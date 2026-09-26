@@ -1,127 +1,1019 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <link rel="stylesheet" href="style.css" />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bKash Tracker</title>
-  </head>
-  <body>
-    <header>
-      <div style="display: flex; align-items: center; gap: 12px">
-        <img id="brandLogo" alt="Logo" title="Click to change logo" />
-        <div>
-          <h1>bKash Tracker</h1>
-          <div class="sub">Daily &amp; monthly limit tracker</div>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bKash Tracker</title>
+<style>
+  :root {
+    --bg:#f4f6f8; --card:#fff; --text:#1f2937; --muted:#6b7280;
+    --border:#e5e7eb; --primary:#e2136e; --primary-dark:#b80f58;
+    --green:#10b981; --yellow:#f59e0b; --red:#ef4444;
+    --wa:#25D366; --wa-dark:#1da851;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+  header{background:var(--primary);color:#fff;padding:14px 20px;display:flex;
+    align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;
+    box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  header h1{font-size:18px;margin:0;font-weight:700}
+  header .sub{font-size:12px;opacity:.85}
+  #brandLogo{width:44px;height:44px;border-radius:12px;object-fit:cover;background:#fff;
+    padding:3px;box-shadow:0 2px 6px rgba(0,0,0,.15);cursor:pointer}
+  .container{max-width:1100px;margin:0 auto;padding:20px}
+  .btn{border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;
+    cursor:pointer;transition:opacity .15s,transform .05s}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:var(--primary-dark)}
+  .btn-ghost{background:rgba(255,255,255,.15);color:#fff}
+  .btn-ghost:hover{background:rgba(255,255,255,.25)}
+  .btn-light{background:#eef1f4;color:var(--text)}
+  .btn-light:hover{background:#e2e6ea}
+  .btn-danger{background:var(--red);color:#fff}
+  .btn-wa{background:var(--wa);color:#fff}
+  .btn-wa:hover{background:var(--wa-dark)}
+  .btn-sm{padding:6px 10px;font-size:12px}
+  .grid{display:grid;gap:16px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  .card{background:var(--card);border-radius:12px;padding:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:5px solid var(--border);
+    cursor:pointer;transition:box-shadow .15s,transform .1s}
+  .card:hover{box-shadow:0 6px 16px rgba(0,0,0,.1);transform:translateY(-1px)}
+  .card.green{border-left-color:var(--green)}
+  .card.yellow{border-left-color:var(--yellow)}
+  .card.red{border-left-color:var(--red)}
+  .card h3{margin:0;font-size:16px}
+  .card .num{color:var(--muted);font-size:13px}
+  .balance{font-size:22px;font-weight:700;margin-bottom:8px}
+  .limit-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:4px}
+  .limit-row b{color:var(--text);font-weight:600}
+  .bar{height:5px;border-radius:3px;background:#eceff2;margin-top:4px;overflow:hidden}
+  .bar span{display:block;height:100%;border-radius:3px}
+  .pending-badge{display:inline-block;background:var(--yellow);color:#fff;
+    padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:6px}
+  .avatar{border-radius:50%;object-fit:cover;display:flex;align-items:center;
+    justify-content:center;color:#fff;font-weight:700;background:var(--primary);flex-shrink:0}
+  .avatar-sm{width:44px;height:44px;font-size:15px}
+  .avatar-lg{width:56px;height:56px;font-size:20px}
+  .panel{background:var(--card);border-radius:12px;padding:20px;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:20px}
+  .panel h2{margin:0 0 14px;font-size:17px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .stat{background:#f9fafb;border:1px solid var(--border);border-radius:10px;padding:14px}
+  .stat .lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .stat .val{font-size:20px;font-weight:700;margin-top:4px}
+  .stat .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  form .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px;font-weight:600}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);
+    border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:var(--text)}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(226,19,110,.1)}
+  .field{margin-bottom:12px}
+  .photo-row{display:flex;align-items:center;gap:14px}
+  .photo-row .avatar{border:2px solid var(--border)}
+  .photo-row input[type=file]{padding:6px;font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--border)}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);background:#f9fafb}
+  td.right,th.right{text-align:right}
+  tr:hover td{background:#fcfcfd}
+  .tag{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;
+    font-weight:600;text-transform:capitalize}
+  .tag.send{background:#fee2e2;color:#991b1b}
+  .tag.receive{background:#d1fae5;color:#065f46}
+  .tag.pending{background:#fef3c7;color:#92400e}
+  .tag.verified{background:#d1fae5;color:#065f46}
+  .empty{text-align:center;padding:50px 20px;color:var(--muted)}
+  .empty h3{color:var(--text);margin-bottom:6px}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:#1f2937;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;
+    opacity:0;transition:all .25s;z-index:50;pointer-events:none;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.error{background:var(--red)}
+  .toast.success{background:var(--wa)}
+  .warn{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 12px;
+    border-radius:8px;font-size:13px;margin-bottom:12px}
+  .info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:10px 12px;
+    border-radius:8px;font-size:12.5px;margin-bottom:12px}
+  .back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;
+    padding:0 0 10px;font-weight:600}
+  .back:hover{color:var(--primary)}
+  .hidden{display:none!important}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .spacer{flex:1}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;
+    align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal{background:#fff;border-radius:14px;padding:22px;max-width:440px;width:100%;
+    box-shadow:0 20px 50px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+  .modal h3{margin:0 0 4px;font-size:18px}
+  .modal .modal-sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .modal-actions{display:flex;gap:10px;margin-top:18px}
+  .modal-actions .btn{flex:1}
+  .preview-msg{background:#e7ffdb;border:1px solid #c5e8b7;padding:12px;
+    border-radius:10px;font-size:13.5px;white-space:pre-wrap;line-height:1.5;
+    margin:12px 0;max-height:200px;overflow-y:auto}
+  .trx-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px}
+  @media (max-width:640px){
+    form .row{grid-template-columns:1fr}
+    .container{padding:14px}
+    header h1{font-size:16px}
+    #brandLogo{width:38px;height:38px}
+    th:nth-child(5),td:nth-child(5){display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <img id="brandLogo" alt="Logo" title="Click to change logo" />
+    <div>
+      <h1>bKash Tracker</h1>
+      <div class="sub">Daily &amp; monthly limit tracker</div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+  </div>
+</header>
+
+<div class="container">
+  <section id="viewDashboard">
+    <div class="toolbar" style="margin-bottom:16px;">
+      <button class="btn btn-primary" onclick="showAddPerson()">+ Add Person</button>
+    </div>
+    <div id="peopleGrid" class="grid cards"></div>
+  </section>
+
+  <section id="viewAddPerson" class="hidden">
+    <button class="back" onclick="showDashboard()">← Back</button>
+    <div class="panel" style="max-width:560px;">
+      <h2>Add Person</h2>
+      <form onsubmit="submitPerson(event)">
+        <div class="field">
+          <label>Photo (optional)</label>
+          <div class="photo-row">
+            <div id="photoFallback" class="avatar avatar-lg">?</div>
+            <img id="photoPreview" class="avatar avatar-lg hidden" alt="" />
+            <input name="photo" type="file" accept="image/*" onchange="previewPhoto(event)" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Name</label>
+          <input name="name" required placeholder="e.g. Karim" />
+        </div>
+        <div class="field">
+          <label>bKash Number</label>
+          <input name="bKashNumber" required pattern="01[0-9]{9}" placeholder="01XXXXXXXXX" maxlength="11" />
+        </div>
+        <div class="field">
+          <label>WhatsApp Number (optional)</label>
+          <input name="whatsappNumber" placeholder="8801XXXXXXXXX" />
+        </div>
+        <div class="field">
+          <label>Current Balance (৳)</label>
+          <input name="initialBalance" type="number" step="0.01" value="0" />
+        </div>
+
+        <h2 style="font-size:14px;margin:18px 0 10px;color:var(--muted);">Already Used (৳)</h2>
+        <div class="row">
+          <div class="field">
+            <label>Used Today</label>
+            <input name="dailyUsedBase" type="number" min="0" value="0" />
+          </div>
+          <div class="field">
+            <label>Used This Month</label>
+            <input name="monthlyUsedBase" type="number" min="0" value="0" />
+          </div>
+        </div>
+        <div class="info">
+          Enter how much has already been sent today and this month.
+          Remaining = ৳50,000 − Used Today and ৳300,000 − Used This Month.
+          Values reset automatically (next day / next month).
+        </div>
+
+        <button class="btn btn-primary" type="submit" style="width:100%;margin-top:8px;">Save Person</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="viewPerson" class="hidden">
+    <button class="back" onclick="showDashboard()">← Back to Dashboard</button>
+    <div id="personDetail"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ------- FIXED LIMITS ------- */
+const DAILY_LIMIT   = 50000;
+const MONTHLY_LIMIT = 300000;
+
+/* ---------------- STORAGE ---------------- */
+const KEY = "bkash_tracker_v3";
+let db = { people: [], settings: { logo: null } };
+
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) db = JSON.parse(raw); }
+  catch (e) { console.warn("Load failed", e); }
+  if (!db.people) db.people = [];
+  if (!db.settings) db.settings = { logo: null };
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function toast(msg, kind) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (kind === "error" ? " error" : kind === "success" ? " success" : "");
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.className = "toast"; }, 2400);
+}
+function money(n){ return "৳" + Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2}); }
+function esc(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+function initialsOf(n){
+  return (n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+}
+function dayKey(d = new Date()) {
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function monthKey(d = new Date()) {
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+function normalizeWa(num){
+  let n = String(num || "").replace(/\D/g, "");
+  if (n.startsWith("01") && n.length === 11) n = "88" + n;
+  return n;
+}
+
+/* ---------------- TRXID VALIDATION ---------------- */
+function validateTrxId(trxId) {
+  const clean = String(trxId || "").trim().toUpperCase();
+  if (!clean) return { ok: false, reason: "empty" };
+  if (!/^[A-Z0-9]{8,12}$/.test(clean)) {
+    return { ok: false, reason: "TrxID should be 8–12 letters/numbers (e.g. 9F7A2B1C4D)" };
+  }
+  return { ok: true, clean };
+}
+
+function trxIdExists(personId, trxId, ignoreTxnId) {
+  const clean = String(trxId || "").trim().toUpperCase();
+  if (!clean) return false;
+
+  const p = db.people.find(x => x.id === personId);
+  if (p && (p.transactions || []).some(t =>
+    t.id !== ignoreTxnId &&
+    ((t.trxId || "").toUpperCase() === clean ||
+     (t.notes || "").toUpperCase().includes(clean))
+  )) return true;
+
+  return db.people.some(pp =>
+    (pp.transactions || []).some(t =>
+      t.id !== ignoreTxnId &&
+      ((t.trxId || "").toUpperCase() === clean ||
+       (t.notes || "").toUpperCase().includes(clean))
+    )
+  );
+}
+
+/* ---------------- CALCULATIONS ---------------- */
+function summarize(p) {
+  const now = new Date();
+  const startOfDay   = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const tKey = dayKey(now);
+  const mKey = monthKey(now);
+  const txns = (p.transactions||[]).map(t=>({...t, date:new Date(t.date)}));
+  const sum = (fn) => txns.filter(fn).reduce((s,t)=>s+t.amount, 0);
+
+  let dailyUsed   = sum(t => t.type === "send" && t.date >= startOfDay);
+  let monthlyUsed = sum(t => t.type === "send" && t.date >= startOfMonth);
+
+  if (p.baseDayKey === tKey)   dailyUsed   += Number(p.dailyUsedBase)   || 0;
+  if (p.baseMonthKey === mKey) monthlyUsed += Number(p.monthlyUsedBase) || 0;
+
+  const balance = txns.reduce((b,t)=>{
+    if (t.type === "receive") return b + t.amount;
+    if (t.type === "send")    return b - t.amount;
+    return b;
+  }, Number(p.initialBalance) || 0);
+
+  const remDaily   = DAILY_LIMIT   - dailyUsed;
+  const remMonthly = MONTHLY_LIMIT - monthlyUsed;
+
+  const pctDaily   = DAILY_LIMIT   > 0 ? remDaily   / DAILY_LIMIT   : 1;
+  const pctMonthly = MONTHLY_LIMIT > 0 ? remMonthly / MONTHLY_LIMIT : 1;
+  const worst = Math.min(pctDaily, pctMonthly);
+
+  let status = "green";
+  if (worst < 0.2) status = "red";
+  else if (worst < 0.5) status = "yellow";
+
+  const pending = (p.pendingRequests || []).filter(r => r.status === "pending");
+  const pendingAmount = pending.reduce((s,r) => s + Number(r.amount || 0), 0);
+
+  return { balance, dailyUsed, monthlyUsed, remDaily, remMonthly, status,
+           pendingCount: pending.length, pendingAmount };
+}
+
+/* ---------------- ROUTING ---------------- */
+function show(id) {
+  ["viewDashboard","viewAddPerson","viewPerson"].forEach(v =>
+    document.getElementById(v).classList.toggle("hidden", v !== id));
+  window.scrollTo(0,0);
+}
+function showDashboard(){ renderDashboard(); show("viewDashboard"); }
+function showAddPerson(){ resetPhotoPicker(); show("viewAddPerson"); }
+function showPerson(id){ renderPerson(id); show("viewPerson"); }
+
+/* ---------------- WHATSAPP OPENER (smart) ---------------- */
+function openWhatsApp(waNumber, message) {
+  const num = normalizeWa(waNumber);
+  const text = encodeURIComponent(message);
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i
+    .test(navigator.userAgent);
+
+  let url;
+  if (isMobile) {
+    url = `whatsapp://send?phone=${num}&text=${text}`;
+  } else {
+    url = `https://web.whatsapp.com/send?phone=${num}&text=${text}`;
+  }
+  window.open(url, "_blank");
+}
+
+/* ---------------- LOGO ---------------- */
+const DEFAULT_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent(
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#e2136e"/>
+  <text x="32" y="42" font-family="Arial,sans-serif" font-size="28"
+        font-weight="700" fill="#fff" text-anchor="middle">৳</text>
+</svg>`);
+function renderLogo(){
+  const img = document.getElementById("brandLogo");
+  img.src = (db.settings && db.settings.logo) || DEFAULT_LOGO;
+  img.onclick = changeLogo;
+}
+function changeLogo(){
+  const input = document.createElement("input");
+  input.type="file"; input.accept="image/*";
+  input.onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const image = new Image();
+      image.onload = ()=>{
+        const size = 128;
+        const c = document.createElement("canvas");
+        c.width=size; c.height=size;
+        const ctx = c.getContext("2d");
+        const scale = Math.max(size/image.width, size/image.height);
+        const w = image.width*scale, h = image.height*scale;
+        ctx.drawImage(image,(size-w)/2,(size-h)/2,w,h);
+        db.settings.logo = c.toDataURL("image/jpeg",0.9);
+        save(); renderLogo(); toast("Logo updated");
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+/* ---------------- PHOTO ---------------- */
+let pendingPhotoDataUrl = null;
+function resetPhotoPicker(){
+  pendingPhotoDataUrl = null;
+  const preview = document.getElementById("photoPreview");
+  const fallback = document.getElementById("photoFallback");
+  if(preview){ preview.src=""; preview.classList.add("hidden"); }
+  if(fallback) fallback.classList.remove("hidden");
+  const fi = document.querySelector('input[name="photo"]');
+  if(fi) fi.value = "";
+}
+function previewPhoto(e){
+  const file = e.target.files[0];
+  if(!file){ resetPhotoPicker(); return; }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const size = 200;
+      const c = document.createElement("canvas");
+      c.width=size; c.height=size;
+      const ctx = c.getContext("2d");
+      const scale = Math.max(size/img.width, size/img.height);
+      const w = img.width*scale, h = img.height*scale;
+      ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
+      pendingPhotoDataUrl = c.toDataURL("image/jpeg",0.85);
+      const preview = document.getElementById("photoPreview");
+      const fallback = document.getElementById("photoFallback");
+      preview.src = pendingPhotoDataUrl;
+      preview.classList.remove("hidden");
+      fallback.classList.add("hidden");
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function avatarHTML(person, sizeClass){
+  if(person.photo) return `<img class="avatar ${sizeClass}" src="${person.photo}" alt="${esc(person.name)}" />`;
+  return `<div class="avatar ${sizeClass}">${initialsOf(person.name)}</div>`;
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const grid = document.getElementById("peopleGrid");
+  if(db.people.length === 0){
+    grid.innerHTML = `
+      <div class="empty" style="grid-column:1/-1;">
+        <h3>No people added yet</h3>
+        <p>Add a person to start tracking their balance and limits.</p>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="showAddPerson()">+ Add your first person</button>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = db.people.map(p=>{
+    const s = summarize(p);
+    const dailyPct = Math.max(0, Math.min(100, DAILY_LIMIT>0 ? (s.remDaily/DAILY_LIMIT)*100 : 0));
+    const barColor = s.status==="red" ? "var(--red)" : s.status==="yellow" ? "var(--yellow)" : "var(--green)";
+    const pendingBadge = s.pendingCount > 0
+      ? `<span class="pending-badge">${s.pendingCount} pending</span>` : "";
+    return `
+      <div class="card ${s.status}" onclick="showPerson('${p.id}')">
+        <div style="display:flex;align-items:center;gap:12px;">
+          ${avatarHTML(p,"avatar-sm")}
+          <div style="flex:1;min-width:0;">
+            <h3>${esc(p.name)}${pendingBadge}</h3>
+            <div class="num">${esc(p.bKashNumber)}</div>
+          </div>
+        </div>
+        <div class="balance" style="margin-top:12px;">${money(s.balance)}</div>
+        <div class="limit-row"><span>Daily left</span><b>${money(s.remDaily)}</b></div>
+        <div class="bar"><span style="width:${dailyPct}%;background:${barColor};"></span></div>
+        <div class="limit-row" style="margin-top:10px;"><span>Monthly left</span><b>${money(s.remMonthly)}</b></div>
+      </div>`;
+  }).join("");
+}
+
+/* ---------------- PERSON DETAIL ---------------- */
+function renderPerson(id){
+  const p = db.people.find(x=>x.id===id);
+  if(!p){ showDashboard(); return; }
+  const s = summarize(p);
+  const txns = [...(p.transactions||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const pendings = (p.pendingRequests||[]).filter(r => r.status === "pending")
+    .sort((a,b)=>new Date(b.sentAt)-new Date(a.sentAt));
+
+  const warnings = [];
+  if(s.remDaily < 0) warnings.push("Daily limit exceeded.");
+  if(s.remMonthly < 0) warnings.push("Monthly limit exceeded.");
+  if(s.pendingCount > 0)
+    warnings.push(`${s.pendingCount} WhatsApp request(s) pending — total ${money(s.pendingAmount)}.`);
+
+  const pendingBlock = pendings.length === 0 ? "" : `
+    <div class="panel">
+      <h2>Pending WhatsApp Requests (${pendings.length})</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Sent</th>
+              <th class="right">Amount</th>
+              <th>Destination</th>
+              <th>To</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pendings.map(r=>`
+              <tr>
+                <td>${new Date(r.sentAt).toLocaleString()}</td>
+                <td class="right">${money(r.amount)}</td>
+                <td>${esc(r.destNumber)}</td>
+                <td>${esc(r.waNumber)}</td>
+                <td class="right" style="white-space:nowrap;">
+                  <button class="btn btn-wa btn-sm" onclick="markAsSent('${p.id}','${r.id}')">Mark Sent</button>
+                  <button class="btn btn-light btn-sm" onclick="cancelPending('${p.id}','${r.id}')">✕</button>
+                </td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("personDetail").innerHTML = `
+    <div class="panel">
+      <div class="toolbar" style="align-items:flex-start;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          ${avatarHTML(p,"avatar-lg")}
+          <div>
+            <h2 style="margin:0 0 4px;">${esc(p.name)}</h2>
+            <div style="color:var(--muted);font-size:13px;">${esc(p.bKashNumber)}</div>
+            ${p.whatsappNumber ? `<div style="color:var(--muted);font-size:12px;">WA: ${esc(p.whatsappNumber)}</div>` : ""}
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-wa btn-sm" onclick="openWaModal('${p.id}')">📱 Request via WhatsApp</button>
+        <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">Change Photo</button>
+        <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">Edit Used</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePerson('${p.id}')">Delete</button>
+      </div>
+
+      ${warnings.length ? `<div class="warn" style="margin-top:14px;">⚠️ ${warnings.join(" ")}</div>` : ""}
+
+      <div class="stats" style="margin-top:16px;">
+        <div class="stat">
+          <div class="lbl">Balance</div>
+          <div class="val">${money(s.balance)}</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Daily Limit Left</div>
+          <div class="val">${money(s.remDaily)}</div>
+          <div class="sub">Used ${money(s.dailyUsed)} of ${money(DAILY_LIMIT)}</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Monthly Limit Left</div>
+          <div class="val">${money(s.remMonthly)}</div>
+          <div class="sub">Used ${money(s.monthlyUsed)} of ${money(MONTHLY_LIMIT)}</div>
         </div>
       </div>
-      <div class="toolbar">
-        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
-          Export CSV
-        </button>
-      </div>
-    </header>
-
-    <div class="container">
-      <!-- DASHBOARD -->
-      <section id="viewDashboard">
-        <div class="toolbar" style="margin-bottom: 16px">
-          <button class="btn btn-primary" onclick="showAddPerson()">
-            + Add Person
-          </button>
-        </div>
-        <div id="peopleGrid" class="grid cards"></div>
-      </section>
-
-      <!-- ADD PERSON -->
-      <section id="viewAddPerson" class="hidden">
-        <button class="back" onclick="showDashboard()">← Back</button>
-        <div class="panel" style="max-width: 560px">
-          <h2>Add Person</h2>
-          <form onsubmit="submitPerson(event)">
-            <div class="field">
-              <label>Photo (optional)</label>
-              <div class="photo-row">
-                <div id="photoFallback" class="avatar avatar-lg">?</div>
-                <img id="photoPreview" class="avatar avatar-lg hidden" alt="" />
-                <input
-                  name="photo"
-                  type="file"
-                  accept="image/*"
-                  onchange="previewPhoto(event)"
-                />
-              </div>
-            </div>
-            <div class="field">
-              <label>Name</label>
-              <input name="name" required placeholder="e.g. Karim" />
-            </div>
-            <div class="field">
-              <label>bKash Number</label>
-              <input
-                name="bKashNumber"
-                required
-                pattern="01[0-9]{9}"
-                placeholder="01XXXXXXXXX"
-                maxlength="11"
-              />
-            </div>
-            <div class="field">
-              <label>Current Balance (৳)</label>
-              <input
-                name="initialBalance"
-                type="number"
-                step="0.01"
-                value="0"
-              />
-            </div>
-
-            <h2
-              style="font-size: 14px; margin: 18px 0 10px; color: var(--muted)"
-            >
-              Already Used (৳)
-            </h2>
-            <div class="row">
-              <div class="field">
-                <label>Used Today</label>
-                <input name="dailyUsedBase" type="number" min="0" value="0" />
-              </div>
-              <div class="field">
-                <label>Used This Month</label>
-                <input name="monthlyUsedBase" type="number" min="0" value="0" />
-              </div>
-            </div>
-            <div class="info">
-              Enter how much has already been sent today and this month.
-              Remaining = ৳50,000 − Used Today and ৳300,000 − Used This Month.
-              Values reset automatically (next day / next month).
-            </div>
-
-
-
-
-            <button
-              class="btn btn-primary"
-              type="submit"
-              style="width: 100%; margin-top: 8px"
-            >
-              Save Person
-            </button>
-          </form>
-        </div>
-      </section>
-
-  
-      <section id="viewPerson" class="hidden">
-        <button class="back" onclick="showDashboard()">
-          ← Back to Dashboard
-        </button>
-        <div id="personDetail"></div>
-      </section>
     </div>
 
-    <div class="toast" id="toast"></div>
+    ${pendingBlock}
 
-    <script src="script.js"></script>
-  </body>
+    <div class="panel">
+      <h2>Add Transaction</h2>
+      <form onsubmit="submitTransaction(event, '${p.id}')">
+        <div class="row">
+          <div class="field">
+            <label>Type</label>
+            <select name="type" required>
+              <option value="send">Send</option>
+              <option value="receive">Receive</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount (৳)</label>
+            <input name="amount" type="number" min="1" step="0.01" required placeholder="0" />
+          </div>
+          <div class="field">
+            <label>Counterparty (optional)</label>
+            <input name="counterparty" placeholder="Name or number" />
+          </div>
+          <div class="field">
+            <label>Date &amp; Time</label>
+            <input name="date" type="datetime-local" value="${localNow()}" />
+          </div>
+        </div>
+        <div class="field">
+          <label>TrxID (optional)</label>
+          <input name="trxId" placeholder="e.g. 9F7A2B1C4D" />
+        </div>
+        <div class="field">
+          <label>Notes (optional)</label>
+          <input name="notes" placeholder="Anything to remember" />
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%;">Add Transaction</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>History (${txns.length})</h2>
+      ${txns.length===0 ? `<p style="color:var(--muted);font-size:14px;">No transactions yet.</p>` : `
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Type</th><th class="right">Amount</th>
+              <th>TrxID</th><th>Counterparty</th><th>Notes</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${txns.map(t=>{
+              const verified = !!(t.verified || (t.trxId && t.trxId.length > 0));
+              const badge = t.type === "send"
+                ? (verified
+                    ? `<span class="tag verified" style="font-size:10px;margin-left:6px;">verified</span>`
+                    : `<span class="tag pending" style="font-size:10px;margin-left:6px;">unverified</span>`)
+                : "";
+              return `
+                <tr>
+                  <td>${new Date(t.date).toLocaleString()}</td>
+                  <td><span class="tag ${t.type}">${t.type}</span></td>
+                  <td class="right">${money(t.amount)}</td>
+                  <td>
+                    ${t.trxId ? `<span class="trx-code">${esc(t.trxId)}</span>` : "—"}
+                    ${badge}
+                  </td>
+                  <td>${esc(t.counterparty || "—")}</td>
+                  <td>${esc(t.notes || "—")}</td>
+                  <td class="right" style="white-space:nowrap;">
+                    ${t.type === "send" && !verified
+                      ? `<button class="btn btn-light btn-sm" onclick="addTrxId('${p.id}','${t.id}')">+ TrxID</button>`
+                      : ""}
+                    <button class="btn btn-light btn-sm" onclick="deleteTxn('${p.id}','${t.id}')">✕</button>
+                  </td>
+                </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`}
+    </div>
+  `;
+}
+
+function localNow(){
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,16);
+}
+
+/* ---------------- WHATSAPP MODAL ---------------- */
+function openWaModal(personId){
+  const p = db.people.find(x=>x.id===personId);
+  if(!p) return;
+
+  const defaultDest = p.bKashNumber;
+  const defaultWa = p.whatsappNumber ? normalizeWa(p.whatsappNumber) : ("88" + p.bKashNumber);
+
+  const html = `
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <h3>Request via WhatsApp</h3>
+        <div class="modal-sub">Sending to <b>${esc(p.name)}</b></div>
+
+        <div class="field">
+          <label>Amount to request (৳)</label>
+          <input id="waAmount" type="number" min="1" step="1" placeholder="5000" />
+        </div>
+        <div class="field">
+          <label>Destination bKash number</label>
+          <input id="waDest" value="${esc(defaultDest)}" />
+        </div>
+        <div class="field">
+          <label>WhatsApp number (with country code)</label>
+          <input id="waNumber" value="${esc(defaultWa)}" />
+        </div>
+
+        <label style="margin-top:6px;">Message preview</label>
+        <div class="preview-msg" id="waPreview"></div>
+
+        <div class="modal-actions">
+          <button class="btn btn-light" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-wa" onclick="sendWaMessage('${p.id}')">Open WhatsApp</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById("modalRoot").innerHTML = html;
+
+  const update = () => {
+    const amt = Number(document.getElementById("waAmount").value) || 0;
+    const dest = document.getElementById("waDest").value || "";
+    const msg =
+      `Assalamu Alaikum ${p.name},\n\n` +
+      `Please send ৳${amt.toLocaleString()} to bKash ${dest}.\n\n` +
+      `Reply in this format:\n` +
+      `Amount: \n` +
+      `TrxID: \n\n` +
+      `JazakAllah.`;
+    document.getElementById("waPreview").textContent = msg;
+  };
+  ["waAmount","waDest","waNumber"].forEach(id => {
+    document.getElementById(id).addEventListener("input", update);
+  });
+  update();
+
+  setTimeout(()=>document.getElementById("waAmount").focus(), 50);
+}
+
+function closeModal(){
+  document.getElementById("modalRoot").innerHTML = "";
+}
+
+function sendWaMessage(personId){
+  const p = db.people.find(x=>x.id===personId);
+  if(!p) return;
+
+  const amount = Number(document.getElementById("waAmount").value);
+  const dest = document.getElementById("waDest").value.trim();
+  const waNumber = normalizeWa(document.getElementById("waNumber").value);
+
+  if(!amount || amount <= 0){ toast("Enter a valid amount", "error"); return; }
+  if(!dest){ toast("Enter a destination bKash number", "error"); return; }
+  if(!waNumber || waNumber.length < 11){ toast("Enter a valid WhatsApp number", "error"); return; }
+
+  const msg =
+    `Assalamu Alaikum ${p.name},\n\n` +
+    `Please send ৳${amount.toLocaleString()} to bKash ${dest}.\n\n` +
+    `Reply in this format:\n` +
+    `Amount: \n` +
+    `TrxID: \n\n` +
+    `JazakAllah.`;
+
+  p.pendingRequests = p.pendingRequests || [];
+  p.pendingRequests.push({
+    id: uid(),
+    amount,
+    destNumber: dest,
+    waNumber,
+    sentAt: new Date().toISOString(),
+    status: "pending"
+  });
+  if(!p.whatsappNumber) p.whatsappNumber = waNumber;
+  save();
+
+  openWhatsApp(waNumber, msg);
+
+  toast("WhatsApp opened, request saved", "success");
+  closeModal();
+  renderPerson(personId);
+}
+
+function markAsSent(personId, requestId){
+  const p = db.people.find(x=>x.id===personId);
+  if(!p) return;
+  const req = (p.pendingRequests||[]).find(r => r.id === requestId);
+  if(!req) return;
+
+  const raw = prompt(
+    "Enter the TrxID from the person:\n" +
+    "(Leave empty if they haven't replied yet — you can add it later.)",
+    ""
+  );
+  if (raw === null) return;
+
+  let trxId = "";
+  if (raw.trim()) {
+    const v = validateTrxId(raw);
+    if (!v.ok) {
+      toast("Invalid TrxID: " + v.reason, "error");
+      return;
+    }
+    if (trxIdExists(personId, v.clean)) {
+      const still = confirm(
+        `⚠️ This TrxID (${v.clean}) already exists in your records.\n\n` +
+        `OK = record anyway\n` +
+        `Cancel = go back and fix it`
+      );
+      if (!still) return;
+    }
+    trxId = v.clean;
+  }
+
+  const summary =
+    `Record this as a SEND transaction?\n\n` +
+    `Amount: ৳${Number(req.amount).toLocaleString()}\n` +
+    `Destination: ${req.destNumber}\n` +
+    `TrxID: ${trxId || "(not provided)"}\n\n` +
+    `Have you confirmed this in your own bKash app / SMS?`;
+  if (!confirm(summary)) return;
+
+  const before = summarize(p);
+  if(req.amount > before.remDaily){ toast("Exceeds daily limit", "error"); return; }
+  if(req.amount > before.remMonthly){ toast("Exceeds monthly limit", "error"); return; }
+
+  p.transactions.push({
+    id: uid(),
+    type: "send",
+    amount: Number(req.amount),
+    date: new Date().toISOString(),
+    counterparty: req.waNumber,
+    trxId: trxId || null,
+    verified: !!trxId,
+    notes: trxId ? "" : "Via WhatsApp request (no TrxID yet)"
+  });
+
+  req.status = "sent";
+  req.completedAt = new Date().toISOString();
+  req.trxId = trxId || null;
+
+  save();
+  toast(trxId ? "Transaction recorded & verified" : "Transaction recorded (unverified)", "success");
+  renderPerson(personId);
+}
+
+function cancelPending(personId, requestId){
+  if(!confirm("Cancel this pending request?")) return;
+  const p = db.people.find(x=>x.id===personId);
+  if(!p) return;
+  p.pendingRequests = (p.pendingRequests||[]).filter(r => r.id !== requestId);
+  save();
+  toast("Request cancelled");
+  renderPerson(personId);
+}
+
+function addTrxId(personId, txnId){
+  const p = db.people.find(x=>x.id===personId);
+  if(!p) return;
+  const t = p.transactions.find(x => x.id === txnId);
+  if(!t) return;
+
+  const raw = prompt(
+    "Enter the correct TrxID for this transaction:\n" +
+    `(Current: ${t.trxId || "none"})`,
+    t.trxId || ""
+  );
+  if (raw === null) return;
+
+  if (!raw.trim()) {
+    t.trxId = null;
+    t.verified = false;
+    t.notes = "Via WhatsApp request (no TrxID yet)";
+    save();
+    toast("TrxID cleared");
+    renderPerson(personId);
+    return;
+  }
+
+  const v = validateTrxId(raw);
+  if (!v.ok) { toast("Invalid TrxID: " + v.reason, "error"); return; }
+
+  if (trxIdExists(personId, v.clean, txnId)) {
+    if (!confirm(`⚠️ ${v.clean} already exists in your records. Save anyway?`)) return;
+  }
+
+  t.trxId = v.clean;
+  t.verified = true;
+  if (!t.notes || t.notes.startsWith("Via WhatsApp")) t.notes = "";
+  save();
+  toast("TrxID updated & verified", "success");
+  renderPerson(personId);
+}
+
+/* ---------------- ACTIONS ---------------- */
+function submitPerson(e){
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const num = (k) => Number(f.get(k)) || 0;
+  const now = new Date();
+
+  const person = {
+    id: uid(),
+    name: f.get("name").trim(),
+    bKashNumber: f.get("bKashNumber").trim(),
+    whatsappNumber: normalizeWa(f.get("whatsappNumber")) || "",
+    photo: pendingPhotoDataUrl || null,
+    initialBalance: num("initialBalance"),
+    dailyUsedBase: num("dailyUsedBase"),
+    monthlyUsedBase: num("monthlyUsedBase"),
+    baseDayKey: dayKey(now),
+    baseMonthKey: monthKey(now),
+    transactions: [],
+    pendingRequests: [],
+    createdAt: now.toISOString()
+  };
+
+  db.people.unshift(person);
+  save();
+  e.target.reset();
+  resetPhotoPicker();
+  toast("Person added");
+  showDashboard();
+}
+
+function submitTransaction(e, personId){
+  e.preventDefault();
+  const p = db.people.find(x=>x.id===personId);
+  if(!p) return;
+  const f = new FormData(e.target);
+  const type = f.get("type");
+  const amount = Number(f.get("amount"));
+  if(!amount || amount <= 0){ toast("Enter a valid amount", "error"); return; }
+
+  const dateVal = f.get("date");
+  const date = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
+
+  let trxId = "";
+  const rawTrx = (f.get("trxId") || "").trim();
+  if (rawTrx) {
+    const v = validateTrxId(rawTrx);
+    if (!v.ok) { toast("Invalid TrxID: " + v.reason, "error"); return; }
+    if (trxIdExists(personId, v.clean)) {
+      if (!confirm(`⚠️ ${v.clean} already exists. Save anyway?`)) return;
+    }
+    trxId = v.clean;
+  }
+
+  if(type === "send"){
+    const before = summarize(p);
+    if(amount > before.remDaily){ toast("Exceeds daily limit", "error"); return; }
+    if(amount > before.remMonthly){ toast("Exceeds monthly limit", "error"); return; }
+  }
+
+  p.transactions.push({
+    id: uid(), type, amount, date,
+    counterparty: (f.get("counterparty")||"").trim(),
+    trxId: trxId || null,
+    verified: !!trxId,
+    notes: (f.get("notes")||"").trim()
+  });
+  save();
+  toast("Transaction added");
+  renderPerson(personId);
+}
+
+function deleteTxn(personId, txnId){
+  if(!confirm("Delete this transaction?")) return;
+  const p = db.people.find(x=>x.id===personId);
+  p.transactions = p.transactions.filter(t=>t.id!==txnId);
+  save(); toast("Transaction deleted"); renderPerson(personId);
+}
+
+function deletePerson(id){
+  const p = db.people.find(x=>x.id===id);
+  if(!confirm(`Delete ${p.name} and all their transactions?`)) return;
+  db.people = db.people.filter(x=>x.id!==id);
+  save(); toast("Person deleted"); showDashboard();
+}
+
+function editUsed(id){
+  const p = db.people.find(x=>x.id===id);
+  if(!p) return;
+  const now = new Date();
+
+  const ask = (label, current) => {
+    const v = prompt(label, current);
+    if(v === null) return null;
+    const n = Number(v);
+    return isNaN(n) || n < 0 ? null : n;
+  };
+
+  const du = ask("Already used TODAY (৳)", p.dailyUsedBase || 0);       if(du === null) return;
+  const mu = ask("Already used THIS MONTH (৳)", p.monthlyUsedBase || 0); if(mu === null) return;
+
+  p.dailyUsedBase = du;
+  p.monthlyUsedBase = mu;
+  p.baseDayKey = dayKey(now);
+  p.baseMonthKey = monthKey(now);
+  save(); toast("Used amounts updated"); renderPerson(id);
+}
+
+function changePersonPhoto(id){
+  const p = db.people.find(x=>x.id===id);
+  if(!p) return;
+  const input = document.createElement("input");
+  input.type="file"; input.accept="image/*";
+  input.onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const size = 200;
+        const c = document.createElement("canvas");
+        c.width=size; c.height=size;
+        const ctx = c.getContext("2d");
+        const scale = Math.max(size/img.width, size/img.height);
+        const w = img.width*scale, h = img.height*scale;
+        ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
+        p.photo = c.toDataURL("image/jpeg",0.85);
+        save(); toast("Photo updated"); renderPerson(id);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+/* ---------------- CSV ---------------- */
+function exportCSV(){
+  const rows = [["Person","bKash Number","Type","Amount","Date","TrxID","Verified","Counterparty","Notes"]];
+  db.people.forEach(p=>{
+    (p.transactions||[]).forEach(t=>{
+      rows.push([p.name,p.bKashNumber,t.type,t.amount,
+        new Date(t.date).toLocaleString(), t.trxId||"",
+        t.verified ? "yes" : "no",
+        t.counterparty||"", t.notes||""]);
+    });
+  });
+  if(rows.length === 1){ toast("Nothing to export", "error"); return; }
+  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `bkash-tracker-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("CSV downloaded");
+}
+
+/* ---------------- INIT ---------------- */
+load();
+renderLogo();
+showDashboard();
+</script>
+</body>
 </html>
