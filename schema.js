@@ -28,7 +28,7 @@ const PersonSchema = new mongoose.Schema({
     },
     baseDayKey: String,      // "2026-09-28"
     baseMonthKey: String     // "2026-09"
-}, { timestamps: true });
+});
 
 const TransactionSchema = new mongoose.Schema({
     person: {
