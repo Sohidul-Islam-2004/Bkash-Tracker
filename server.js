@@ -30,9 +30,63 @@ const upload = multer({
 });
 
 
+app.post("/api/people", upload.single("photo"), async (req, res) => {
+    try {
+        const {
+            name,
+            bkashNumber,
+            whatsappNumber,
+            initialBalance,
+            dailyUsedBase,
+            monthlyUsedBase
+        } = req.body;
 
-app.post("/api/people", (req, res) => {
-    console.log(req.body);
+        let photoUrl = null;
+
+        if (req.file) {
+            const path = `ProfileImage/${Date.now()}-${req.file.originalname}`;
+
+            const { error } = await supabase.storage
+                .from("Bkash")
+                .upload(path, req.file.buffer, {
+                    contentType: req.file.mimetype,   // ← was `file`
+                    upsert: false
+                });
+
+            if (error) throw new Error("photo upload failed: " + error.message);
+
+            const { data } = supabase.storage.from("Bkash").getPublicUrl(path);
+            photoUrl = data.publicUrl;
+        }
+       
+        const person = await Person.create({
+            name,
+            bkashNumber,
+            whatsappNumber,
+            photo: photoUrl,                       // ← save it!
+            initialBalance,
+            dailyUsedBase,
+            monthlyUsedBase
+        });
+
+        res.status(201).json(person);              // ← real response
+    } catch (err) {
+        console.error(err);
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.get("/api/people", async (req, res) => {
+    const data = await Person.find();
+    res.json(data);
+})
+
+app.get("/api/people/:id", async (req, res) => {
+
+    const data = await Person.findById(req.params.id);
+    res.json(data);
+
+
 })
 
 
