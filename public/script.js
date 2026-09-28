@@ -4,24 +4,89 @@
 const DAILY_LIMIT = 50000;
 const MONTHLY_LIMIT = 300000;
 
-/* ---------------- সংরক্ষণ ---------------- */
-const KEY = "bkash_tracker_bn_v2";
-let db = { people: [], settings: { logo: null } };
+/* ======================================================
+   API configuration
+   ====================================================== */
+const API_BASE = "http://localhost:3000";
 
-function load() {
+/* ---------------- lokар storage (শুধু লোগো + pending request) ---------------- */
+const LOCAL_KEY = "bkash_tracker_local_v1";
+let local = { logo: null, pending: {} };
+let db = { people: [] };
+
+function loadLocal() {
     try {
-        const raw = localStorage.getItem(KEY);
-        if (raw) db = JSON.parse(raw);
-        else {
-            // migrate from v1 if present
-            const old = localStorage.getItem("bkash_tracker_bn_v1");
-            if (old) db = JSON.parse(old);
-        }
-    } catch (e) { console.warn("লোড হয়নি", e); }
-    if (!db.people) db.people = [];
-    if (!db.settings) db.settings = { logo: null };
+        const raw = localStorage.getItem(LOCAL_KEY);
+        if (raw) local = JSON.parse(raw);
+    } catch (e) { console.warn("লোকাল লোড হয়নি", e); }
+    if (!local.pending) local.pending = {};
 }
-function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+function saveLocal() {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(local));
+}
+
+/* ---------------- API helper ---------------- */
+async function api(path, { method = "GET", body } = {}) {
+    const res = await fetch(API_BASE + path, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Server error");
+    return data;
+}
+
+function normalizePerson(p) {
+    return {
+        ...p,
+        id: p._id,
+        transactions: (p.transactions || []).map(t => ({ ...t, id: t._id }))
+    };
+}
+
+async function refreshPeople() {
+    const list = await api("/api/people");
+    db.people = list.map(normalizePerson);
+}
+async function refreshPerson(id) {
+    const p = await api("/api/people/" + id);
+    const np = normalizePerson(p);
+    const idx = db.people.findIndex(x => x.id === id);
+    if (idx >= 0) db.people[idx] = { ...db.people[idx], ...np };
+    else db.people.push(np);
+    return np;
+}
+
+/* সার্ভারের ইংরেজি এরর → বাংলা */
+function translateError(msg) {
+    const map = {
+        "exceeds daily limit": "আজকের সীমা পার হয়ে যাবে",
+        "exceeds monthly limit": "এই মাসের সীমা পার হয়ে যাবে",
+        "TrxID already exists": "এই আইডি আগেই লেখা আছে",
+        "amount must be > 0": "টাকার পরিমাণ লিখুন",
+        "type must be send or receive": "ধরন ঠিক নয়",
+        "person not found": "মানুষ খুঁজে পাওয়া যায়নি",
+        "invalid TrxID format": "আইডি ৮ থেকে ১২ অক্ষরের হতে হবে"
+    };
+    return map[msg] || msg;
+}
+
+/* ---------------- pending requests (লোকাল) ---------------- */
+function getPending(personId) {
+    return local.pending[personId] || [];
+}
+function addPending(personId, req) {
+    local.pending[personId] = local.pending[personId] || [];
+    local.pending[personId].push(req);
+    saveLocal();
+}
+function removePending(personId, reqId) {
+    local.pending[personId] = (local.pending[personId] || []).filter(r => r.id !== reqId);
+    saveLocal();
+}
+
+/* ---------------- helpers ---------------- */
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
 function toast(msg, kind) {
@@ -69,52 +134,29 @@ function trxIdExists(personId, trxId, ignoreTxnId) {
     if (!clean) return false;
     const p = db.people.find(x => x.id === personId);
     if (p && (p.transactions || []).some(t =>
-        t.id !== ignoreTxnId &&
-        ((t.trxId || "").toUpperCase() === clean || (t.notes || "").toUpperCase().includes(clean))
+        t.id !== ignoreTxnId && (t.trxId || "").toUpperCase() === clean
     )) return true;
-    return db.people.some(pp => (pp.transactions || []).some(t =>
-        t.id !== ignoreTxnId &&
-        ((t.trxId || "").toUpperCase() === clean || (t.notes || "").toUpperCase().includes(clean))
-    ));
+    return false;
 }
 
 /* ---------------- হিসাব ---------------- */
 function summarize(p) {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const tKey = dayKey(now);
-    const mKey = monthKey(now);
-    const txns = (p.transactions || []).map(t => ({ ...t, date: new Date(t.date) }));
-    const sum = fn => txns.filter(fn).reduce((s, t) => s + t.amount, 0);
-
-    let dailyUsed = sum(t => t.type === "send" && t.date >= startOfDay);
-    let monthlyUsed = sum(t => t.type === "send" && t.date >= startOfMonth);
-    if (p.baseDayKey === tKey) dailyUsed += Number(p.dailyUsedBase) || 0;
-    if (p.baseMonthKey === mKey) monthlyUsed += Number(p.monthlyUsedBase) || 0;
-
-    const balance = txns.reduce((b, t) => {
-        if (t.type === "receive") return b + t.amount;
-        if (t.type === "send") return b - t.amount;
-        return b;
-    }, Number(p.initialBalance) || 0);
-
-    const remDaily = DAILY_LIMIT - dailyUsed;
-    const remMonthly = MONTHLY_LIMIT - monthlyUsed;
-    const pctDaily = DAILY_LIMIT > 0 ? remDaily / DAILY_LIMIT : 1;
-    const pctMonthly = MONTHLY_LIMIT > 0 ? remMonthly / MONTHLY_LIMIT : 1;
-    const worst = Math.min(pctDaily, pctMonthly);
-
-    let status = "green";
-    if (worst < 0.2) status = "red";
-    else if (worst < 0.5) status = "yellow";
-
-    const pending = (p.pendingRequests || []).filter(r => r.status === "pending");
-    const pendingAmount = pending.reduce((s, r) => s + Number(r.amount || 0), 0);
-
+    const pendingList = getPending(p.id);
+    const pendingAmount = pendingList.reduce((s, r) => s + Number(r.amount || 0), 0);
     return {
-        balance, dailyUsed, monthlyUsed, remDaily, remMonthly, status,
-        pendingCount: pending.length, pendingAmount
+        balance: Number(p.balance || 0),
+        dailyUsed: Number(p.dailyUsed || 0),
+        monthlyUsed: Number(p.monthlyUsed || 0),
+        remDaily: Number(p.remDaily || 0),
+        remMonthly: Number(p.remMonthly || 0),
+        status: p.status || (
+            Math.min(
+                DAILY_LIMIT > 0 ? (p.remDaily || 0) / DAILY_LIMIT : 1,
+                MONTHLY_LIMIT > 0 ? (p.remMonthly || 0) / MONTHLY_LIMIT : 1
+            ) < 0.2 ? "red" : "yellow"
+        ),
+        pendingCount: pendingList.length,
+        pendingAmount
     };
 }
 
@@ -124,9 +166,19 @@ function show(id) {
         document.getElementById(v).classList.toggle("hidden", v !== id));
     window.scrollTo(0, 0);
 }
-function showDashboard() { renderDashboard(); show("viewDashboard"); }
+async function showDashboard() {
+    try { await refreshPeople(); }
+    catch (e) { toast("সার্ভারে সংযোগ হয়নি", "error"); }
+    renderDashboard();
+    show("viewDashboard");
+}
 function showAddPerson() { resetPhotoPicker(); show("viewAddPerson"); }
-function showPerson(id) { renderPerson(id); show("viewPerson"); }
+async function showPerson(id) {
+    try { await refreshPerson(id); }
+    catch (e) { toast("লোড হয়নি: " + translateError(e.message), "error"); return; }
+    renderPerson(id);
+    show("viewPerson");
+}
 
 /* ---------------- হোয়াটসঅ্যাপ ---------------- */
 function openWhatsApp(waNumber, message) {
@@ -139,7 +191,7 @@ function openWhatsApp(waNumber, message) {
     window.open(url, "_blank");
 }
 
-/* ---------------- লোগো ---------------- */
+/* ---------------- লোগো (লোকাল) ---------------- */
 const DEFAULT_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
@@ -154,7 +206,7 @@ const DEFAULT_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent(
 </svg>`);
 function renderLogo() {
     const img = document.getElementById("brandLogo");
-    img.src = (db.settings && db.settings.logo) || DEFAULT_LOGO;
+    img.src = local.logo || DEFAULT_LOGO;
     img.onclick = changeLogo;
 }
 function changeLogo() {
@@ -173,8 +225,8 @@ function changeLogo() {
                 const scale = Math.max(size / image.width, size / image.height);
                 const w = image.width * scale, h = image.height * scale;
                 ctx.drawImage(image, (size - w) / 2, (size - h) / 2, w, h);
-                db.settings.logo = c.toDataURL("image/jpeg", 0.9);
-                save(); renderLogo(); toast("লোগো বদলানো হয়েছে", "success");
+                local.logo = c.toDataURL("image/jpeg", 0.9);
+                saveLocal(); renderLogo(); toast("লোগো বদলানো হয়েছে", "success");
             };
             image.src = reader.result;
         };
@@ -323,7 +375,7 @@ function renderDashboard() {
           ${avatarHTML(p, "avatar-sm")}
           <div style="flex:1;min-width:0">
             <h3>${esc(p.name)}${pendingBadge}</h3>
-            <div class="num">${esc(p.bKashNumber)}</div>
+            <div class="num">${esc(p.bkashNumber)}</div>
           </div>
         </div>
         <div class="balance" style="margin-top:16px">${money(s.balance)}</div>
@@ -340,8 +392,7 @@ function renderPerson(id) {
     if (!p) { showDashboard(); return; }
     const s = summarize(p);
     const txns = [...(p.transactions || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const pendings = (p.pendingRequests || []).filter(r => r.status === "pending")
-        .sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+    const pendings = getPending(p.id).slice().sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
 
     const warnings = [];
     if (s.remDaily < 0) warnings.push("আজকের সীমা শেষ হয়ে গেছে।");
@@ -387,7 +438,7 @@ function renderPerson(id) {
           ${avatarHTML(p, "avatar-lg")}
           <div>
             <h2 style="margin:0 0 4px;display:block">${esc(p.name)}</h2>
-            <div style="color:var(--muted);font-size:15px">বিকাশ: ${esc(p.bKashNumber)}</div>
+            <div style="color:var(--muted);font-size:15px">বিকাশ: ${esc(p.bkashNumber)}</div>
             ${p.whatsappNumber ? `<div style="color:var(--muted);font-size:14px">হোয়াটসঅ্যাপ: ${esc(p.whatsappNumber)}</div>` : ""}
           </div>
         </div>
@@ -519,8 +570,8 @@ function localNow() {
 function openWaModal(personId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
-    const defaultDest = p.bKashNumber;
-    const defaultWa = p.whatsappNumber ? normalizeWa(p.whatsappNumber) : "88" + p.bKashNumber;
+    const defaultDest = p.bkashNumber;
+    const defaultWa = p.whatsappNumber ? normalizeWa(p.whatsappNumber) : "88" + p.bkashNumber;
 
     const html = `
     <div class="modal-bg" onclick="if(event.target===this)closeModal()">
@@ -591,13 +642,10 @@ function sendWaMessage(personId) {
         `আইডি: \n\n` +
         `জাযাকাল্লাহ।`;
 
-    p.pendingRequests = p.pendingRequests || [];
-    p.pendingRequests.push({
+    addPending(personId, {
         id: uid(), amount, destNumber: dest, waNumber,
         sentAt: new Date().toISOString(), status: "pending"
     });
-    if (!p.whatsappNumber) p.whatsappNumber = waNumber;
-    save();
     openWhatsApp(waNumber, msg);
     toast("হোয়াটসঅ্যাপ খোলা হয়েছে", "success");
     closeModal();
@@ -607,7 +655,7 @@ function sendWaMessage(personId) {
 async function markAsSent(personId, requestId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
-    const req = (p.pendingRequests || []).find(r => r.id === requestId);
+    const req = getPending(personId).find(r => r.id === requestId);
     if (!req) return;
 
     const result = await showModal({
@@ -623,63 +671,52 @@ async function markAsSent(personId, requestId) {
     });
     if (!result) return;
 
-    let trxId = "";
+    let trxId = null;
     const rawTrx = (result.trxId || "").trim();
     if (rawTrx) {
         const v = validateTrxId(rawTrx);
         if (!v.ok) { toast("আইডি ঠিক নয়: " + v.reason, "error"); return; }
-        if (trxIdExists(personId, v.clean)) {
-            const still = await confirmModal({
-                title: "⚠️ এই আইডি আগে ব্যবহার হয়েছে",
-                description: `আইডি <b>${v.clean}</b> আগেই লেখা আছে। তবুও যোগ করবেন?`,
-                submitLabel: "হ্যাঁ, যোগ করুন"
-            });
-            if (!still) return;
-        }
         trxId = v.clean;
     }
 
-    const before = summarize(p);
-    if (req.amount > before.remDaily) { toast("আজকের সীমা পার হয়ে যাবে", "error"); return; }
-    if (req.amount > before.remMonthly) { toast("এই মাসের সীমা পার হয়ে যাবে", "error"); return; }
-
-    p.transactions.push({
-        id: uid(),
-        type: "send",
-        amount: Number(req.amount),
-        date: new Date().toISOString(),
-        counterparty: req.waNumber,
-        trxId: trxId || null,
-        verified: !!trxId,
-        notes: trxId ? "" : "হোয়াটসঅ্যাপে চাওয়া (আইডি এখনো নেই)"
-    });
-    req.status = "sent";
-    req.completedAt = new Date().toISOString();
-    req.trxId = trxId || null;
-    save();
-    toast(trxId ? "যোগ হয়েছে ✔" : "যোগ হয়েছে (আইডি নেই)", "success");
-    renderPerson(personId);
+    try {
+        await api(`/api/people/${personId}/transactions`, {
+            method: "POST",
+            body: {
+                type: "send",
+                amount: Number(req.amount),
+                date: new Date().toISOString(),
+                counterparty: req.waNumber,
+                trxId,
+                notes: trxId ? "" : "হোয়াটসঅ্যাপে চাওয়া (আইডি এখনো নেই)"
+            }
+        });
+        removePending(personId, requestId);
+        await refreshPerson(personId);
+        toast(trxId ? "যোগ হয়েছে ✔" : "যোগ হয়েছে (আইডি নেই)", "success");
+        renderPerson(personId);
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
 }
 
-async function cancelPending(personId, requestId) {
-    const ok = await confirmModal({
+function cancelPending(personId, requestId) {
+    confirmModal({
         title: "বাতিল করবেন?",
         description: "এই অনুরোধটি বাতিল হয়ে যাবে।",
         submitLabel: "হ্যাঁ, বাতিল"
+    }).then(ok => {
+        if (!ok) return;
+        removePending(personId, requestId);
+        toast("বাতিল হয়েছে");
+        renderPerson(personId);
     });
-    if (!ok) return;
-    const p = db.people.find(x => x.id === personId);
-    if (!p) return;
-    p.pendingRequests = (p.pendingRequests || []).filter(r => r.id !== requestId);
-    save();
-    toast("বাতিল হয়েছে");
-    renderPerson(personId);
 }
 
 async function addTrxId(personId, txnId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
-    const t = p.transactions.find(x => x.id === txnId);
+    const t = (p.transactions || []).find(x => x.id === txnId);
     if (!t) return;
 
     const result = await showModal({
@@ -694,63 +731,64 @@ async function addTrxId(personId, txnId) {
     if (!result) return;
 
     const raw = (result.trxId || "").trim();
-    if (!raw) {
-        t.trxId = null; t.verified = false;
-        t.notes = "হোয়াটসঅ্যাপে চাওয়া (আইডি এখনো নেই)";
-        save(); toast("আইডি মুছে ফেলা হয়েছে");
-        renderPerson(personId);
-        return;
+    let cleanTrx = null;
+    if (raw) {
+        const v = validateTrxId(raw);
+        if (!v.ok) { toast("আইডি ঠিক নয়: " + v.reason, "error"); return; }
+        cleanTrx = v.clean;
     }
-    const v = validateTrxId(raw);
-    if (!v.ok) { toast("আইডি ঠিক নয়: " + v.reason, "error"); return; }
-    if (trxIdExists(personId, v.clean, txnId)) {
-        const ok = await confirmModal({
-            title: "⚠️ এই আইডি আগে আছে",
-            description: `আইডি <b>${v.clean}</b> আগেই লেখা আছে। তবুও সংরক্ষণ করবেন?`,
-            submitLabel: "হ্যাঁ"
+
+    try {
+        await api("/api/transactions/" + txnId, { method: "DELETE" });
+        await api(`/api/people/${personId}/transactions`, {
+            method: "POST",
+            body: {
+                type: t.type,
+                amount: Number(t.amount),
+                date: t.date,
+                counterparty: t.counterparty || null,
+                trxId: cleanTrx,
+                notes: cleanTrx ? (t.notes || null) : "হোয়াটসঅ্যাপে চাওয়া (আইডি এখনো নেই)"
+            }
         });
-        if (!ok) return;
+        await refreshPerson(personId);
+        toast(cleanTrx ? "আইডি সংরক্ষণ হয়েছে ✔" : "আইডি মুছে ফেলা হয়েছে", "success");
+        renderPerson(personId);
+    } catch (err) {
+        toast(translateError(err.message), "error");
     }
-    t.trxId = v.clean; t.verified = true;
-    if (!t.notes || t.notes.startsWith("হোয়াটসঅ্যাপ")) t.notes = "";
-    save(); toast("আইডি সংরক্ষণ হয়েছে ✔", "success");
-    renderPerson(personId);
 }
 
 /* ---------------- মূল কাজগুলো ---------------- */
-function submitPerson(e) {
+async function submitPerson(e) {
     e.preventDefault();
     const f = new FormData(e.target);
     const num = k => Number(f.get(k)) || 0;
-    const now = new Date();
 
-    const person = {
-        id: uid(),
-        name: f.get("name").trim(),
-        bKashNumber: f.get("bKashNumber").trim(),
-        whatsappNumber: normalizeWa(f.get("whatsappNumber")) || "",
-        photo: pendingPhotoDataUrl || null,
-        initialBalance: num("initialBalance"),
-        dailyUsedBase: num("dailyUsedBase"),
-        monthlyUsedBase: num("monthlyUsedBase"),
-        baseDayKey: dayKey(now),
-        baseMonthKey: monthKey(now),
-        transactions: [],
-        pendingRequests: [],
-        createdAt: now.toISOString()
-    };
-    db.people.unshift(person);
-    save();
-    e.target.reset();
-    resetPhotoPicker();
-    toast("যোগ হয়েছে ✔", "success");
-    showDashboard();
+    try {
+        await api("/api/people", {
+            method: "POST",
+            body: {
+                name: f.get("name").trim(),
+                bkashNumber: f.get("bkashNumber").trim(),
+                whatsappNumber: normalizeWa(f.get("whatsappNumber")) || null,
+                photo: pendingPhotoDataUrl || null,
+                initialBalance: num("initialBalance"),
+                dailyUsedBase: num("dailyUsedBase"),
+                monthlyUsedBase: num("monthlyUsedBase")
+            }
+        });
+        e.target.reset();
+        resetPhotoPicker();
+        toast("যোগ হয়েছে ✔", "success");
+        await showDashboard();
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
 }
 
-function submitTransaction(e, personId) {
+async function submitTransaction(e, personId) {
     e.preventDefault();
-    const p = db.people.find(x => x.id === personId);
-    if (!p) return;
     const f = new FormData(e.target);
     const type = f.get("type");
     const amount = Number(f.get("amount"));
@@ -759,33 +797,32 @@ function submitTransaction(e, personId) {
     const dateVal = f.get("date");
     const date = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
 
-    let trxId = "";
+    let trxId = null;
     const rawTrx = (f.get("trxId") || "").trim();
     if (rawTrx) {
         const v = validateTrxId(rawTrx);
         if (!v.ok) { toast("আইডি ঠিক নয়: " + v.reason, "error"); return; }
-        if (trxIdExists(personId, v.clean)) {
-            if (!confirm(`আইডি ${v.clean} আগেই লেখা আছে। তবুও যোগ করবেন?`)) return;
-        }
         trxId = v.clean;
     }
 
-    if (type === "send") {
-        const before = summarize(p);
-        if (amount > before.remDaily) { toast("আজকের সীমা পার হয়ে যাবে", "error"); return; }
-        if (amount > before.remMonthly) { toast("এই মাসের সীমা পার হয়ে যাবে", "error"); return; }
+    try {
+        await api(`/api/people/${personId}/transactions`, {
+            method: "POST",
+            body: {
+                type,
+                amount,
+                date,
+                counterparty: (f.get("counterparty") || "").trim() || null,
+                trxId,
+                notes: (f.get("notes") || "").trim() || null
+            }
+        });
+        await refreshPerson(personId);
+        toast("যোগ হয়েছে ✔", "success");
+        renderPerson(personId);
+    } catch (err) {
+        toast(translateError(err.message), "error");
     }
-
-    p.transactions.push({
-        id: uid(), type, amount, date,
-        counterparty: (f.get("counterparty") || "").trim(),
-        trxId: trxId || null,
-        verified: !!trxId,
-        notes: (f.get("notes") || "").trim()
-    });
-    save();
-    toast("যোগ হয়েছে ✔", "success");
-    renderPerson(personId);
 }
 
 async function deleteTxn(personId, txnId) {
@@ -795,10 +832,14 @@ async function deleteTxn(personId, txnId) {
         submitLabel: "হ্যাঁ, মুছুন"
     });
     if (!ok) return;
-    const p = db.people.find(x => x.id === personId);
-    p.transactions = p.transactions.filter(t => t.id !== txnId);
-    save(); toast("মুছে ফেলা হয়েছে");
-    renderPerson(personId);
+    try {
+        await api("/api/transactions/" + txnId, { method: "DELETE" });
+        await refreshPerson(personId);
+        toast("মুছে ফেলা হয়েছে");
+        renderPerson(personId);
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
 }
 
 async function deletePerson(id) {
@@ -809,15 +850,20 @@ async function deletePerson(id) {
         submitLabel: "হ্যাঁ, মুছুন"
     });
     if (!ok) return;
-    db.people = db.people.filter(x => x.id !== id);
-    save(); toast("মুছে ফেলা হয়েছে");
-    showDashboard();
+    try {
+        await api("/api/people/" + id, { method: "DELETE" });
+        delete local.pending[id];
+        saveLocal();
+        toast("মুছে ফেলা হয়েছে");
+        await showDashboard();
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
 }
 
 async function editUsed(id) {
     const p = db.people.find(x => x.id === id);
     if (!p) return;
-    const now = new Date();
 
     const result = await showModal({
         title: "খরচ ঠিক করুন",
@@ -834,12 +880,18 @@ async function editUsed(id) {
     if (isNaN(du) || du < 0 || isNaN(mu) || mu < 0) {
         toast("সঠিক সংখ্যা লিখুন", "error"); return;
     }
-    p.dailyUsedBase = du;
-    p.monthlyUsedBase = mu;
-    p.baseDayKey = dayKey(now);
-    p.baseMonthKey = monthKey(now);
-    save(); toast("সংরক্ষণ হয়েছে ✔", "success");
-    renderPerson(id);
+
+    try {
+        await api("/api/people/" + id, {
+            method: "PATCH",
+            body: { dailyUsedBase: du, monthlyUsedBase: mu }
+        });
+        await refreshPerson(id);
+        toast("সংরক্ষণ হয়েছে ✔", "success");
+        renderPerson(id);
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
 }
 
 function changePersonPhoto(id) {
@@ -852,7 +904,7 @@ function changePersonPhoto(id) {
         const reader = new FileReader();
         reader.onload = () => {
             const img = new Image();
-            img.onload = () => {
+            img.onload = async () => {
                 const size = 200;
                 const c = document.createElement("canvas");
                 c.width = size; c.height = size;
@@ -860,9 +912,18 @@ function changePersonPhoto(id) {
                 const scale = Math.max(size / img.width, size / img.height);
                 const w = img.width * scale, h = img.height * scale;
                 ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-                p.photo = c.toDataURL("image/jpeg", 0.85);
-                save(); toast("ছবি বদলানো হয়েছে ✔", "success");
-                renderPerson(id);
+                const dataUrl = c.toDataURL("image/jpeg", 0.85);
+                try {
+                    await api("/api/people/" + id, {
+                        method: "PATCH",
+                        body: { photo: dataUrl }
+                    });
+                    await refreshPerson(id);
+                    toast("ছবি বদলানো হয়েছে ✔", "success");
+                    renderPerson(id);
+                } catch (err) {
+                    toast(translateError(err.message), "error");
+                }
             };
             img.src = reader.result;
         };
@@ -872,19 +933,28 @@ function changePersonPhoto(id) {
 }
 
 /* ---------------- এক্সপোর্ট ---------------- */
-function exportCSV() {
+async function exportCSV() {
+    toast("তৈরি হচ্ছে...");
     const rows = [["নাম", "বিকাশ নম্বর", "ধরন", "টাকা", "তারিখ", "আইডি", "যাচাই", "কার সাথে", "নোট"]];
-    db.people.forEach(p => {
-        (p.transactions || []).forEach(t => {
-            rows.push([
-                p.name, p.bKashNumber,
-                t.type === "send" ? "পাঠানো" : "পাওয়া",
-                t.amount, new Date(t.date).toLocaleString("bn-BD"),
-                t.trxId || "", t.verified ? "হ্যাঁ" : "না",
-                t.counterparty || "", t.notes || ""
-            ]);
-        });
-    });
+
+    try {
+        for (const person of db.people) {
+            const full = await api("/api/people/" + person.id);
+            (full.transactions || []).forEach(t => {
+                rows.push([
+                    person.name, person.bkashNumber,
+                    t.type === "send" ? "পাঠানো" : "পাওয়া",
+                    t.amount, new Date(t.date).toLocaleString("bn-BD"),
+                    t.trxId || "", t.verified ? "হ্যাঁ" : "না",
+                    t.counterparty || "", t.notes || ""
+                ]);
+            });
+        }
+    } catch (err) {
+        toast("এক্সপোর্ট ব্যর্থ", "error");
+        return;
+    }
+
     if (rows.length === 1) { toast("এক্সপোর্ট করার মতো কিছু নেই", "error"); return; }
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -898,6 +968,6 @@ function exportCSV() {
 }
 
 /* ---------------- শুরু ---------------- */
-load();
+loadLocal();
 renderLogo();
 showDashboard();
