@@ -26,6 +26,13 @@ const PersonSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    transactions: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Transaction',
+            
+        }
+    ],
     baseDayKey: String,      // "2026-09-28"
     baseMonthKey: String     // "2026-09"
 });

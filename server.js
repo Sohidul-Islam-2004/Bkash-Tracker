@@ -87,14 +87,31 @@ app.get('/api/people', async (req, res) => {
 
 // Get Person By ID
 app.get('/api/people/:id', async (req, res) => {
-    const data = await Person.findById(req.params.id);
+    const data = await Person.findById(req.params.id).populate('transactions');
+
     res.json(data);
+});
+app.delete('/api/people/:id', async (req, res) => {
+    try {
+
+        const deletedPerson = await Person.findByIdAndDelete(req.params.id);
+        const deletionResult = await Transaction.deleteMany({ person: req.params.id });
+
+        console.log('Deleted Person:', deletedPerson);
+        console.log('Transactions Deletion Result:', deletionResult);
+
+        res.status(200).json({ msg: "ok" });
+
+    } catch (error) {
+        console.error('Error during deletion:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 // Create Transaction & Update Balance Ledger
 app.post('/api/transactions/:id', async (req, res) => {
     try {
-        console.log(req.params.id);
+
         const { type, amount, counterparty, date, trxId, notes } = req.body;
 
         const PersonData = await Person.findById(req.params.id);
@@ -112,7 +129,7 @@ app.post('/api/transactions/:id', async (req, res) => {
             };
         }
 
-        await Transaction.create({
+        const cur = await Transaction.create({
             person: req.params.id,
             type,
             amount,
@@ -122,18 +139,25 @@ app.post('/api/transactions/:id', async (req, res) => {
             notes
         });
 
-        await Person.findByIdAndUpdate(
+
+
+        const updatedPerson = await Person.findByIdAndUpdate(
             req.params.id,
-            updateData,
+            {
+                ...updateData,
+                $push: { transactions: cur._id }
+            },
             {
                 new: true,
                 runValidators: true
             }
         );
 
+
+
         res.end();
     } catch (error) {
-        console.log(error);
+
         res.json({ msg: error });
     }
 });

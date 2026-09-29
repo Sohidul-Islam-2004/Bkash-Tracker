@@ -47,7 +47,7 @@ async function refreshPerson(id) {
     if (idx >= 0) db.people[idx] = { ...db.people[idx], ...np };
 
     else db.people.push(np);
-    console.log(db.people[idx]);
+
     return np;
 }
 
@@ -142,6 +142,7 @@ function summarize(p) {
     let balance = Number(p.initialBalance || 0);
 
     const txns = p.transactions || [];
+    console.log(p.transactions);
     for (const t of txns) {
         const amt = Number(t.amount || 0);
         const dt = new Date(t.date);
@@ -350,7 +351,7 @@ function renderDashboard() {
     grid.innerHTML = db.people.map((p, i) => {
         const s = summarize(p);
 
-        console.log(s);
+
         const dailyPct = Math.max(0, Math.min(100, (s.remDaily / DAILY_LIMIT) * 100));
         const barColor = s.status === "red"
             ? "linear-gradient(90deg, #f87171, #dc2626)"
