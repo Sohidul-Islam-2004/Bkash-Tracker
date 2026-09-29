@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const PersonSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     bkashNumber: {
         type: String,
@@ -11,13 +12,14 @@ const PersonSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
-    whatsappNumber: String,
+    whatsappNumber: { type: String, trim: true },
     photo: String,
+
     initialBalance: {
         type: Number,
         default: 0
     },
-    // "Already used" amounts — only counted if the key matches today/this month
+
     dailyUsedBase: {
         type: Number,
         default: 0
@@ -26,31 +28,33 @@ const PersonSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    baseDayKey: String,      // "2026-09-30"
+    baseMonthKey: String,    // "2026-09"
+
     transactions: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Transaction',
-            
+            ref: "Transaction"
         }
-    ],
-    baseDayKey: String,      // "2026-09-28"
-    baseMonthKey: String     // "2026-09"
-});
+    ]
+}, { timestamps: true });
 
 const TransactionSchema = new mongoose.Schema({
     person: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Person',
-        required: true
+        ref: "Person",
+        required: true,
+        index: true
     },
     type: {
         type: String,
-        enum: ['send', 'receive'],
+        enum: ["send", "receive"],
         required: true
     },
     amount: {
         type: Number,
-        required: true
+        required: true,
+        min: 1
     },
     date: {
         type: Date,
