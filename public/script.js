@@ -45,7 +45,9 @@ async function refreshPerson(id) {
     const np = normalizePerson(p);
     const idx = db.people.findIndex(x => x.id === id);
     if (idx >= 0) db.people[idx] = { ...db.people[idx], ...np };
+
     else db.people.push(np);
+    console.log(db.people[idx]);
     return np;
 }
 
@@ -133,8 +135,7 @@ function summarize(p) {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const tKey = dayKey(now);
-    const mKey = monthKey(now);
+
 
     let dailyUsed = 0;
     let monthlyUsed = 0;
@@ -154,8 +155,8 @@ function summarize(p) {
     }
 
     // "already used" base — শুধু যদি আজ / এই মাসে সেট করা হয়
-    if (p.baseDayKey === tKey) dailyUsed += Number(p.dailyUsedBase || 0);
-    if (p.baseMonthKey === mKey) monthlyUsed += Number(p.monthlyUsedBase || 0);
+   dailyUsed += Number(p.dailyUsedBase || 0);
+   monthlyUsed += Number(p.monthlyUsedBase || 0);
 
     const remDaily = DAILY_LIMIT - dailyUsed;
     const remMonthly = MONTHLY_LIMIT - monthlyUsed;
@@ -348,6 +349,8 @@ function renderDashboard() {
     }
     grid.innerHTML = db.people.map((p, i) => {
         const s = summarize(p);
+    
+        console.log(s);
         const dailyPct = Math.max(0, Math.min(100, (s.remDaily / DAILY_LIMIT) * 100));
         const barColor = s.status === "red"
             ? "linear-gradient(90deg, #f87171, #dc2626)"
@@ -687,7 +690,7 @@ async function submitTransaction(e, personId) {
     }
 
     try {
-        await api(`/api/people/${personId}/transactions`, {
+        await api(`/api/transactions/${personId}`, {
             method: "POST",
             body: {
                 type,

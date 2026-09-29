@@ -56,7 +56,7 @@ const TransactionSchema = new mongoose.Schema({
         default: false
     },
     notes: String
-}, { timestamps: true });
+});
 
 module.exports = {
     PersonSchema,
