@@ -513,6 +513,15 @@ function renderPerson(id) {
   `;
 }
 
+
+
+/* ---------------- হোয়াটসঅ্যাপ ---------------- */
+function openWhatsApp(waNumber, message) {
+    const num = normalizeWa(waNumber);
+    const text = encodeURIComponent(message);
+    window.open(`https://wa.me/${num}?text=${text}`, "_blank");
+}
+
 /* ---------------- টাকা চাওয়ার মডাল ---------------- */
 function openWaModal(personId) {
     const p = db.people.find(x => x.id === personId);
@@ -567,6 +576,7 @@ function openWaModal(personId) {
     update();
     setTimeout(() => document.getElementById("waAmount").focus(), 60);
 }
+
 function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 
 function sendWaMessage(personId) {
@@ -592,6 +602,8 @@ function sendWaMessage(personId) {
     toast("হোয়াটসঅ্যাপ খোলা হয়েছে", "success");
     closeModal();
 }
+
+
 
 /* ---------------- TrxID ঠিক করা ---------------- */
 async function addTrxId(personId, txnId) {
@@ -712,6 +724,7 @@ async function submitTransaction(e, personId) {
 
 /* ---------------- delete ---------------- */
 async function deleteTxn(personId, txnId) {
+    console.log(personId, txnId);
     const ok = await confirmModal({
         title: "মুছে ফেলবেন?",
         description: "এই লেনদেনটি চিরতরে মুছে যাবে।",
