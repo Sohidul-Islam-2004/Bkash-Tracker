@@ -155,8 +155,8 @@ function summarize(p) {
     }
 
     // "already used" base — শুধু যদি আজ / এই মাসে সেট করা হয়
-   dailyUsed += Number(p.dailyUsedBase || 0);
-   monthlyUsed += Number(p.monthlyUsedBase || 0);
+    dailyUsed += Number(p.dailyUsedBase || 0);
+    monthlyUsed += Number(p.monthlyUsedBase || 0);
 
     const remDaily = DAILY_LIMIT - dailyUsed;
     const remMonthly = MONTHLY_LIMIT - monthlyUsed;
@@ -349,7 +349,7 @@ function renderDashboard() {
     }
     grid.innerHTML = db.people.map((p, i) => {
         const s = summarize(p);
-    
+
         console.log(s);
         const dailyPct = Math.max(0, Math.min(100, (s.remDaily / DAILY_LIMIT) * 100));
         const barColor = s.status === "red"
@@ -430,8 +430,8 @@ function renderPerson(id) {
           <div class="field">
             <label>কী হয়েছে?</label>
             <select name="type" required>
-              <option value="send">টাকা পাঠানো হয়েছে</option>
-              <option value="receive">টাকা পাওয়া গেছে</option>
+              <option value="send">সেন্ড মানি</option>
+              <option value="receive">রিসিভ মানি</option>
             </select>
           </div>
           <div class="field">
