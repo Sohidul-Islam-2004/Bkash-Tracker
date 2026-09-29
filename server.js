@@ -70,6 +70,23 @@ async function uploadPhoto(file) {
     return data.publicUrl;
 }
 
+// Delete a photo from Supabase using its public URL.
+// Never throws: a failed cleanup should not break the request.
+async function deletePhoto(url) {
+    if (!url) return;
+    try {
+        const marker = `/object/public/${BUCKET}/`;
+        const i = url.indexOf(marker);
+        if (i === -1) return;
+
+        const storagePath = decodeURIComponent(url.slice(i + marker.length));
+        const { error } = await supabase.storage.from(BUCKET).remove([storagePath]);
+        if (error) console.error('photo delete failed:', error.message);
+    } catch (err) {
+        console.error('photo delete failed:', err.message);
+    }
+}
+
 // ================= PEOPLE =================
 
 // Create person
@@ -127,7 +144,12 @@ app.patch('/api/people/:id', upload.single('photo'), wrap(async (req, res) => {
     if (b.monthlyUsedBase !== undefined) update.monthlyUsedBase = toNumber(b.monthlyUsedBase);
     if (b.baseDayKey !== undefined) update.baseDayKey = b.baseDayKey;
     if (b.baseMonthKey !== undefined) update.baseMonthKey = b.baseMonthKey;
-    if (req.file) update.photo = await uploadPhoto(req.file);
+    let oldPhoto = null;
+    if (req.file) {
+        const existing = await Person.findById(req.params.id).select('photo');
+        oldPhoto = existing && existing.photo;
+        update.photo = await uploadPhoto(req.file);
+    }
 
     const person = await Person.findByIdAndUpdate(req.params.id, update, {
         new: true,
@@ -135,6 +157,8 @@ app.patch('/api/people/:id', upload.single('photo'), wrap(async (req, res) => {
     }).populate('transactions');
 
     if (!person) throw new HttpError(404, 'Person not found');
+
+    if (req.file) await deletePhoto(oldPhoto);
     res.json(person);
 }));
 
@@ -146,6 +170,7 @@ app.delete('/api/people/:id', wrap(async (req, res) => {
     if (!person) throw new HttpError(404, 'Person not found');
 
     await Transaction.deleteMany({ person: req.params.id });
+    await deletePhoto(person.photo);
     res.json({ msg: 'ok' });
 }));
 
