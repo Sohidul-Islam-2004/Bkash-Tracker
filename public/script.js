@@ -45,14 +45,14 @@ async function refreshPerson(id) {
     const np = normalizePerson(p);
     const idx = db.people.findIndex(x => x.id === id);
     if (idx >= 0) db.people[idx] = { ...db.people[idx], ...np };
-
     else db.people.push(np);
-
     return np;
 }
 
 /* সার্ভারের ইংরেজি এরর → বাংলা */
 function translateError(msg) {
+    if (!msg) return "অজানা সমস্যা";
+    const text = String(msg);
     const map = {
         "exceeds daily limit": "আজকের সীমা পার হয়ে যাবে",
         "exceeds monthly limit": "এই মাসের সীমা পার হয়ে যাবে",
@@ -64,9 +64,9 @@ function translateError(msg) {
         "photo upload failed": "ছবি আপলোড হয়নি"
     };
     for (const k in map) {
-        if (msg.includes(k)) return map[k];
+        if (text.includes(k)) return map[k];
     }
-    return msg;
+    return text;
 }
 
 /* ---------------- helpers ---------------- */
@@ -111,7 +111,7 @@ function localNow() {
 /* ---------------- TrxID যাচাই ---------------- */
 function validateTrxId(trxId) {
     const clean = String(trxId || "").trim().toUpperCase();
-    if (!clean) return { ok: false, reason: "খালি" };
+    if (!clean) return { ok: true, clean: null };
     if (!/^[A-Z0-9]{8,12}$/.test(clean)) {
         return { ok: false, reason: "আইডি ৮ থেকে ১২ অক্ষরের হতে হবে" };
     }
@@ -128,21 +128,20 @@ function trxIdExists(personId, trxId, ignoreTxnId) {
 }
 
 /* ======================================================
-   হিসাব — ফ্রন্টএন্ডে হিসাব করা হয়
-   কারণ সার্ভার এখনো balance/remDaily পাঠায় না
+   হিসাব
    ====================================================== */
 function summarize(p) {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
+    const tKey = dayKey(now);
+    const mKey = monthKey(now);
 
     let dailyUsed = 0;
     let monthlyUsed = 0;
     let balance = Number(p.initialBalance || 0);
 
     const txns = p.transactions || [];
-    console.log(p.transactions);
     for (const t of txns) {
         const amt = Number(t.amount || 0);
         const dt = new Date(t.date);
@@ -155,9 +154,8 @@ function summarize(p) {
         }
     }
 
-    // "already used" base — শুধু যদি আজ / এই মাসে সেট করা হয়
-    dailyUsed += Number(p.dailyUsedBase || 0);
-    monthlyUsed += Number(p.monthlyUsedBase || 0);
+    if (p.baseDayKey === tKey) dailyUsed += Number(p.dailyUsedBase || 0);
+    if (p.baseMonthKey === mKey) monthlyUsed += Number(p.monthlyUsedBase || 0);
 
     const remDaily = DAILY_LIMIT - dailyUsed;
     const remMonthly = MONTHLY_LIMIT - monthlyUsed;
@@ -197,15 +195,26 @@ async function showPerson(id) {
     show("viewPerson");
 }
 
+/* ---------------- অডিও সাহায্য ---------------- */
+function playAudioHelp() {
+    const text = "নতুন মানুষ যোগ করতে নিচের প্লাস বাটনে চাপুন। কারো হিসাব দেখতে কার্ডে চাপুন।";
+    if (!("speechSynthesis" in window)) {
+        toast("এই ব্রাউজারে ভয়েস চলে না", "error");
+        return;
+    }
+    speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "bn-BD";
+    utter.rate = 0.9;
+    speechSynthesis.speak(utter);
+    toast("শুনুন...", "success");
+}
+
 /* ---------------- হোয়াটসঅ্যাপ ---------------- */
 function openWhatsApp(waNumber, message) {
     const num = normalizeWa(waNumber);
     const text = encodeURIComponent(message);
-    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(navigator.userAgent);
-    const url = isMobile
-        ? `whatsapp://send?phone=${num}&text=${text}`
-        : `https://web.whatsapp.com/send?phone=${num}&text=${text}`;
-    window.open(url, "_blank");
+    window.open(`https://wa.me/${num}?text=${text}`, "_blank");
 }
 
 /* ---------------- লোগো ---------------- */
@@ -213,11 +222,11 @@ const DEFAULT_LOGO = "data:image/svg+xml;utf8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff4a95"/>
-      <stop offset="1" stop-color="#b30f58"/>
+      <stop offset="0" stop-color="#ff4a7d"/>
+      <stop offset="1" stop-color="#a51845"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#g)"/>
+  <rect width="64" height="64" rx="18" fill="url(#g)"/>
   <text x="32" y="44" font-family="Arial,sans-serif" font-size="32"
         font-weight="700" fill="#fff" text-anchor="middle">৳</text>
 </svg>`);
@@ -333,80 +342,91 @@ function confirmModal({ title, description, submitLabel = "হ্যাঁ", can
     });
 }
 
-/* ---------------- মূল পাতা ---------------- */
+/* ======================================================
+   মূল পাতা — বড় কার্ড
+   ====================================================== */
 function renderDashboard() {
     const grid = document.getElementById("peopleGrid");
+    const sb = document.getElementById("searchBar");
+    if (sb) sb.classList.toggle("solo", db.people.length === 0);
     if (db.people.length === 0) {
         grid.innerHTML = `
       <div class="empty" style="grid-column:1/-1">
         <div class="icon">📋</div>
         <h3>এখনো কেউ যোগ করা হয়নি</h3>
-        <p>হিসাব শুরু করতে নিচের বাটনে চাপ দিন।</p>
-        <button class="btn btn-primary" style="margin-top:8px" onclick="showAddPerson()">
-          ➕ প্রথম মানুষ যোগ করুন
-        </button>
+        <p>হিসাব শুরু করতে উপরের "যোগ" বাটনে চাপ দিন।</p>
       </div>`;
         return;
     }
-    grid.innerHTML = db.people.map((p, i) => {
+    const bar = (rem, limit) => {
+        const used = Math.max(0, Math.min(100, ((limit - rem) / limit) * 100));
+        const color = rem <= 0 ? "#b3122f" : used >= 70 ? "#f59e0b" : "#16a34a";
+        return `<div class="bar"><span style="width:${used}%;background:${color}"></span></div>`;
+    };
+    const box = document.getElementById("searchBox");
+    const q = box ? box.value.trim().toLowerCase() : "";
+    const list = q ? db.people.filter(p => (p.name || "").toLowerCase().includes(q) || (p.bkashNumber || "").includes(q)) : db.people;
+    if (list.length === 0) {
+        grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="icon">🔍</div><h3>কাউকে পাওয়া যায়নি</h3><p>অন্য নাম বা নম্বর লিখে দেখুন।</p></div>`;
+        return;
+    }
+    grid.innerHTML = list.map((p, i) => {
         const s = summarize(p);
-
-
-        const dailyPct = Math.max(0, Math.min(100, (s.remDaily / DAILY_LIMIT) * 100));
-        const barColor = s.status === "red"
-            ? "linear-gradient(90deg, #f87171, #dc2626)"
-            : s.status === "yellow"
-                ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
-                : "linear-gradient(90deg, #34d399, #0ea472)";
         return `
-      <div class="card ${s.status}" onclick="showPerson('${p.id}')" style="animation-delay:${i * 40}ms">
-        <div style="display:flex;align-items:center;gap:14px">
+      <div class="person" onclick="showPerson('${p.id}')" style="animation-delay:${Math.min(i, 8) * 40}ms">
+        <div class="p-top">
           ${avatarHTML(p, "avatar-sm")}
-          <div style="flex:1;min-width:0">
+          <div class="p-name">
             <h3>${esc(p.name)}</h3>
             <div class="num">${esc(p.bkashNumber)}</div>
           </div>
+          <div class="p-bal">${money(s.balance)}</div>
         </div>
-        <div class="balance" style="margin-top:16px">${money(s.balance)}</div>
-        <div class="limit-row"><span>আজ বাকি আছে</span><b>${money(s.remDaily)}</b></div>
-        <div class="bar"><span style="width:${dailyPct}%;background:${barColor}"></span></div>
-        <div class="limit-row" style="margin-top:12px"><span>এই মাসে বাকি আছে</span><b>${money(s.remMonthly)}</b></div>
+        <div class="p-limits">
+          <div>
+            <div class="limit-row"><span>আজ বাকি</span><b class="${s.remDaily <= 0 ? "over" : ""}">${money(s.remDaily)}</b></div>
+            ${bar(s.remDaily, DAILY_LIMIT)}
+          </div>
+          <div>
+            <div class="limit-row"><span>মাসে বাকি</span><b class="${s.remMonthly <= 0 ? "over" : ""}">${money(s.remMonthly)}</b></div>
+            ${bar(s.remMonthly, MONTHLY_LIMIT)}
+          </div>
+        </div>
       </div>`;
     }).join("");
 }
 
-/* ---------------- মানুষের বিবরণ ---------------- */
-function renderPerson(id) {
+/* ======================================================
+   মানুষের বিবরণ
+   ====================================================== */
+var historyOpen = false;
+function renderPerson(id, all) {
     const p = db.people.find(x => x.id === id);
     if (!p) { showDashboard(); return; }
     const s = summarize(p);
     const txns = [...(p.transactions || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+    const visible = all ? txns : txns.slice(0, 10);
     const warnings = [];
     if (s.remDaily < 0) warnings.push("আজকের সীমা শেষ হয়ে গেছে।");
     if (s.remMonthly < 0) warnings.push("এই মাসের সীমা শেষ হয়ে গেছে।");
 
     document.getElementById("personDetail").innerHTML = `
+
+    <!-- ============ HEADER CARD ============ -->
     <div class="panel">
-      <div class="toolbar" style="align-items:flex-start">
-        <div style="display:flex;align-items:center;gap:16px">
-          ${avatarHTML(p, "avatar-lg")}
-          <div>
-            <h2 style="margin:0 0 4px;display:block">${esc(p.name)}</h2>
-            <div style="color:var(--muted);font-size:15px">বিকাশ: ${esc(p.bkashNumber)}</div>
-            ${p.whatsappNumber ? `<div style="color:var(--muted);font-size:14px">হোয়াটসঅ্যাপ: ${esc(p.whatsappNumber)}</div>` : ""}
-          </div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px">
+        ${avatarHTML(p, "avatar-lg")}
+        <div style="flex:1;min-width:0">
+          <h2 style="margin:0 0 4px;display:block;font-size:22px">${esc(p.name)}</h2>
+          <div style="color:var(--muted);font-size:15px">বিকাশ: ${esc(p.bkashNumber)}</div>
+          ${p.whatsappNumber ? `<div style="color:var(--muted);font-size:13.5px">হোয়াটসঅ্যাপ: ${esc(p.whatsappNumber)}</div>` : ""}
         </div>
-        <div class="spacer"></div>
-        <button class="btn btn-wa btn-sm" onclick="openWaModal('${p.id}')">📱 টাকা চান</button>
-        <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">📷 ছবি</button>
-        <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">✏️ খরচ ঠিক</button>
-        <button class="btn btn-danger btn-sm" onclick="deletePerson('${p.id}')">🗑 মুছুন</button>
       </div>
 
-      ${warnings.length ? `<div class="warn" style="margin-top:20px"><span style="font-size:20px">⚠️</span><div>${warnings.join(" ")}</div></div>` : ""}
+      ${warnings.length ? `<div class="warn" style="margin-top:16px"><span style="font-size:20px">⚠️</span><div>${warnings.join(" ")}</div></div>` : ""}
 
-      <div class="stats" style="margin-top:20px">
+      <div class="stats" style="margin-top:18px">
         <div class="stat">
           <div class="lbl">এখনকার টাকা</div>
           <div class="val">${money(s.balance)}</div>
@@ -422,10 +442,18 @@ function renderPerson(id) {
           <div class="sub">খরচ ${money(s.monthlyUsed)} / ${money(MONTHLY_LIMIT)}</div>
         </div>
       </div>
+
+      <div class="toolbar" style="margin-top:18px">
+        <button class="btn btn-wa btn-sm" onclick="openWaModal('${p.id}')">📱 টাকা চান</button>
+        <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">📷 ছবি</button>
+        <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">✏️ খরচ ঠিক</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePerson('${p.id}')">🗑 মুছুন</button>
+      </div>
     </div>
 
-    <div class="panel">
-      <h2>➕ নতুন লেনদেন</h2>
+    <!-- ============ ADD TRANSACTION ============ -->
+    <details class="panel fold">
+      <summary>➕ নতুন লেনদেন</summary>
       <form onsubmit="submitTransaction(event, '${p.id}')">
         <div class="row">
           <div class="field">
@@ -457,12 +485,14 @@ function renderPerson(id) {
           <label>নোট (না দিলেও চলবে)</label>
           <input name="notes" placeholder="মনে রাখার মতো কিছু" />
         </div>
-        <button class="btn btn-primary btn-block" type="submit">✔ যোগ করুন</button>
+        <button class="btn btn-primary btn-block btn-xl" type="submit">✔ যোগ করুন</button>
       </form>
-    </div>
+    </details>
 
-    <div class="panel">
-      <h2>📜 সব লেনদেন (${txns.length})</h2>
+    <!-- ============ HISTORY ============ -->
+    <details class="panel fold" ${historyOpen || all ? "open" : ""} ontoggle="historyOpen=this.open">
+      <summary>📜 সব লেনদেন (${txns.length})</summary>
+      <div class="fold-body">
       ${txns.length === 0
             ? `<div class="empty" style="padding:40px 20px"><div class="icon">📭</div><p>এখনো কোনো লেনদেন নেই।</p></div>`
             : `
@@ -480,7 +510,7 @@ function renderPerson(id) {
               </tr>
             </thead>
             <tbody>
-              ${txns.map(t => {
+              ${visible.map(t => {
                 const verified = !!(t.verified || (t.trxId && t.trxId.length > 0));
                 const badge = t.type === "send"
                     ? (verified
@@ -508,21 +538,14 @@ function renderPerson(id) {
             }).join("")}
             </tbody>
           </table>
-        </div>`}
-    </div>
+        </div>${txns.length > visible.length ? `<button class="btn btn-light btn-block" style="margin-top:12px" onclick="renderPerson('${p.id}', true)">আরও দেখুন (${txns.length - visible.length})</button>` : ""}`}
+    </div></details>
   `;
 }
 
-
-
-/* ---------------- হোয়াটসঅ্যাপ ---------------- */
-function openWhatsApp(waNumber, message) {
-    const num = normalizeWa(waNumber);
-    const text = encodeURIComponent(message);
-    window.open(`https://wa.me/${num}?text=${text}`, "_blank");
-}
-
-/* ---------------- টাকা চাওয়ার মডাল ---------------- */
+/* ======================================================
+   টাকা চাওয়ার মডাল
+   ====================================================== */
 function openWaModal(personId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
@@ -576,7 +599,6 @@ function openWaModal(personId) {
     update();
     setTimeout(() => document.getElementById("waAmount").focus(), 60);
 }
-
 function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 
 function sendWaMessage(personId) {
@@ -603,9 +625,9 @@ function sendWaMessage(personId) {
     closeModal();
 }
 
-
-
-/* ---------------- TrxID ঠিক করা ---------------- */
+/* ======================================================
+   TrxID ঠিক করা
+   ====================================================== */
 async function addTrxId(personId, txnId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
@@ -652,7 +674,9 @@ async function addTrxId(personId, txnId) {
     }
 }
 
-/* ---------------- submit person ---------------- */
+/* ======================================================
+   submit person
+   ====================================================== */
 async function submitPerson(e) {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -683,7 +707,9 @@ async function submitPerson(e) {
     }
 }
 
-/* ---------------- submit transaction ---------------- */
+/* ======================================================
+   submit transaction
+   ====================================================== */
 async function submitTransaction(e, personId) {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -722,9 +748,10 @@ async function submitTransaction(e, personId) {
     }
 }
 
-/* ---------------- delete ---------------- */
+/* ======================================================
+   delete
+   ====================================================== */
 async function deleteTxn(personId, txnId) {
-    console.log(personId, txnId);
     const ok = await confirmModal({
         title: "মুছে ফেলবেন?",
         description: "এই লেনদেনটি চিরতরে মুছে যাবে।",
@@ -743,6 +770,8 @@ async function deleteTxn(personId, txnId) {
 
 async function deletePerson(id) {
     const p = db.people.find(x => x.id === id);
+    if (!p) return;
+
     const ok = await confirmModal({
         title: `${esc(p.name)} কে মুছবেন?`,
         description: "এই মানুষের সব লেনদেনও মুছে যাবে।",
@@ -758,7 +787,9 @@ async function deletePerson(id) {
     }
 }
 
-/* ---------------- edit used ---------------- */
+/* ======================================================
+   edit used
+   ====================================================== */
 async function editUsed(id) {
     const p = db.people.find(x => x.id === id);
     if (!p) return;
@@ -797,7 +828,9 @@ async function editUsed(id) {
     }
 }
 
-/* ---------------- change photo ---------------- */
+/* ======================================================
+   change photo
+   ====================================================== */
 function changePersonPhoto(id) {
     const input = document.createElement("input");
     input.type = "file"; input.accept = "image/*";
@@ -820,7 +853,9 @@ function changePersonPhoto(id) {
     input.click();
 }
 
-/* ---------------- এক্সপোর্ট ---------------- */
+/* ======================================================
+   এক্সপোর্ট
+   ====================================================== */
 async function exportCSV() {
     toast("তৈরি হচ্ছে...");
     const rows = [["নাম", "বিকাশ নম্বর", "ধরন", "টাকা", "তারিখ", "আইডি", "যাচাই", "কার সাথে", "নোট"]];
@@ -855,6 +890,8 @@ async function exportCSV() {
     toast("ডাউনলোড হয়েছে ✔", "success");
 }
 
-/* ---------------- শুরু ---------------- */
+/* ======================================================
+   শুরু
+   ====================================================== */
 renderLogo();
 showDashboard();

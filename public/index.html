@@ -2,68 +2,94 @@
 <html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#d12053" />
     <title>বিকাশ হিসাব</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <header>
-      <div style="display: flex; align-items: center; gap: 14px">
-        <img id="brandLogo" alt="লোগো" title="লোগো বদলাতে চাপুন" />
-        <div>
+
+    <!-- ============================
+         HEADER
+    ============================= -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <img id="brandLogo" alt="লোগো" />
+        <div class="topbar-titles">
           <h1>বিকাশ হিসাব</h1>
-          <div class="sub">টাকার হিসাব রাখার সহজ অ্যাপ</div>
+          <span class="sub">টাকার হিসাব</span>
         </div>
-      </div>
-      <div class="toolbar">
-        <button class="btn btn-ghost" onclick="exportCSV()">
-          📥 এক্সপোর্ট
-        </button>
       </div>
     </header>
 
-    <div class="container">
-      <section id="viewDashboard">
-        <div class="toolbar" style="margin-bottom: 20px">
-          <button class="btn btn-primary" onclick="showAddPerson()">
-            ➕ নতুন মানুষ যোগ করুন
-          </button>
+    <!-- ============================
+         MAIN
+    ============================= -->
+    <main class="container">
+
+      <!-- ========== DASHBOARD ========== -->
+      <section id="viewDashboard" class="view">
+        <div id="searchBar" class="searchbar">
+          <input id="searchBox" type="search" placeholder="নাম বা নম্বর খুঁজুন" oninput="renderDashboard()" autocomplete="off" />
+          <button class="add-btn" onclick="showAddPerson()" aria-label="নতুন মানুষ যোগ করুন"><i>+</i> যোগ</button>
         </div>
-        <div id="peopleGrid" class="grid cards"></div>
+        <div id="peopleGrid" class="people-grid"></div>
       </section>
 
-      <section id="viewAddPerson" class="hidden">
-        <button class="back" onclick="showDashboard()">← ফিরে যান</button>
-        <div class="panel" style="max-width: 600px">
-          <h2>✨ নতুন মানুষের হিসাব</h2>
+      <!-- ========== ADD PERSON ========== -->
+      <section id="viewAddPerson" class="view hidden">
+        <button class="back" onclick="showDashboard()">
+          <span>←</span> ফিরে যান
+        </button>
+
+        <div class="panel">
+          <h2 class="panel-title">
+            <span class="panel-title-icon">✨</span>
+            নতুন মানুষের হিসাব
+          </h2>
+
           <form onsubmit="submitPerson(event)">
-            <div class="field">
-              <label>ছবি (না দিলেও চলবে)</label>
-              <div class="photo-row">
-                <div id="photoFallback" class="avatar avatar-lg">?</div>
-                <img id="photoPreview" class="avatar avatar-lg hidden" alt="" />
-                <input
-                  name="photo"
-                  type="file"
-                  accept="image/*"
-                  onchange="previewPhoto(event)"
-                />
+
+            <!-- Photo -->
+            <div class="field photo-field">
+              <div class="photo-picker">
+                <div id="photoFallback" class="avatar avatar-xl">?</div>
+                <img id="photoPreview" class="avatar avatar-xl hidden" alt="" />
+                <label class="photo-btn">
+                  📷 ছবি নিন
+                  <input
+                    name="photo"
+                    type="file"
+                    accept="image/*"
+                    onchange="previewPhoto(event)"
+                    hidden
+                  />
+                </label>
               </div>
             </div>
 
+            <!-- Name -->
             <div class="field">
               <label>নাম</label>
-              <input name="name" required placeholder="যেমন: করিম" />
+              <input
+                name="name"
+                type="text"
+                required
+                placeholder="যেমন: করিম"
+                autocomplete="off"
+              />
             </div>
 
+            <!-- bKash number -->
             <div class="field">
               <label>বিকাশ নম্বর</label>
               <input
                 name="bKashNumber"
+                type="tel"
                 required
                 pattern="01[0-9]{9}"
                 placeholder="01XXXXXXXXX"
@@ -72,15 +98,18 @@
               />
             </div>
 
+            <!-- WhatsApp -->
             <div class="field">
-              <label>হোয়াটসঅ্যাপ নম্বর (না দিলেও চলবে)</label>
+              <label>হোয়াটসঅ্যাপ নম্বর <span class="opt">(না দিলেও চলবে)</span></label>
               <input
                 name="whatsappNumber"
+                type="tel"
                 placeholder="8801XXXXXXXXX"
                 inputmode="numeric"
               />
             </div>
 
+            <!-- Balance -->
             <div class="field">
               <label>এখন কত টাকা আছে?</label>
               <input
@@ -92,15 +121,14 @@
               />
             </div>
 
-            <h2
-              style="font-size: 16px; margin: 24px 0 14px; color: var(--muted)"
-            >
+            <!-- Used today / month -->
+            <h3 class="section-label">
               💸 এখন পর্যন্ত কত টাকা পাঠানো হয়েছে?
-            </h2>
+            </h3>
 
             <div class="row">
               <div class="field">
-                <label>আজ পাঠানো হয়েছে</label>
+                <label>আজ</label>
                 <input
                   name="dailyUsedBase"
                   type="number"
@@ -110,7 +138,7 @@
                 />
               </div>
               <div class="field">
-                <label>এই মাসে পাঠানো হয়েছে</label>
+                <label>এই মাসে</label>
                 <input
                   name="monthlyUsedBase"
                   type="number"
@@ -122,33 +150,37 @@
             </div>
 
             <div class="info">
-              <span style="font-size: 20px">💡</span>
+              <span class="info-icon">💡</span>
               <div>
-                আজ কত টাকা পাঠানো হয়েছে আর এই মাসে কত টাকা পাঠানো হয়েছে, সেটা
-                লিখুন। বাকি টাকা অ্যাপ নিজেই হিসাব করে দেখাবে।
-                <br /><br />
-                দিন শেষ হলে আজকের হিসাব, আর মাস শেষ হলে মাসের হিসাব নিজে থেকেই
-                নতুন হবে।
+                আজ ও এই মাসে পাঠানো টাকার পরিমাণ লিখুন।
+                বাকি টাকা অ্যাপ নিজেই হিসাব করে দেখাবে।
               </div>
             </div>
 
-            <button
-              class="btn btn-primary btn-block"
-              type="submit"
-              style="margin-top: 10px"
-            >
+            <button class="btn btn-primary btn-block btn-xl" type="submit">
               ✔ সংরক্ষণ করুন
             </button>
           </form>
         </div>
       </section>
 
-      <section id="viewPerson" class="hidden">
-        <button class="back" onclick="showDashboard()">← ফিরে যান</button>
+      <!-- ========== PERSON DETAIL ========== -->
+      <section id="viewPerson" class="view hidden">
+        <button class="back" onclick="showDashboard()">
+          <span>←</span> ফিরে যান
+        </button>
         <div id="personDetail"></div>
       </section>
-    </div>
 
+    </main>
+
+    <!-- ============================
+         FLOATING ACTION BUTTON
+    ============================= -->
+
+    <!-- ============================
+         TOAST & MODAL ROOT
+    ============================= -->
     <div class="toast" id="toast"></div>
     <div id="modalRoot"></div>
 
