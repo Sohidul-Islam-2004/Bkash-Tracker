@@ -91,6 +91,18 @@ app.get('/api/people/:id', async (req, res) => {
 
     res.json(data);
 });
+app.delete("/api/transactions/:id", async (req, res) => {
+    try {
+
+        await Transaction.findByIdAndDelete(req.params.id);
+        res.status(200).json({ msg: "ok" });
+
+    } catch (error) {
+        console.error('Error during deletion:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
+})
 app.delete('/api/people/:id', async (req, res) => {
     try {
 
