@@ -134,6 +134,8 @@ function summarize(p) {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const tKey = dayKey(now);
     const mKey = monthKey(now);
 
@@ -146,8 +148,8 @@ function summarize(p) {
         const amt = Number(t.amount || 0);
         const dt = new Date(t.date);
         if (t.type === "send") {
-            if (dt >= startOfDay) dailyUsed += amt;
-            if (dt >= startOfMonth) monthlyUsed += amt;
+            if (dt >= startOfDay && dt < endOfDay) dailyUsed += amt;
+            if (dt >= startOfMonth && dt < endOfMonth) monthlyUsed += amt;
             balance -= amt;
         } else if (t.type === "receive") {
             balance += amt;
@@ -172,6 +174,55 @@ function summarize(p) {
         remDaily,
         remMonthly,
         status: worst < 0.2 ? "red" : worst < 0.5 ? "yellow" : "green"
+    };
+}
+
+/* ======================================================
+   সেন্ড করা যাবে কিনা (ব্যালেন্স + সীমা)
+   রিসিভ মানি এখানে আসে না — সেটা সবসময় চলে।
+   ====================================================== */
+function checkSend(p, amount, when = new Date()) {
+    const s = summarize(p);
+    if (s.balance <= 0) return "ব্যালেন্স নেই — টাকা পাঠানো যাবে না";
+    if (amount > s.balance) return "ব্যালেন্স কম — আছে মাত্র " + money(s.balance);
+
+    const dKey = dayKey(when);
+    const mKey = monthKey(when);
+    let dUsed = 0;
+    let mUsed = 0;
+    for (const t of p.transactions || []) {
+        if (t.type !== "send") continue;
+        const td = new Date(t.date);
+        if (dayKey(td) === dKey) dUsed += Number(t.amount || 0);
+        if (monthKey(td) === mKey) mUsed += Number(t.amount || 0);
+    }
+    if (p.baseDayKey === dKey) dUsed += Number(p.dailyUsedBase || 0);
+    if (p.baseMonthKey === mKey) mUsed += Number(p.monthlyUsedBase || 0);
+
+    const dLabel = dKey === dayKey() ? "আজকের" : "ওই দিনের";
+    const mLabel = mKey === monthKey() ? "এই মাসের" : "ওই মাসের";
+    const remD = DAILY_LIMIT - dUsed;
+    const remM = MONTHLY_LIMIT - mUsed;
+
+    if (remD <= 0) return dLabel + " সীমা শেষ — টাকা পাঠানো যাবে না";
+    if (amount > remD) return dLabel + " সীমা পার হয়ে যাবে — বাকি " + money(remD);
+    if (remM <= 0) return mLabel + " সীমা শেষ — টাকা পাঠানো যাবে না";
+    if (amount > remM) return mLabel + " সীমা পার হয়ে যাবে — বাকি " + money(remM);
+    return null;
+}
+
+/* ======================================================
+   সীমা শেষ কিনা
+   ====================================================== */
+function isLimitReached(p) {
+    const s = summarize(p);
+    return {
+        blocked: s.remDaily <= 0 || s.remMonthly <= 0,
+        dailyBlocked: s.remDaily <= 0,
+        monthlyBlocked: s.remMonthly <= 0,
+        remDaily: s.remDaily,
+        remMonthly: s.remMonthly,
+        ...s
     };
 }
 
@@ -372,12 +423,13 @@ function renderDashboard() {
     }
     grid.innerHTML = list.map((p, i) => {
         const s = summarize(p);
+        const blocked = s.remDaily <= 0 || s.remMonthly <= 0;
         return `
-      <div class="person" onclick="showPerson('${p.id}')" style="animation-delay:${Math.min(i, 8) * 40}ms">
+      <div class="person ${blocked ? "blocked" : ""}" onclick="showPerson('${p.id}')" style="animation-delay:${Math.min(i, 8) * 40}ms">
         <div class="p-top">
           ${avatarHTML(p, "avatar-sm")}
           <div class="p-name">
-            <h3>${esc(p.name)}</h3>
+            <h3>${esc(p.name)}${blocked ? '<span class="block-badge">সীমা শেষ</span>' : ''}</h3>
             <div class="num">${esc(p.bkashNumber)}</div>
           </div>
           <div class="p-bal">${money(s.balance)}</div>
@@ -407,9 +459,16 @@ function renderPerson(id, all) {
     const txns = [...(p.transactions || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const visible = all ? txns : txns.slice(0, 10);
+    const dailyBlocked = s.remDaily <= 0;
+    const monthlyBlocked = s.remMonthly <= 0;
+    const blocked = dailyBlocked || monthlyBlocked;
+    const noBalance = s.balance <= 0;
+    const msgBlocked = blocked || noBalance;
+
     const warnings = [];
-    if (s.remDaily < 0) warnings.push("আজকের সীমা শেষ হয়ে গেছে।");
-    if (s.remMonthly < 0) warnings.push("এই মাসের সীমা শেষ হয়ে গেছে।");
+    if (noBalance) warnings.push("ব্যালেন্স নেই — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।");
+    if (dailyBlocked) warnings.push("আজকের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।");
+    if (monthlyBlocked) warnings.push("এই মাসের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।");
 
     document.getElementById("personDetail").innerHTML = `
 
@@ -428,25 +487,27 @@ function renderPerson(id, all) {
 
       <div class="stats" style="margin-top:18px">
         <div class="stat">
-          <div class="lbl">এখনকার টাকা</div>
+          <div class="lbl">ব্যালেন্স</div>
           <div class="val">${money(s.balance)}</div>
         </div>
         <div class="stat">
-          <div class="lbl">আজ বাকি আছে</div>
-          <div class="val">${money(s.remDaily)}</div>
+          <div class="lbl">দৈনিক লিমিট</div>
+          <div class="val" style="${dailyBlocked ? 'color:#b3122f' : ''}">${money(s.remDaily)}</div>
           <div class="sub">খরচ ${money(s.dailyUsed)} / ${money(DAILY_LIMIT)}</div>
         </div>
         <div class="stat">
-          <div class="lbl">এই মাসে বাকি আছে</div>
-          <div class="val">${money(s.remMonthly)}</div>
+          <div class="lbl">মাসিক লিমিট</div>
+          <div class="val" style="${monthlyBlocked ? 'color:#b3122f' : ''}">${money(s.remMonthly)}</div>
           <div class="sub">খরচ ${money(s.monthlyUsed)} / ${money(MONTHLY_LIMIT)}</div>
         </div>
       </div>
 
       <div class="toolbar" style="margin-top:18px">
-        <button class="btn btn-wa btn-sm" onclick="openWaModal('${p.id}')">📱 টাকা চান</button>
-        <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">📷 ছবি</button>
-        <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">✏️ খরচ ঠিক</button>
+        <button class="btn ${msgBlocked ? 'btn-muted' : 'btn-wa'} btn-sm" onclick="openWaModal('${p.id}')">
+          ${msgBlocked ? '🚫 মেসেজ পাঠানো বন্ধ' : '📱 ম্যাসাজ পাঠান'}
+        </button>
+        <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">📷 ছবি পরিবর্তন</button>
+        <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">✏️ লিমিট ঠিক করুন</button>
         <button class="btn btn-danger btn-sm" onclick="deletePerson('${p.id}')">🗑 মুছুন</button>
       </div>
     </div>
@@ -520,7 +581,7 @@ function renderPerson(id, all) {
                 return `
                   <tr>
                     <td>${new Date(t.date).toLocaleString("bn-BD")}</td>
-                    <td><span class="tag ${t.type}">${t.type === "send" ? "পাঠানো" : "পাওয়া"}</span></td>
+                    <td><span class="tag ${t.type}">${t.type === "send" ? "সেন্ড মানি" : "রিসিভ মানি"}</span></td>
                     <td class="right">${money(t.amount)}</td>
                     <td>
                       ${t.trxId ? `<span class="trx-code">${esc(t.trxId)}</span>` : "—"}
@@ -549,6 +610,23 @@ function renderPerson(id, all) {
 function openWaModal(personId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
+
+    /* 🔒 সীমা শেষ হলে বন্ধ */
+    const s = summarize(p);
+    if (s.remDaily <= 0) {
+        toast("আজকের সীমা শেষ — মেসেজ পাঠানো যাবে না", "error");
+        return;
+    }
+    if (s.remMonthly <= 0) {
+        toast("এই মাসের সীমা শেষ — মেসেজ পাঠানো যাবে না", "error");
+        return;
+    }
+
+    if (s.balance <= 0) {
+        toast("ব্যালেন্স নেই — মেসেজ পাঠানো যাবে না", "error");
+        return;
+    }
+
     const defaultDest = p.bkashNumber;
     const defaultWa = p.whatsappNumber ? normalizeWa(p.whatsappNumber) : "88" + p.bkashNumber;
 
@@ -584,13 +662,7 @@ function openWaModal(personId) {
     const update = () => {
         const amt = Number(document.getElementById("waAmount").value) || 0;
         const dest = document.getElementById("waDest").value || "";
-        const msg =
-            `আসসালামু আলাইকুম ${p.name},\n\n` +
-            `অনুগ্রহ করে ${money(amt)} পাঠান বিকাশ নম্বর ${dest}-এ।\n\n` +
-            `পাঠানোর পর এই ফরম্যাটে উত্তর দিন:\n` +
-            `টাকা: \n` +
-            `আইডি: \n\n` +
-            `জাযাকাল্লাহ।`;
+        const msg = `${money(amt)} পাঠান বিকাশ নম্বর ${dest}-এ।`;
         document.getElementById("waPreview").textContent = msg;
     };
     ["waAmount", "waDest", "waNumber"].forEach(id => {
@@ -604,6 +676,12 @@ function closeModal() { document.getElementById("modalRoot").innerHTML = ""; }
 function sendWaMessage(personId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
+
+    /* 🔒 সীমা শেষ হলে বন্ধ */
+    const s = summarize(p);
+    if (s.remDaily <= 0) { toast("আজকের সীমা শেষ — মেসেজ পাঠানো যাবে না", "error"); return; }
+    if (s.remMonthly <= 0) { toast("এই মাসের সীমা শেষ — মেসেজ পাঠানো যাবে না", "error"); return; }
+
     const amount = Number(document.getElementById("waAmount").value);
     const dest = document.getElementById("waDest").value.trim();
     const waNumber = normalizeWa(document.getElementById("waNumber").value);
@@ -612,14 +690,14 @@ function sendWaMessage(personId) {
     if (!dest) { toast("বিকাশ নম্বর লিখুন", "error"); return; }
     if (!waNumber || waNumber.length < 11) { toast("হোয়াটসঅ্যাপ নম্বর ঠিক নয়", "error"); return; }
 
-    const msg =
-        `আসসালামু আলাইকুম ${p.name},\n\n` +
-        `অনুগ্রহ করে ${money(amount)} পাঠান বিকাশ নম্বর ${dest}-এ।\n\n` +
-        `পাঠানোর পর এই ফরম্যাটে উত্তর দিন:\n` +
-        `টাকা: \n` +
-        `আইডি: \n\n` +
-        `জাযাকাল্লাহ।`;
+    /* 🔒 চাওয়া টাকা বাকি সীমার চেয়ে বেশি হলে বন্ধ */
+    if (amount > s.remDaily) { toast("আজকের সীমার চেয়ে বেশি — মেসেজ পাঠানো যাবে না", "error"); return; }
+    if (amount > s.remMonthly) { toast("এই মাসের সীমার চেয়ে বেশি — মেসেজ পাঠানো যাবে না", "error"); return; }
 
+    if (s.balance <= 0) { toast("ব্যালেন্স নেই — মেসেজ পাঠানো যাবে না", "error"); return; }
+    if (amount > s.balance) { toast("ব্যালেন্স কম — আছে মাত্র " + money(s.balance), "error"); return; }
+
+    const msg = `${money(amount)} পাঠান বিকাশ নম্বর ${dest}-এ।`;
     openWhatsApp(waNumber, msg);
     toast("হোয়াটসঅ্যাপ খোলা হয়েছে", "success");
     closeModal();
@@ -712,13 +790,23 @@ async function submitPerson(e) {
    ====================================================== */
 async function submitTransaction(e, personId) {
     e.preventDefault();
+    const p = db.people.find(x => x.id === personId);
+    if (!p) return;
+
     const f = new FormData(e.target);
     const type = f.get("type");
     const amount = Number(f.get("amount"));
     if (!amount || amount <= 0) { toast("টাকার পরিমাণ লিখুন", "error"); return; }
 
     const dateVal = f.get("date");
-    const date = dateVal ? new Date(dateVal).toISOString() : new Date().toISOString();
+    const when = dateVal ? new Date(dateVal) : new Date();
+    const date = when.toISOString();
+
+    /* 🔒 শুধু send-এ ব্যালেন্স ও সীমা চেক — receive সবসময় চলবে */
+    if (type === "send") {
+        const err = checkSend(p, amount, when);
+        if (err) { toast(err, "error"); return; }
+    }
 
     let trxId = null;
     const rawTrx = (f.get("trxId") || "").trim();
