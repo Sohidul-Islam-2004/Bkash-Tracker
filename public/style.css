@@ -1236,3 +1236,13 @@ select {
     box-shadow: 0 16px 32px rgba(209, 32, 83, 0.14),
         0 6px 16px rgba(30, 36, 48, 0.08);
 }
+
+/* Balances alignment between the Bengali labels and the English digits */
+.detail-num {
+    font-size: 15px !important;
+    line-height: 1 !important;
+    display: inline-block;
+    vertical-align: middle;
+    /* Optional: Makes numbers look clean and evenly spaced */
+    font-variant-numeric: tabular-nums;
+}
