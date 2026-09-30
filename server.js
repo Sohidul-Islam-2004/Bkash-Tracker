@@ -1,4 +1,9 @@
 /* ============================================================
+   TIMEZONE — MUST BE FIRST
+   ============================================================ */
+process.env.TZ = "Asia/Dhaka";
+
+/* ============================================================
    IMPORTS
    ============================================================ */
 require("dotenv").config();
@@ -136,33 +141,18 @@ async function deletePhoto(url) {
 }
 
 /* ============================================================
-   USAGE CALCULATOR
+   USAGE — reads directly from the person's stored counters
+   (with day/month reset applied)
    ============================================================ */
-async function getUsage(person) {
+function getUsage(person) {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const tKey = dayKey(now);
+    const mKey = monthKey(now);
 
-    const txns = await Transaction.find({
-        person: person._id,
-        type: "send"
-    });
-
-    let dailyUsed = 0;
-    let monthlyUsed = 0;
-
-    for (const t of txns) {
-        const dt = new Date(t.date);
-        if (dt >= startOfDay) dailyUsed += Number(t.amount) || 0;
-        if (dt >= startOfMonth) monthlyUsed += Number(t.amount) || 0;
-    }
-
-    if (person.baseDayKey === dayKey(now)) {
-        dailyUsed += Number(person.dailyUsedBase) || 0;
-    }
-    if (person.baseMonthKey === monthKey(now)) {
-        monthlyUsed += Number(person.monthlyUsedBase) || 0;
-    }
+    const dailyUsed =
+        person.baseDayKey === tKey ? Number(person.dailyUsedBase) || 0 : 0;
+    const monthlyUsed =
+        person.baseMonthKey === mKey ? Number(person.monthlyUsedBase) || 0 : 0;
 
     return {
         dailyUsed,
@@ -245,7 +235,7 @@ app.get(
         const person = await Person.findById(req.params.id);
         if (!person) throw new HttpError(404, "Person not found");
 
-        const u = await getUsage(person);
+        const u = getUsage(person);
 
         res.json({
             dailyLimit: DAILY_LIMIT,
@@ -314,6 +304,7 @@ app.delete(
    ROUTES — TRANSACTIONS
    ============================================================ */
 
+/* Create transaction — MUTATES the person's balance and limits */
 async function createTransaction(req, res) {
     const personId = req.params.id;
     if (!isId(personId)) throw new HttpError(400, "Invalid id");
@@ -331,21 +322,32 @@ async function createTransaction(req, res) {
     const person = await Person.findById(personId);
     if (!person) throw new HttpError(404, "Person not found");
 
-    /* Server-side limit check for send */
-    if (type === "send") {
-        const u = await getUsage(person);
+    const now = new Date();
+    const tKey = dayKey(now);
+    const mKey = monthKey(now);
 
-        if (u.remDaily <= 0) {
+    /* Current effective usage (with reset logic applied) */
+    const curDaily =
+        person.baseDayKey === tKey ? Number(person.dailyUsedBase) || 0 : 0;
+    const curMonthly =
+        person.baseMonthKey === mKey ? Number(person.monthlyUsedBase) || 0 : 0;
+
+    /* Server-side checks for send */
+    if (type === "send") {
+        if (curDaily >= DAILY_LIMIT) {
             throw new HttpError(400, "exceeds daily limit");
         }
-        if (u.remMonthly <= 0) {
+        if (curMonthly >= MONTHLY_LIMIT) {
             throw new HttpError(400, "exceeds monthly limit");
         }
-        if (amount > u.remDaily) {
+        if (curDaily + amount > DAILY_LIMIT) {
             throw new HttpError(400, "exceeds daily limit");
         }
-        if (amount > u.remMonthly) {
+        if (curMonthly + amount > MONTHLY_LIMIT) {
             throw new HttpError(400, "exceeds monthly limit");
+        }
+        if (amount > Number(person.initialBalance || 0)) {
+            throw new HttpError(400, "not enough balance");
         }
     }
 
@@ -359,20 +361,43 @@ async function createTransaction(req, res) {
         if (dup) throw new HttpError(400, "TrxID already exists");
     }
 
+    /* Create the transaction record */
     const transaction = await Transaction.create({
         person: personId,
         type,
         amount,
-        date: date ? new Date(date) : new Date(),
+        date: date ? new Date(date) : now,
         counterparty: counterparty || undefined,
         trxId: cleanTrx || undefined,
         verified: Boolean(cleanTrx),
         notes: notes || undefined
     });
 
-    await Person.findByIdAndUpdate(personId, {
-        $push: { transactions: transaction._id }
-    });
+    /* ----------------------------------------------------------
+       MUTATE THE PERSON
+       — Reset day counter if a new day has started
+       — Reset month counter if a new month has started
+       — Apply the transaction effect
+       ---------------------------------------------------------- */
+    if (person.baseDayKey !== tKey) {
+        person.dailyUsedBase = 0;
+        person.baseDayKey = tKey;
+    }
+    if (person.baseMonthKey !== mKey) {
+        person.monthlyUsedBase = 0;
+        person.baseMonthKey = mKey;
+    }
+
+    if (type === "send") {
+        person.initialBalance = Number(person.initialBalance) - amount;
+        person.dailyUsedBase = Number(person.dailyUsedBase) + amount;
+        person.monthlyUsedBase = Number(person.monthlyUsedBase) + amount;
+    } else {
+        person.initialBalance = Number(person.initialBalance) + amount;
+    }
+
+    person.transactions.push(transaction._id);
+    await person.save();
 
     res.status(201).json(transaction);
 }
@@ -381,7 +406,10 @@ async function createTransaction(req, res) {
 app.post("/api/transactions/:id", wrap(createTransaction));
 app.post("/api/people/:id/transactions", wrap(createTransaction));
 
-/* Delete transaction */
+/* ----------------------------------------------------------
+   Delete transaction — removes ONLY the record.
+   Balance and limits stay unchanged (frozen snapshot).
+   ---------------------------------------------------------- */
 app.delete(
     "/api/transactions/:id",
     wrap(async (req, res) => {
@@ -390,6 +418,7 @@ app.delete(
         const transaction = await Transaction.findByIdAndDelete(req.params.id);
         if (!transaction) throw new HttpError(404, "Transaction not found");
 
+        /* Only remove the reference — do NOT touch balance or counters */
         await Person.findByIdAndUpdate(transaction.person, {
             $pull: { transactions: transaction._id }
         });
@@ -431,6 +460,8 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
+    console.log(`Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+    console.log(`Today: ${dayKey(new Date())}`);
 });
 
 module.exports = app;
