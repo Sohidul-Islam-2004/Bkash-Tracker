@@ -78,7 +78,8 @@ function translateError(msg) {
         "photo upload failed": "ছবি আপলোড হয়নি",
         "Invalid id": "ভুল আইডি",
         "Transaction not found": "লেনদেন খুঁজে পাওয়া যায়নি",
-        "This bKash number is already added": "এই বিকাশ নম্বর আগেই যোগ করা আছে"
+        "This bKash number is already added": "এই বিকাশ নম্বর আগেই যোগ করা আছে",
+        "not enough balance": "ব্যালেন্স নেই — টাকা পাঠানো যাবে না"
     };
     for (const k in map) {
         if (text.includes(k)) return map[k];
@@ -155,37 +156,20 @@ function localNow() {
 }
 
 /* ============================================================
-   SUMMARY — balance + daily / monthly usage
+   SUMMARY — reads stored values directly from the server
+   The server maintains initialBalance and used counters.
    ============================================================ */
 function summarize(p) {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const tKey = dayKey(now);
     const mKey = monthKey(now);
 
-    let dailyUsed = 0;
-    let monthlyUsed = 0;
-    let balance = Number(p.initialBalance || 0);
+    const dailyUsed =
+        p.baseDayKey === tKey ? Number(p.dailyUsedBase || 0) : 0;
+    const monthlyUsed =
+        p.baseMonthKey === mKey ? Number(p.monthlyUsedBase || 0) : 0;
 
-    const txns = p.transactions || [];
-    for (const t of txns) {
-        const amt = Number(t.amount || 0);
-        const dt = new Date(t.date);
-        if (t.type === "send") {
-            if (dt >= startOfDay && dt < endOfDay) dailyUsed += amt;
-            if (dt >= startOfMonth && dt < endOfMonth) monthlyUsed += amt;
-            balance -= amt;
-        } else if (t.type === "receive") {
-            balance += amt;
-        }
-    }
-
-    if (p.baseDayKey === tKey) dailyUsed += Number(p.dailyUsedBase || 0);
-    if (p.baseMonthKey === mKey) monthlyUsed += Number(p.monthlyUsedBase || 0);
-
+    const balance = Number(p.initialBalance || 0);
     const remDaily = DAILY_LIMIT - dailyUsed;
     const remMonthly = MONTHLY_LIMIT - monthlyUsed;
 
@@ -208,35 +192,26 @@ function summarize(p) {
    CHECK IF SEND IS ALLOWED
    ============================================================ */
 function checkSend(p, amount, when = new Date()) {
-    const s = summarize(p);
+    const now = new Date();
+    const tKey = dayKey(now);
+    const mKey = monthKey(now);
 
-    if (s.balance <= 0) return "ব্যালেন্স নেই — টাকা পাঠানো যাবে না";
-    if (amount > s.balance) return "ব্যালেন্স কম — আছে মাত্র " + money(s.balance);
+    const balance = Number(p.initialBalance || 0);
+    const curDaily =
+        p.baseDayKey === tKey ? Number(p.dailyUsedBase || 0) : 0;
+    const curMonthly =
+        p.baseMonthKey === mKey ? Number(p.monthlyUsedBase || 0) : 0;
 
-    const dKey = dayKey(when);
-    const mKey = monthKey(when);
+    if (balance <= 0) return "ব্যালেন্স নেই — টাকা পাঠানো যাবে না";
+    if (amount > balance) return "ব্যালেন্স কম — আছে মাত্র " + money(balance);
 
-    let dUsed = 0;
-    let mUsed = 0;
-    for (const t of p.transactions || []) {
-        if (t.type !== "send") continue;
-        const td = new Date(t.date);
-        if (dayKey(td) === dKey) dUsed += Number(t.amount || 0);
-        if (monthKey(td) === mKey) mUsed += Number(t.amount || 0);
-    }
-    if (p.baseDayKey === dKey) dUsed += Number(p.dailyUsedBase || 0);
-    if (p.baseMonthKey === mKey) mUsed += Number(p.monthlyUsedBase || 0);
+    const remD = DAILY_LIMIT - curDaily;
+    const remM = MONTHLY_LIMIT - curMonthly;
 
-    const dLabel = dKey === dayKey() ? "আজকের" : "ওই দিনের";
-    const mLabel = mKey === monthKey() ? "এই মাসের" : "ওই মাসের";
-
-    const remD = DAILY_LIMIT - dUsed;
-    const remM = MONTHLY_LIMIT - mUsed;
-
-    if (remD <= 0) return dLabel + " সীমা শেষ — টাকা পাঠানো যাবে না";
-    if (amount > remD) return dLabel + " সীমা পার হয়ে যাবে — বাকি " + money(remD);
-    if (remM <= 0) return mLabel + " সীমা শেষ — টাকা পাঠানো যাবে না";
-    if (amount > remM) return mLabel + " সীমা পার হয়ে যাবে — বাকি " + money(remM);
+    if (remD <= 0) return "আজকের সীমা শেষ — টাকা পাঠানো যাবে না";
+    if (amount > remD) return "আজকের সীমা পার হয়ে যাবে — বাকি " + money(remD);
+    if (remM <= 0) return "এই মাসের সীমা শেষ — টাকা পাঠানো যাবে না";
+    if (amount > remM) return "এই মাসের সীমা পার হয়ে যাবে — বাকি " + money(remM);
 
     return null;
 }
@@ -818,7 +793,7 @@ function openWaModal(personId) {
         return;
     }
 
-
+    const defaultDest = p.bkashNumber;
 
     document.getElementById("modalRoot").innerHTML = `
         <div class="modal-bg" onclick="if(event.target===this)closeModal()">
@@ -834,7 +809,7 @@ function openWaModal(personId) {
 
                 <div class="field">
                     <label>কোন বিকাশ নম্বরে পাঠাবে?</label>
-                    <input id="waDest" value="" inputmode="numeric" />
+                    <input id="waDest" value="${esc(defaultDest)}" inputmode="numeric" />
                 </div>
 
                 <label style="margin-top:8px">যে মেসেজ যাবে</label>
@@ -1007,7 +982,8 @@ async function submitTransaction(e, personId) {
 async function deleteTxn(personId, txnId) {
     const ok = await confirmModal({
         title: "মুছে ফেলবেন?",
-        description: "এই লেনদেনটি চিরতরে মুছে যাবে।",
+        description:
+            "এই লেনদেনটি চিরতরে মুছে যাবে। ব্যালেন্স বা সীমার হিসাব বদলাবে না।",
         submitLabel: "হ্যাঁ, মুছুন"
     });
     if (!ok) return;
