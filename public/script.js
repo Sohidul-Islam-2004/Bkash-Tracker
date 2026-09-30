@@ -143,10 +143,9 @@ function monthKey(d = new Date()) {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
 }
 
+/* Keep the local 01XXXXXXXXX format — no 88 prefix */
 function normalizeWa(num) {
-    let n = String(num || "").replace(/\D/g, "");
-    if (n.startsWith("01") && n.length === 11) n = "88" + n;
-    return n;
+    return String(num || "").replace(/\D/g, "");
 }
 
 function localNow() {
@@ -243,6 +242,24 @@ function checkSend(p, amount, when = new Date()) {
 }
 
 /* ============================================================
+   BUILD WHATSAPP MESSAGE
+   — Adds "send from your bKash" line only when
+     the WhatsApp number differs from the bKash number.
+   ============================================================ */
+function buildWaMessage(p, amount, dest, waNumber) {
+    let msg = `${money(amount)} পাঠান বিকাশ নম্বর ${dest}-এ।`;
+
+    const wa = normalizeWa(waNumber);
+    const bk = normalizeWa(p.bkashNumber);
+
+    if (wa && bk && wa !== bk) {
+        msg += `\n\nআপনার বিকাশ নম্বর ${p.bkashNumber} থেকে পাঠাবেন।`;
+    }
+
+    return msg;
+}
+
+/* ============================================================
    PAGE ROUTING
    ============================================================ */
 function show(id) {
@@ -279,10 +296,14 @@ async function showPerson(id) {
 }
 
 /* ============================================================
-   WHATSAPP
+   WHATSAPP LINK
    ============================================================ */
 function openWhatsApp(waNumber, message) {
-    const num = normalizeWa(waNumber);
+    let num = String(waNumber || "").replace(/\D/g, "");
+
+    // Add Bangladesh country code only for the wa.me link
+    if (num.startsWith("01") && num.length === 11) num = "88" + num;
+
     const text = encodeURIComponent(message);
     window.open(`https://wa.me/${num}?text=${text}`, "_blank");
 }
@@ -540,14 +561,14 @@ function renderDashboard() {
                 <div class="p-limits">
                     <div>
                         <div class="limit-row">
-                            <span>আজ বাকি</span>
+                            <span>দৈনিক লিমিট</span>
                             <b class="${s.remDaily <= 0 ? "over" : ""}">${money(s.remDaily)}</b>
                         </div>
                         ${bar(s.remDaily, DAILY_LIMIT)}
                     </div>
                     <div>
                         <div class="limit-row">
-                            <span>মাসে বাকি</span>
+                            <span>মাসিক লিমিট</span>
                             <b class="${s.remMonthly <= 0 ? "over" : ""}">${money(s.remMonthly)}</b>
                         </div>
                         ${bar(s.remMonthly, MONTHLY_LIMIT)}
@@ -766,7 +787,7 @@ function renderTxList(personId, txns, hasMore, remaining) {
 }
 
 /* ============================================================
-   WHATSAPP MODAL
+   WHATSAPP MODAL — send message section
    ============================================================ */
 function openWaModal(personId) {
     const p = db.people.find(x => x.id === personId);
@@ -787,10 +808,17 @@ function openWaModal(personId) {
         return;
     }
 
-    const defaultDest = p.bkashNumber;
-    const defaultWa = p.whatsappNumber
+    /* WhatsApp number comes from the person's saved data */
+    const waNumber = p.whatsappNumber
         ? normalizeWa(p.whatsappNumber)
-        : "88" + p.bkashNumber;
+        : normalizeWa(p.bkashNumber);
+
+    if (!waNumber || waNumber.length < 11) {
+        toast("এই মানুষের হোয়াটসঅ্যাপ নম্বর নেই — আগে যোগ করুন", "error");
+        return;
+    }
+
+
 
     document.getElementById("modalRoot").innerHTML = `
         <div class="modal-bg" onclick="if(event.target===this)closeModal()">
@@ -803,13 +831,10 @@ function openWaModal(personId) {
                     <input id="waAmount" type="number" min="1" step="1"
                            placeholder="5000" inputmode="numeric" />
                 </div>
+
                 <div class="field">
                     <label>কোন বিকাশ নম্বরে পাঠাবে?</label>
-                    <input id="waDest" value="${esc(defaultDest)}" inputmode="numeric" />
-                </div>
-                <div class="field">
-                    <label>হোয়াটসঅ্যাপ নম্বর</label>
-                    <input id="waNumber" value="${esc(defaultWa)}" inputmode="numeric" />
+                    <input id="waDest" value="" inputmode="numeric" />
                 </div>
 
                 <label style="margin-top:8px">যে মেসেজ যাবে</label>
@@ -826,12 +851,13 @@ function openWaModal(personId) {
         const amt = Number(document.getElementById("waAmount").value) || 0;
         const dest = document.getElementById("waDest").value || "";
         document.getElementById("waPreview").textContent =
-            `${money(amt)} পাঠান বিকাশ নম্বর ${dest}-এ।`;
+            buildWaMessage(p, amt, dest, waNumber);
     };
 
-    ["waAmount", "waDest", "waNumber"].forEach(id => {
+    ["waAmount", "waDest"].forEach(id => {
         document.getElementById(id).addEventListener("input", update);
     });
+
     update();
     setTimeout(() => document.getElementById("waAmount").focus(), 60);
 }
@@ -856,7 +882,11 @@ function sendWaMessage(personId) {
 
     const amount = Number(document.getElementById("waAmount").value);
     const dest = document.getElementById("waDest").value.trim();
-    const waNumber = normalizeWa(document.getElementById("waNumber").value);
+
+    /* WhatsApp number from the person's saved data */
+    const waNumber = p.whatsappNumber
+        ? normalizeWa(p.whatsappNumber)
+        : normalizeWa(p.bkashNumber);
 
     if (!amount || amount <= 0) {
         toast("টাকার পরিমাণ লিখুন", "error");
@@ -884,7 +914,7 @@ function sendWaMessage(personId) {
         return;
     }
 
-    const msg = `${money(amount)} পাঠান বিকাশ নম্বর ${dest}-এ।`;
+    const msg = buildWaMessage(p, amount, dest, waNumber);
     openWhatsApp(waNumber, msg);
     toast("হোয়াটসঅ্যাপ খোলা হয়েছে", "success");
     closeModal();
