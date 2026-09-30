@@ -1213,24 +1213,26 @@ select {
     background: #ffffff;
     padding: 12px 14px;
     cursor: pointer;
+    border-radius: 20px;
     animation: cardIn 0.3s ease-out backwards;
 
-    /* 1. PERMANENT 2PX ACCENT BORDER - Frames the item immediately on load */
-    border: 2px solid #d2d7e2;
+    /* 1. SOFT TRANSLUCENT PINK BORDER: Ties the border edge directly into the bKash theme */
+    border: 2px solid rgba(209, 32, 83, 0.25);
 
-    /* 2. ROUNDED CORNERS - Keeps the container looking isolated and distinct */
-    border-radius: 20px;
+    /* 2. THEME-MATCHED FADED GLOW SHADOW: Creates a soft, multi-layered depth halo 
+       that prevents blending with the page background */
+    box-shadow: 0 10px 24px rgba(209, 32, 83, 0.08),
+        0 4px 12px rgba(30, 36, 48, 0.05),
+        0 0 0 4px rgba(209, 32, 83, 0.03);
 
-    /* 3. STRONG PERMANENT BACKSHADOW - Keeps it completely separated from the background page on load */
-    box-shadow: 0 12px 28px rgba(30, 36, 48, 0.14),
-        0 4px 10px rgba(30, 36, 48, 0.06);
-
-    /* Prepares smooth transition if the card is interacted with */
+    /* Ensures clean structural rendering transitions */
     transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .person:hover {
-    /* Subtle interaction accent highlight without changing the shape or shadow size */
+    /* solidifies the theme border and adds a crisp interactive lift */
     border-color: var(--pink);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(209, 32, 83, 0.14),
+        0 6px 16px rgba(30, 36, 48, 0.08);
 }
