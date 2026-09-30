@@ -1208,3 +1208,29 @@ select {
         transition: none !important;
     }
 }
+
+.person {
+    background: #ffffff;
+    padding: 12px 14px;
+    cursor: pointer;
+    animation: cardIn 0.3s ease-out backwards;
+
+    /* 1. PERMANENT 2PX ACCENT BORDER - Frames the item immediately on load */
+    border: 2px solid #d2d7e2;
+
+    /* 2. ROUNDED CORNERS - Keeps the container looking isolated and distinct */
+    border-radius: 20px;
+
+    /* 3. STRONG PERMANENT BACKSHADOW - Keeps it completely separated from the background page on load */
+    box-shadow: 0 12px 28px rgba(30, 36, 48, 0.14),
+        0 4px 10px rgba(30, 36, 48, 0.06);
+
+    /* Prepares smooth transition if the card is interacted with */
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.person:hover {
+    /* Subtle interaction accent highlight without changing the shape or shadow size */
+    border-color: var(--pink);
+    transform: translateY(-2px);
+}
