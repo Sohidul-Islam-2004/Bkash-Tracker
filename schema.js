@@ -37,7 +37,7 @@ const PersonSchema = new mongoose.Schema({
             ref: "Transaction"
         }
     ]
-}, { timestamps: true });
+});
 
 const TransactionSchema = new mongoose.Schema({
     person: {

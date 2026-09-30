@@ -35,6 +35,10 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 }
 });
 
+// ---------- Limits ----------
+const DAILY_LIMIT = 50000;
+const MONTHLY_LIMIT = 300000;
+
 // ---------- Helpers ----------
 const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -53,6 +57,16 @@ const toNumber = (value, fallback = 0) => {
     return Number.isFinite(n) ? n : fallback;
 };
 
+function dayKey(d = new Date()) {
+    return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+}
+
+function monthKey(d = new Date()) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
 async function uploadPhoto(file) {
     const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const storagePath = `ProfileImage/${Date.now()}-${safeName}`;
@@ -70,8 +84,6 @@ async function uploadPhoto(file) {
     return data.publicUrl;
 }
 
-// Delete a photo from Supabase using its public URL.
-// Never throws: a failed cleanup should not break the request.
 async function deletePhoto(url) {
     if (!url) return;
     try {
@@ -87,6 +99,35 @@ async function deletePhoto(url) {
     }
 }
 
+/* ---------- Usage / limit calculator ---------- */
+async function getUsage(person) {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const txns = await Transaction.find({ person: person._id, type: 'send' });
+
+    let dailyUsed = 0;
+    let monthlyUsed = 0;
+
+    for (const t of txns) {
+        const dt = new Date(t.date);
+        if (dt >= startOfDay) dailyUsed += Number(t.amount) || 0;
+        if (dt >= startOfMonth) monthlyUsed += Number(t.amount) || 0;
+    }
+
+    // Include "already used" base — only if it was entered today / this month
+    if (person.baseDayKey === dayKey(now)) dailyUsed += Number(person.dailyUsedBase) || 0;
+    if (person.baseMonthKey === monthKey(now)) monthlyUsed += Number(person.monthlyUsedBase) || 0;
+
+    return {
+        dailyUsed,
+        monthlyUsed,
+        remDaily: DAILY_LIMIT - dailyUsed,
+        remMonthly: MONTHLY_LIMIT - monthlyUsed
+    };
+}
+
 // ================= PEOPLE =================
 
 // Create person
@@ -98,6 +139,7 @@ app.post('/api/people', upload.single('photo'), wrap(async (req, res) => {
     } = req.body;
 
     const photo = req.file ? await uploadPhoto(req.file) : null;
+    const now = new Date();
 
     const person = await Person.create({
         name,
@@ -107,14 +149,14 @@ app.post('/api/people', upload.single('photo'), wrap(async (req, res) => {
         initialBalance: toNumber(initialBalance),
         dailyUsedBase: toNumber(dailyUsedBase),
         monthlyUsedBase: toNumber(monthlyUsedBase),
-        baseDayKey,
-        baseMonthKey
+        baseDayKey: baseDayKey || dayKey(now),
+        baseMonthKey: baseMonthKey || monthKey(now)
     });
 
     res.status(201).json(person);
 }));
 
-// Get all people (transactions included, the dashboard needs them)
+// Get all people (with transactions)
 app.get('/api/people', wrap(async (req, res) => {
     const people = await Person.find().populate('transactions');
     res.json(people);
@@ -130,7 +172,24 @@ app.get('/api/people/:id', wrap(async (req, res) => {
     res.json(person);
 }));
 
-// Update person (used-amount fix and photo change)
+// Get usage for a person (for frontend to double-check)
+app.get('/api/people/:id/usage', wrap(async (req, res) => {
+    if (!isId(req.params.id)) throw new HttpError(400, 'Invalid id');
+
+    const person = await Person.findById(req.params.id);
+    if (!person) throw new HttpError(404, 'Person not found');
+
+    const u = await getUsage(person);
+    res.json({
+        dailyLimit: DAILY_LIMIT,
+        monthlyLimit: MONTHLY_LIMIT,
+        ...u,
+        dailyBlocked: u.remDaily <= 0,
+        monthlyBlocked: u.remMonthly <= 0
+    });
+}));
+
+// Update person
 app.patch('/api/people/:id', upload.single('photo'), wrap(async (req, res) => {
     if (!isId(req.params.id)) throw new HttpError(400, 'Invalid id');
 
@@ -144,6 +203,7 @@ app.patch('/api/people/:id', upload.single('photo'), wrap(async (req, res) => {
     if (b.monthlyUsedBase !== undefined) update.monthlyUsedBase = toNumber(b.monthlyUsedBase);
     if (b.baseDayKey !== undefined) update.baseDayKey = b.baseDayKey;
     if (b.baseMonthKey !== undefined) update.baseMonthKey = b.baseMonthKey;
+
     let oldPhoto = null;
     if (req.file) {
         const existing = await Person.findById(req.params.id).select('photo');
@@ -175,8 +235,6 @@ app.delete('/api/people/:id', wrap(async (req, res) => {
 }));
 
 // ================= TRANSACTIONS =================
-// The app calculates balance and used limits from the transaction list,
-// so these routes only store or remove the record.
 
 async function createTransaction(req, res) {
     const personId = req.params.id;
@@ -191,14 +249,39 @@ async function createTransaction(req, res) {
     const person = await Person.findById(personId);
     if (!person) throw new HttpError(404, 'Person not found');
 
+    /* 🔒 Server-side limit check for send */
+    if (type === 'send') {
+        const u = await getUsage(person);
+
+        if (u.remDaily <= 0) {
+            throw new HttpError(400, 'exceeds daily limit');
+        }
+        if (u.remMonthly <= 0) {
+            throw new HttpError(400, 'exceeds monthly limit');
+        }
+        if (amount > u.remDaily) {
+            throw new HttpError(400, 'exceeds daily limit');
+        }
+        if (amount > u.remMonthly) {
+            throw new HttpError(400, 'exceeds monthly limit');
+        }
+    }
+
+    /* TrxID duplicate check within the same person */
+    const cleanTrx = trxId ? String(trxId).toUpperCase().trim() : null;
+    if (cleanTrx) {
+        const dup = await Transaction.findOne({ person: personId, trxId: cleanTrx });
+        if (dup) throw new HttpError(400, 'TrxID already exists');
+    }
+
     const transaction = await Transaction.create({
         person: personId,
         type,
         amount,
         date: date ? new Date(date) : new Date(),
         counterparty: counterparty || undefined,
-        trxId: trxId || undefined,
-        verified: Boolean(trxId),
+        trxId: cleanTrx || undefined,
+        verified: Boolean(cleanTrx),
         notes: notes || undefined
     });
 
@@ -207,7 +290,7 @@ async function createTransaction(req, res) {
     res.status(201).json(transaction);
 }
 
-// Add transaction (both URLs are used by the frontend)
+// Add transaction (both URLs supported)
 app.post('/api/transactions/:id', wrap(createTransaction));
 app.post('/api/people/:id/transactions', wrap(createTransaction));
 
