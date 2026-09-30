@@ -221,18 +221,6 @@ function checkSend(p, amount, when = new Date()) {
    — Adds "send from your bKash" line only when
      the WhatsApp number differs from the bKash number.
    ============================================================ */
-function buildWaMessage(p, amount, dest, waNumber) {
-    let msg = `${money(amount)} পাঠান বিকাশ নম্বর ${dest}-এ।`;
-
-    const wa = normalizeWa(waNumber);
-    const bk = normalizeWa(p.bkashNumber);
-
-    if (wa && bk && wa !== bk) {
-        msg += `\n\nআপনার বিকাশ নম্বর ${p.bkashNumber} থেকে পাঠাবেন।`;
-    }
-
-    return msg;
-}
 
 /* ============================================================
    PAGE ROUTING
@@ -575,7 +563,7 @@ function renderPerson(id, all) {
     const monthlyBlocked = s.remMonthly <= 0;
     const blocked = dailyBlocked || monthlyBlocked;
     const noBalance = s.balance <= 0;
-    const msgBlocked = blocked || noBalance;
+    const msgBlocked = blocked || noBalance || !p.whatsappNumber;
 
     const warnings = [];
     if (noBalance)
@@ -597,13 +585,21 @@ function renderPerson(id, all) {
         <div class="panel">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px">
                 ${avatarHTML(p, "avatar-lg")}
-                <div style="flex:1;min-width:0">
-                    <h2 style="margin:0 0 4px;display:block;font-size:22px">${esc(p.name)}</h2>
-                    <div style="color:var(--muted);font-size:15px">বিকাশ: ${esc(p.bkashNumber)}</div>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                    <h2 style="margin:0 0 2px;display:block;font-size:22px">${esc(p.name)}</h2>
+                    
+                    <!-- Normalized bkash number layout -->
+                    <div style="color:var(--muted);font-size:15px;display:flex;align-items:center;gap:6px;line-height:1.2;">
+                        <span>বিকাশ:</span> 
+                        <span class="detail-phone-num">${esc(p.bkashNumber)}</span>
+                    </div>
+                    
+                    <!-- Normalized whatsapp number layout matching the size of bkash -->
                     ${p.whatsappNumber
-            ? `<div style="color:var(--muted);font-size:13.5px">হোয়াটসঅ্যাপ: ${esc(
-                p.whatsappNumber
-            )}</div>`
+            ? `<div style="color:var(--muted);font-size:15px;display:flex;align-items:center;gap:6px;line-height:1.2;">
+                        <span>হোয়াটসঅ্যাপ:</span> 
+                        <span class="detail-phone-num">${esc(p.whatsappNumber)}</span>
+                       </div>`
             : ""
         }
                 </div>
@@ -706,64 +702,54 @@ function renderPerson(id, all) {
     `;
 }
 
+
 /* ============================================================
    TRANSACTION LIST
-   ============================================================ */
+ /* ============================================================ */
 function renderTxList(personId, txns, hasMore, remaining) {
     const rows = txns
         .map(t => {
             const typeClass = t.type === "send" ? "send" : "receive";
             const typeLabel = t.type === "send" ? "সেন্ড মানি" : "রিসিভ মানি";
 
+            // --- UPDATED DATE & TIME FORMATTING ---
             const d = new Date(t.date);
-            const dateStr = d.toLocaleDateString("bn-BD", {
-                day: "numeric",
-                month: "long",
-                year: "numeric"
-            });
-            const timeStr = d.toLocaleTimeString("bn-BD", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true
-            });
+            const dateStr = d.toLocaleDateString("en-GB", { day: "numeric", month: "numeric", year: "numeric" });
+            const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+            // --------------------------------------
 
-            const counterpartyHtml = t.counterparty
-                ? `<span class="tx-counterparty">${esc(t.counterparty)}</span>`
-                : `<span class="tx-counterparty tx-empty">—</span>`;
-
-            const notesHtml = t.notes
-                ? `<div class="tx-notes">📝 ${esc(t.notes)}</div>`
-                : "";
+            const counterpartyHtml = t.counterparty ? `<span class="tx-counterparty">${esc(t.counterparty)}</span>` : `<span class="tx-counterparty tx-empty">—</span>`;
+            const notesHtml = t.notes ? `<div class="tx-notes">📝 ${esc(t.notes)}</div>` : "";
 
             return `
-            <div class="tx-item">
-                <div class="tx-row">
-                    <span class="tag ${typeClass}">${typeLabel}</span>
-                    ${counterpartyHtml}
-                    <span class="tx-amount ${typeClass}">${money(t.amount)}</span>
-                    <button class="tx-del"
-                            onclick="deleteTxn('${personId}','${t.id}')"
-                            aria-label="মুছুন">✕</button>
-                </div>
-                <div class="tx-date">${dateStr} · ${timeStr}</div>
-                ${notesHtml}
-            </div>`;
+        <div class="tx-item">
+          <div class="tx-row">
+            <span class="tag ${typeClass}">${typeLabel}</span>
+            ${counterpartyHtml}
+            <span class="tx-amount ${typeClass}">${money(t.amount)}</span>
+            <button class="tx-del" onclick="deleteTxn('${personId}','${t.id}')" aria-label="মুছুন">✕</button>
+          </div>
+          <!-- Applied the "--" separator here -->
+          <div class="tx-date">${dateStr} -- ${timeStr}</div> 
+          ${notesHtml}
+        </div>`;
         })
         .join("");
 
-    const moreBtn = hasMore
-        ? `<button class="btn btn-light btn-block" style="margin-top:12px"
-                   onclick="renderPerson('${personId}', true)">
-               আরও দেখুন (${remaining})
-           </button>`
-        : "";
-
+    const moreBtn = hasMore ? `<button class="btn btn-light btn-block" style="margin-top:12px" onclick="renderPerson('${personId}', true)"> আরও দেখুন (${remaining}) </button>` : "";
     return `<div class="tx-list">${rows}</div>${moreBtn}`;
 }
+
 
 /* ============================================================
    WHATSAPP MODAL — send message section
    ============================================================ */
+function buildWaMessage(p, amount, dest, waNumber) {
+    let msg = `আপনার বিকাশ নম্বর (${p.bkashNumber}) থেকে \n\nএই ${dest} নম্বরে ${money(amount)} টাকা বিকাশ সেন্ড মানি করুন।`;
+
+    return msg;
+}
+
 function openWaModal(personId) {
     const p = db.people.find(x => x.id === personId);
     if (!p) return;
@@ -782,6 +768,11 @@ function openWaModal(personId) {
         toast("ব্যালেন্স নেই — মেসেজ পাঠানো যাবে না", "error");
         return;
     }
+    if(!p.whatsappNumber)
+    {
+        toast("হোয়াটস্যাপ নম্বর নেই — মেসেজ পাঠানো যাবে না", "error");
+        return;
+    }
 
     /* WhatsApp number comes from the person's saved data */
     const waNumber = p.whatsappNumber
@@ -793,7 +784,7 @@ function openWaModal(personId) {
         return;
     }
 
-    const defaultDest = p.bkashNumber;
+
 
     document.getElementById("modalRoot").innerHTML = `
         <div class="modal-bg" onclick="if(event.target===this)closeModal()">
@@ -802,14 +793,14 @@ function openWaModal(personId) {
                 <div class="modal-sub"><b>${esc(p.name)}</b> কে মেসেজ পাঠানো হবে</div>
 
                 <div class="field">
-                    <label>কত টাকা চাইবেন?</label>
+                    <label>কত টাকা?</label>
                     <input id="waAmount" type="number" min="1" step="1"
                            placeholder="5000" inputmode="numeric" />
                 </div>
 
                 <div class="field">
-                    <label>কোন বিকাশ নম্বরে পাঠাবে?</label>
-                    <input id="waDest" value="${esc(defaultDest)}" inputmode="numeric" />
+                    <label>বিকাশ নম্বর?</label>
+                    <input id="waDest" value="" inputmode="numeric" />
                 </div>
 
                 <label style="margin-top:8px">যে মেসেজ যাবে</label>
