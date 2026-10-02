@@ -599,7 +599,7 @@ async function editBundle(id) {
    PERSON DETAIL
    ============================================================ */
 function renderPerson(id, all) {
-    const p = db.people.find((x) => x.id === id);
+    const p = db.people.find(x => x.id === id);
     if (!p) {
         showDashboard();
         return;
@@ -607,7 +607,7 @@ function renderPerson(id, all) {
 
     const s = summarize(p);
     const txns = [...(p.transactions || [])].sort(
-        (a, b) => new Date(b.date) - new Date(a.date),
+        (a, b) => new Date(b.date) - new Date(a.date)
     );
 
     const visible = all ? txns : txns.slice(0, 10);
@@ -618,62 +618,45 @@ function renderPerson(id, all) {
     const noBalance = s.balance <= 0;
     const msgBlocked = blocked || noBalance || !p.whatsappNumber;
 
-    const bundleLeft = Number(p.bundleLeft || 0);
-    const hasBundle = bundleLeft > 0 || !!p.bundleExpiry;
-    const bundleSub = bundleSubText(p);
-    const bundleExpired =
-        p.bundleExpiry &&
-        new Date(String(p.bundleExpiry).slice(0, 10)).getTime() <
-        new Date(dayKey()).getTime();
-
     const warnings = [];
-    if (noBalance)
-        warnings.push(
-            "ব্যালেন্স নেই — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।",
-        );
-    if (dailyBlocked)
-        warnings.push(
-            "আজকের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।",
-        );
-    if (monthlyBlocked)
-        warnings.push(
-            "এই মাসের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।",
-        );
+    if (noBalance) warnings.push("ব্যালেন্স নেই — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না।");
+    if (dailyBlocked) warnings.push("আজকের সীমা শেষ।");
+    if (monthlyBlocked) warnings.push("এই মাসের সীমা শেষ।");
 
     document.getElementById("personDetail").innerHTML = `
 
         <!-- HEADER CARD -->
         <div class="panel">
-            <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px">
-                ${avatarHTML(p, "avatar-lg")}
-                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
-                    <h2 style="margin:0 0 2px;display:block;font-size:22px">${esc(p.name)}</h2>
 
-                    <div style="color:var(--muted);font-size:15px;display:flex;align-items:center;gap:6px;line-height:1.2;">
-                        <span>বিকাশ:</span>
-                        <span class="detail-phone-num">${esc(p.bkashNumber)}</span>
+            <!-- Person header row -->
+            <div class="person-header">
+                ${avatarHTML(p, "avatar-lg")}
+                <div class="person-header-info">
+                    <h2 class="person-header-name">${esc(p.name)}</h2>
+
+                    <div class="person-header-row">
+                        <span class="person-header-lbl">বিকাশ</span>
+                        <span class="person-header-val">${esc(p.bkashNumber)}</span>
                     </div>
 
-                    ${p.whatsappNumber
-            ? `<div style="color:var(--muted);font-size:15px;display:flex;align-items:center;gap:6px;line-height:1.2;">
-                        <span>হোয়াটসঅ্যাপ:</span>
-                        <span class="detail-phone-num">${esc(p.whatsappNumber)}</span>
-                       </div>`
-            : ""
-        }
+                    ${p.whatsappNumber ? `
+                        <div class="person-header-row">
+                            <span class="person-header-lbl">হোয়াটসঅ্যাপ</span>
+                            <span class="person-header-val">${esc(p.whatsappNumber)}</span>
+                        </div>
+                    ` : ""}
                 </div>
             </div>
 
-            ${warnings.length
-            ? `<div class="warn" style="margin-top:16px">
-                           <span style="font-size:20px">⚠️</span>
-                           <div>${warnings.join(" ")}</div>
-                       </div>`
-            : ""
-        }
+            ${warnings.length ? `
+                <div class="warn" style="margin-top:16px">
+                    <span style="font-size:20px">⚠️</span>
+                    <div>${warnings.join(" ")}</div>
+                </div>
+            ` : ""}
 
-            <!-- 4 STAT BOXES -->
-            <div class="stats" style="margin-top:18px">
+            <!-- Stats grid -->
+            <div class="stats person-stats">
 
                 <div class="stat stat-balance">
                     <div class="lbl">ব্যালেন্স</div>
@@ -692,23 +675,36 @@ function renderPerson(id, all) {
                     <div class="sub">খরচ ${money(s.monthlyUsed)} / ${money(MONTHLY_LIMIT)}</div>
                 </div>
 
-              <div class="stat stat-bundle">
-    <div class="lbl">📦 সেন্ড মানি বান্ডেল</div>
-    <div class="val">${p.bundleCount || 0}টি</div>
-    <div class="sub">${bundleSubText(p)}</div>
-</div>
+                <div class="stat stat-bundle ${!p.bundleCount ? "stat-bundle-empty" : ""}">
+                    <div class="lbl">📦 সেন্ড মানি বান্ডেল</div>
+                    <div class="val">${p.bundleCount || 0} টি</div>
+                    <div class="sub">${bundleSubText(p)}</div>
+                </div>
 
             </div>
 
-            <div class="toolbar" style="margin-top:18px">
-                <button class="btn ${msgBlocked ? "btn-muted" : "btn-wa"} btn-sm"
+            <!-- Toolbar -->
+            <div class="toolbar person-toolbar">
+                <button class="btn ${msgBlocked ? "btn-muted" : "btn-wa"} toolbar-full"
                         onclick="openWaModal('${p.id}')">
                     ${msgBlocked ? "🚫 মেসেজ পাঠানো বন্ধ" : "📱 ম্যাসাজ পাঠান"}
                 </button>
-                <button class="btn btn-light btn-sm" onclick="editBundle('${p.id}')">📦 বান্ডেল</button>
-                <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">📷 ছবি পরিবর্তন</button>
-                <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">✏️ লিমিট ঠিক করুন</button>
-                <button class="btn btn-danger btn-sm" onclick="deletePerson('${p.id}')">🗑 মুছুন</button>
+
+                <button class="btn btn-light" onclick="editBundle('${p.id}')">
+                    📦 বান্ডেল
+                </button>
+
+                <button class="btn btn-light" onclick="changePersonPhoto('${p.id}')">
+                    📷 ছবি পরিবর্তন
+                </button>
+
+                <button class="btn btn-light" onclick="editUsed('${p.id}')">
+                    ✏️ লিমিট ঠিক করুন
+                </button>
+
+                <button class="btn btn-danger" onclick="deletePerson('${p.id}')">
+                    🗑 মুছুন
+                </button>
             </div>
         </div>
 
@@ -754,16 +750,15 @@ function renderPerson(id, all) {
             <div class="fold-body">
                 ${txns.length === 0
             ? `<div class="empty" style="padding:40px 20px">
-                               <div class="icon">📭</div>
-                               <p>এখনো কোনো লেনদেন নেই।</p>
-                           </div>`
+                           <div class="icon">📭</div>
+                           <p>এখনো কোনো লেনদেন নেই।</p>
+                       </div>`
             : renderTxList(
                 p.id,
                 visible,
                 txns.length > visible.length,
-                txns.length - visible.length,
-            )
-        }
+                txns.length - visible.length
+            )}
             </div>
         </details>
     `;
