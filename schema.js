@@ -44,6 +44,19 @@ const PersonSchema = new mongoose.Schema(
         },
         baseDayKey: String,     // "2026-09-30"
         baseMonthKey: String,   // "2026-09"
+        baseDayKey: String,     // "2026-09-30"
+        baseMonthKey: String,   // "2026-09"
+
+        /* Send money bundle */
+        bundleCount: {
+            type: Number,
+            default: 0,
+            min: 0
+        },
+        bundleExpiry: {
+            type: Number,       // "2026-10-15"
+            default: null
+        },
 
         transactions: [
             {
