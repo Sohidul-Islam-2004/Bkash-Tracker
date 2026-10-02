@@ -389,6 +389,7 @@ async function createTransaction(req, res) {
     }
 
     if (type === "send") {
+        person.bundleCount = Number(person.bundleCount) - 1;
         person.initialBalance = Number(person.initialBalance) - amount;
         person.dailyUsedBase = Number(person.dailyUsedBase) + amount;
         person.monthlyUsedBase = Number(person.monthlyUsedBase) + amount;
@@ -451,8 +452,28 @@ app.use((err, req, res, next) => {
     res.status(status).json({
         error: status === 500 ? "Internal server error" : err.message
     });
-});
+}); app.patch(
+    "/api/people/bandle/:id",
+    wrap(async (req, res) => {
+        if (!isId(req.params.id)) throw new HttpError(400, "Invalid id");
 
+        const { bundleCount, bundleExpiry } = req.body;
+
+        const update = {};
+        if (bundleCount !== undefined) update.bundleCount = toNumber(bundleCount);
+        if (bundleExpiry !== undefined) update.bundleExpiry = bundleExpiry;
+
+        const person = await Person.findByIdAndUpdate(
+            req.params.id,
+            update,
+            { new: true, runValidators: true }
+        );
+
+        if (!person) throw new HttpError(404, "Person not found");
+
+        res.json(person);
+    })
+);
 /* ============================================================
    START
    ============================================================ */

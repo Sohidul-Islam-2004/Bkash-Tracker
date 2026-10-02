@@ -18,7 +18,7 @@ async function api(path, { method = "GET", body } = {}) {
     const res = await fetch(path, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : undefined
+        body: body ? JSON.stringify(body) : undefined,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || data.message || "Server error");
@@ -39,10 +39,10 @@ function normalizePerson(p) {
     return {
         ...p,
         id: p._id || p.id,
-        transactions: (p.transactions || []).map(t => ({
+        transactions: (p.transactions || []).map((t) => ({
             ...t,
-            id: t._id || t.id
-        }))
+            id: t._id || t.id,
+        })),
     };
 }
 
@@ -54,7 +54,7 @@ async function refreshPeople() {
 async function refreshPerson(id) {
     const p = await api("/api/people/" + id);
     const np = normalizePerson(p);
-    const idx = db.people.findIndex(x => x.id === id);
+    const idx = db.people.findIndex((x) => x.id === id);
     if (idx >= 0) db.people[idx] = { ...db.people[idx], ...np };
     else db.people.push(np);
     return np;
@@ -79,7 +79,7 @@ function translateError(msg) {
         "Invalid id": "ভুল আইডি",
         "Transaction not found": "লেনদেন খুঁজে পাওয়া যায়নি",
         "This bKash number is already added": "এই বিকাশ নম্বর আগেই যোগ করা আছে",
-        "not enough balance": "ব্যালেন্স নেই — টাকা পাঠানো যাবে না"
+        "not enough balance": "ব্যালেন্স নেই — টাকা পাঠানো যাবে না",
     };
     for (const k in map) {
         if (text.includes(k)) return map[k];
@@ -124,7 +124,7 @@ function initialsOf(n) {
     return (n || "?")
         .trim()
         .split(/\s+/)
-        .map(w => w[0])
+        .map((w) => w[0])
         .slice(0, 2)
         .join("")
         .toUpperCase();
@@ -164,8 +164,7 @@ function summarize(p) {
     const tKey = dayKey(now);
     const mKey = monthKey(now);
 
-    const dailyUsed =
-        p.baseDayKey === tKey ? Number(p.dailyUsedBase || 0) : 0;
+    const dailyUsed = p.baseDayKey === tKey ? Number(p.dailyUsedBase || 0) : 0;
     const monthlyUsed =
         p.baseMonthKey === mKey ? Number(p.monthlyUsedBase || 0) : 0;
 
@@ -175,7 +174,7 @@ function summarize(p) {
 
     const worst = Math.min(
         DAILY_LIMIT > 0 ? remDaily / DAILY_LIMIT : 1,
-        MONTHLY_LIMIT > 0 ? remMonthly / MONTHLY_LIMIT : 1
+        MONTHLY_LIMIT > 0 ? remMonthly / MONTHLY_LIMIT : 1,
     );
 
     return {
@@ -184,7 +183,7 @@ function summarize(p) {
         monthlyUsed,
         remDaily,
         remMonthly,
-        status: worst < 0.2 ? "red" : worst < 0.5 ? "yellow" : "green"
+        status: worst < 0.2 ? "red" : worst < 0.5 ? "yellow" : "green",
     };
 }
 
@@ -197,8 +196,7 @@ function checkSend(p, amount, when = new Date()) {
     const mKey = monthKey(now);
 
     const balance = Number(p.initialBalance || 0);
-    const curDaily =
-        p.baseDayKey === tKey ? Number(p.dailyUsedBase || 0) : 0;
+    const curDaily = p.baseDayKey === tKey ? Number(p.dailyUsedBase || 0) : 0;
     const curMonthly =
         p.baseMonthKey === mKey ? Number(p.monthlyUsedBase || 0) : 0;
 
@@ -226,8 +224,8 @@ function checkSend(p, amount, when = new Date()) {
    PAGE ROUTING
    ============================================================ */
 function show(id) {
-    ["viewDashboard", "viewAddPerson", "viewPerson"].forEach(v =>
-        document.getElementById(v).classList.toggle("hidden", v !== id)
+    ["viewDashboard", "viewAddPerson", "viewPerson"].forEach((v) =>
+        document.getElementById(v).classList.toggle("hidden", v !== id),
     );
     window.scrollTo(0, 0);
 }
@@ -287,7 +285,7 @@ const DEFAULT_LOGO =
   <rect width="64" height="64" rx="18" fill="url(#g)"/>
   <text x="32" y="44" font-family="Arial,sans-serif" font-size="32"
         font-weight="700" fill="#fff" text-anchor="middle">৳</text>
-</svg>`
+</svg>`,
     );
 
 function renderLogo() {
@@ -347,7 +345,7 @@ function previewPhoto(e) {
 function avatarHTML(person, sizeClass) {
     if (person.photo) {
         return `<img class="avatar ${sizeClass}" src="${esc(person.photo)}" alt="${esc(
-            person.name
+            person.name,
         )}" />`;
     }
     return `<div class="avatar ${sizeClass}">${initialsOf(person.name)}</div>`;
@@ -361,13 +359,13 @@ function showModal({
     description = "",
     fields,
     submitLabel = "ঠিক আছে",
-    cancelLabel = "বাতিল"
+    cancelLabel = "বাতিল",
 }) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         const modalId = "m" + uid();
         const fieldsHtml = fields
             .map(
-                f => `
+                (f) => `
             <div class="field">
                 <label>${esc(f.label)}</label>
                 <input id="${modalId}_${f.id}"
@@ -376,7 +374,7 @@ function showModal({
                        placeholder="${esc(f.placeholder || "")}"
                        inputmode="${f.inputmode || "text"}" />
             </div>
-        `
+        `,
             )
             .join("");
 
@@ -394,12 +392,12 @@ function showModal({
             </div>`;
 
         const bg = document.getElementById(`${modalId}_bg`);
-        const cleanup = result => {
+        const cleanup = (result) => {
             document.getElementById("modalRoot").innerHTML = "";
             resolve(result);
         };
 
-        bg.addEventListener("click", e => {
+        bg.addEventListener("click", (e) => {
             if (e.target === bg) cleanup(null);
         });
         document.getElementById(`${modalId}_cancel`).onclick = () => cleanup(null);
@@ -423,9 +421,9 @@ function confirmModal({
     title,
     description,
     submitLabel = "হ্যাঁ",
-    cancelLabel = "না"
+    cancelLabel = "না",
 }) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         const modalId = "m" + uid();
         document.getElementById("modalRoot").innerHTML = `
             <div class="modal-bg" id="${modalId}_bg">
@@ -440,12 +438,12 @@ function confirmModal({
             </div>`;
 
         const bg = document.getElementById(`${modalId}_bg`);
-        const cleanup = result => {
+        const cleanup = (result) => {
             document.getElementById("modalRoot").innerHTML = "";
             resolve(result);
         };
 
-        bg.addEventListener("click", e => {
+        bg.addEventListener("click", (e) => {
             if (e.target === bg) cleanup(false);
         });
         document.getElementById(`${modalId}_cancel`).onclick = () => cleanup(false);
@@ -476,9 +474,9 @@ function renderDashboard() {
     const q = box ? box.value.trim().toLowerCase() : "";
     const list = q
         ? db.people.filter(
-            p =>
+            (p) =>
                 (p.name || "").toLowerCase().includes(q) ||
-                (p.bkashNumber || "").includes(q)
+                (p.bkashNumber || "").includes(q),
         )
         : db.people;
 
@@ -494,8 +492,7 @@ function renderDashboard() {
 
     const bar = (rem, limit) => {
         const used = Math.max(0, Math.min(100, ((limit - rem) / limit) * 100));
-        const color =
-            rem <= 0 ? "#b3122f" : used >= 70 ? "#f59e0b" : "#16a34a";
+        const color = rem <= 0 ? "#b3122f" : used >= 70 ? "#f59e0b" : "#16a34a";
         return `<div class="bar"><span style="width:${used}%;background:${color}"></span></div>`;
     };
 
@@ -541,12 +538,68 @@ function renderDashboard() {
         })
         .join("");
 }
+/* ============================================================
+   BUNDLE — sub text (expiry + days left)
+   ============================================================ */
+function bundleSubText(p) {
+    const bundle = p.bundleCount;
+    if (!bundle || bundle == 0) return "";
+    return p.bundleExpiry + " দিন বাকি";
+}
+/* ============================================================
+   BUNDLE — edit modal
+   ============================================================ */
+/* ============================================================
+   BUNDLE — add count
+   ============================================================ */
+async function editBundle(id) {
+    const p = db.people.find((x) => x.id === id);
+    if (!p) return;
 
+    const have = Number(p.bundleCount || 0);
+
+    const result = await showModal({
+        title: "📦 সেন্ড মানি বান্ডেল",
+        description: `এখন আছে: <b>${have}</b> টি বান্ডেল। কয়টা যোগ করবেন?`,
+        fields: [
+            {
+                id: "count",
+                label: "কয়টা যোগ করবেন?",
+                type: "number",
+                inputmode: "numeric",
+                value: "",
+            },
+        ],
+        submitLabel: "✔ যোগ করুন",
+    });
+    if (!result) return;
+
+    const add = Number(result.count) || 0;
+    if (add <= 0) {
+        toast("সঠিক সংখ্যা লিখুন", "error");
+        return;
+    }
+
+    try {
+        await api("/api/people/bandle/" + id, {
+            method: "PATCH",
+            body: {
+                bundleCount: have + add,
+                bundleExpiry: 30,
+            },
+        });
+        await refreshPerson(id);
+        toast("বান্ডেল যোগ করা হয়েছে ✔", "success");
+        renderPerson(id);
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
+}
 /* ============================================================
    PERSON DETAIL
    ============================================================ */
 function renderPerson(id, all) {
-    const p = db.people.find(x => x.id === id);
+    const p = db.people.find((x) => x.id === id);
     if (!p) {
         showDashboard();
         return;
@@ -554,7 +607,7 @@ function renderPerson(id, all) {
 
     const s = summarize(p);
     const txns = [...(p.transactions || [])].sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
+        (a, b) => new Date(b.date) - new Date(a.date),
     );
 
     const visible = all ? txns : txns.slice(0, 10);
@@ -565,18 +618,26 @@ function renderPerson(id, all) {
     const noBalance = s.balance <= 0;
     const msgBlocked = blocked || noBalance || !p.whatsappNumber;
 
+    const bundleLeft = Number(p.bundleLeft || 0);
+    const hasBundle = bundleLeft > 0 || !!p.bundleExpiry;
+    const bundleSub = bundleSubText(p);
+    const bundleExpired =
+        p.bundleExpiry &&
+        new Date(String(p.bundleExpiry).slice(0, 10)).getTime() <
+        new Date(dayKey()).getTime();
+
     const warnings = [];
     if (noBalance)
         warnings.push(
-            "ব্যালেন্স নেই — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।"
+            "ব্যালেন্স নেই — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।",
         );
     if (dailyBlocked)
         warnings.push(
-            "আজকের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।"
+            "আজকের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।",
         );
     if (monthlyBlocked)
         warnings.push(
-            "এই মাসের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।"
+            "এই মাসের সীমা শেষ — টাকা পাঠানো বা মেসেজ পাঠানো যাবে না। রিসিভ করা যাবে।",
         );
 
     document.getElementById("personDetail").innerHTML = `
@@ -587,17 +648,15 @@ function renderPerson(id, all) {
                 ${avatarHTML(p, "avatar-lg")}
                 <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
                     <h2 style="margin:0 0 2px;display:block;font-size:22px">${esc(p.name)}</h2>
-                    
-                    <!-- Normalized bkash number layout -->
+
                     <div style="color:var(--muted);font-size:15px;display:flex;align-items:center;gap:6px;line-height:1.2;">
-                        <span>বিকাশ:</span> 
+                        <span>বিকাশ:</span>
                         <span class="detail-phone-num">${esc(p.bkashNumber)}</span>
                     </div>
-                    
-                    <!-- Normalized whatsapp number layout matching the size of bkash -->
+
                     ${p.whatsappNumber
             ? `<div style="color:var(--muted);font-size:15px;display:flex;align-items:center;gap:6px;line-height:1.2;">
-                        <span>হোয়াটসঅ্যাপ:</span> 
+                        <span>হোয়াটসঅ্যাপ:</span>
                         <span class="detail-phone-num">${esc(p.whatsappNumber)}</span>
                        </div>`
             : ""
@@ -613,25 +672,32 @@ function renderPerson(id, all) {
             : ""
         }
 
+            <!-- 4 STAT BOXES -->
             <div class="stats" style="margin-top:18px">
-                <div class="stat">
+
+                <div class="stat stat-balance">
                     <div class="lbl">ব্যালেন্স</div>
                     <div class="val">${money(s.balance)}</div>
                 </div>
+
                 <div class="stat">
                     <div class="lbl">দৈনিক লিমিট</div>
-                    <div class="val" style="${dailyBlocked ? "color:#b3122f" : ""}">${money(
-            s.remDaily
-        )}</div>
+                    <div class="val" style="${dailyBlocked ? "color:#b3122f" : ""}">${money(s.remDaily)}</div>
                     <div class="sub">খরচ ${money(s.dailyUsed)} / ${money(DAILY_LIMIT)}</div>
                 </div>
+
                 <div class="stat">
                     <div class="lbl">মাসিক লিমিট</div>
-                    <div class="val" style="${monthlyBlocked ? "color:#b3122f" : ""}">${money(
-            s.remMonthly
-        )}</div>
+                    <div class="val" style="${monthlyBlocked ? "color:#b3122f" : ""}">${money(s.remMonthly)}</div>
                     <div class="sub">খরচ ${money(s.monthlyUsed)} / ${money(MONTHLY_LIMIT)}</div>
                 </div>
+
+              <div class="stat stat-bundle">
+    <div class="lbl">📦 সেন্ড মানি বান্ডেল</div>
+    <div class="val">${p.bundleCount || 0}টি</div>
+    <div class="sub">${bundleSubText(p)}</div>
+</div>
+
             </div>
 
             <div class="toolbar" style="margin-top:18px">
@@ -639,6 +705,7 @@ function renderPerson(id, all) {
                         onclick="openWaModal('${p.id}')">
                     ${msgBlocked ? "🚫 মেসেজ পাঠানো বন্ধ" : "📱 ম্যাসাজ পাঠান"}
                 </button>
+                <button class="btn btn-light btn-sm" onclick="editBundle('${p.id}')">📦 বান্ডেল</button>
                 <button class="btn btn-light btn-sm" onclick="changePersonPhoto('${p.id}')">📷 ছবি পরিবর্তন</button>
                 <button class="btn btn-light btn-sm" onclick="editUsed('${p.id}')">✏️ লিমিট ঠিক করুন</button>
                 <button class="btn btn-danger btn-sm" onclick="deletePerson('${p.id}')">🗑 মুছুন</button>
@@ -694,32 +761,42 @@ function renderPerson(id, all) {
                 p.id,
                 visible,
                 txns.length > visible.length,
-                txns.length - visible.length
+                txns.length - visible.length,
             )
         }
             </div>
         </details>
     `;
 }
-
-
 /* ============================================================
    TRANSACTION LIST
  /* ============================================================ */
 function renderTxList(personId, txns, hasMore, remaining) {
     const rows = txns
-        .map(t => {
+        .map((t) => {
             const typeClass = t.type === "send" ? "send" : "receive";
             const typeLabel = t.type === "send" ? "সেন্ড মানি" : "রিসিভ মানি";
 
             // --- UPDATED DATE & TIME FORMATTING ---
             const d = new Date(t.date);
-            const dateStr = d.toLocaleDateString("en-GB", { day: "numeric", month: "numeric", year: "numeric" });
-            const timeStr = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+            const dateStr = d.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "numeric",
+                year: "numeric",
+            });
+            const timeStr = d.toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+            });
             // --------------------------------------
 
-            const counterpartyHtml = t.counterparty ? `<span class="tx-counterparty">${esc(t.counterparty)}</span>` : `<span class="tx-counterparty tx-empty">—</span>`;
-            const notesHtml = t.notes ? `<div class="tx-notes">📝 ${esc(t.notes)}</div>` : "";
+            const counterpartyHtml = t.counterparty
+                ? `<span class="tx-counterparty">${esc(t.counterparty)}</span>`
+                : `<span class="tx-counterparty tx-empty">—</span>`;
+            const notesHtml = t.notes
+                ? `<div class="tx-notes">📝 ${esc(t.notes)}</div>`
+                : "";
 
             return `
         <div class="tx-item">
@@ -736,10 +813,11 @@ function renderTxList(personId, txns, hasMore, remaining) {
         })
         .join("");
 
-    const moreBtn = hasMore ? `<button class="btn btn-light btn-block" style="margin-top:12px" onclick="renderPerson('${personId}', true)"> আরও দেখুন (${remaining}) </button>` : "";
+    const moreBtn = hasMore
+        ? `<button class="btn btn-light btn-block" style="margin-top:12px" onclick="renderPerson('${personId}', true)"> আরও দেখুন (${remaining}) </button>`
+        : "";
     return `<div class="tx-list">${rows}</div>${moreBtn}`;
 }
-
 
 /* ============================================================
    WHATSAPP MODAL — send message section
@@ -751,7 +829,7 @@ function buildWaMessage(p, amount, dest, waNumber) {
 }
 
 function openWaModal(personId) {
-    const p = db.people.find(x => x.id === personId);
+    const p = db.people.find((x) => x.id === personId);
     if (!p) return;
 
     const s = summarize(p);
@@ -768,8 +846,7 @@ function openWaModal(personId) {
         toast("ব্যালেন্স নেই — মেসেজ পাঠানো যাবে না", "error");
         return;
     }
-    if(!p.whatsappNumber)
-    {
+    if (!p.whatsappNumber) {
         toast("হোয়াটস্যাপ নম্বর নেই — মেসেজ পাঠানো যাবে না", "error");
         return;
     }
@@ -783,8 +860,6 @@ function openWaModal(personId) {
         toast("এই মানুষের হোয়াটসঅ্যাপ নম্বর নেই — আগে যোগ করুন", "error");
         return;
     }
-
-
 
     document.getElementById("modalRoot").innerHTML = `
         <div class="modal-bg" onclick="if(event.target===this)closeModal()">
@@ -816,11 +891,15 @@ function openWaModal(personId) {
     const update = () => {
         const amt = Number(document.getElementById("waAmount").value) || 0;
         const dest = document.getElementById("waDest").value || "";
-        document.getElementById("waPreview").textContent =
-            buildWaMessage(p, amt, dest, waNumber);
+        document.getElementById("waPreview").textContent = buildWaMessage(
+            p,
+            amt,
+            dest,
+            waNumber,
+        );
     };
 
-    ["waAmount", "waDest"].forEach(id => {
+    ["waAmount", "waDest"].forEach((id) => {
         document.getElementById(id).addEventListener("input", update);
     });
 
@@ -833,7 +912,7 @@ function closeModal() {
 }
 
 function sendWaMessage(personId) {
-    const p = db.people.find(x => x.id === personId);
+    const p = db.people.find((x) => x.id === personId);
     if (!p) return;
 
     const s = summarize(p);
@@ -892,7 +971,7 @@ function sendWaMessage(personId) {
 async function submitPerson(e) {
     e.preventDefault();
     const f = new FormData(e.target);
-    const num = k => Number(f.get(k)) || 0;
+    const num = (k) => Number(f.get(k)) || 0;
 
     const fi = e.target.querySelector('input[name="photo"]');
     const photoFile = fi && fi.files ? fi.files[0] : null;
@@ -924,7 +1003,7 @@ async function submitPerson(e) {
    ============================================================ */
 async function submitTransaction(e, personId) {
     e.preventDefault();
-    const p = db.people.find(x => x.id === personId);
+    const p = db.people.find((x) => x.id === personId);
     if (!p) return;
 
     const f = new FormData(e.target);
@@ -956,8 +1035,8 @@ async function submitTransaction(e, personId) {
                 amount,
                 date,
                 counterparty: (f.get("counterparty") || "").trim() || null,
-                notes: (f.get("notes") || "").trim() || null
-            }
+                notes: (f.get("notes") || "").trim() || null,
+            },
         });
         await refreshPerson(personId);
         toast("যোগ হয়েছে ✔", "success");
@@ -975,7 +1054,7 @@ async function deleteTxn(personId, txnId) {
         title: "মুছে ফেলবেন?",
         description:
             "এই লেনদেনটি চিরতরে মুছে যাবে। ব্যালেন্স বা সীমার হিসাব বদলাবে না।",
-        submitLabel: "হ্যাঁ, মুছুন"
+        submitLabel: "হ্যাঁ, মুছুন",
     });
     if (!ok) return;
 
@@ -990,13 +1069,13 @@ async function deleteTxn(personId, txnId) {
 }
 
 async function deletePerson(id) {
-    const p = db.people.find(x => x.id === id);
+    const p = db.people.find((x) => x.id === id);
     if (!p) return;
 
     const ok = await confirmModal({
         title: `${esc(p.name)} কে মুছবেন?`,
         description: "এই মানুষের সব লেনদেনও মুছে যাবে।",
-        submitLabel: "হ্যাঁ, মুছুন"
+        submitLabel: "হ্যাঁ, মুছুন",
     });
     if (!ok) return;
 
@@ -1013,7 +1092,7 @@ async function deletePerson(id) {
    EDIT USED AMOUNTS
    ============================================================ */
 async function editUsed(id) {
-    const p = db.people.find(x => x.id === id);
+    const p = db.people.find((x) => x.id === id);
     if (!p) return;
 
     const result = await showModal({
@@ -1025,17 +1104,17 @@ async function editUsed(id) {
                 label: "আজ পাঠানো হয়েছে",
                 type: "number",
                 inputmode: "numeric",
-                value: p.dailyUsedBase || 0
+                value: p.dailyUsedBase || 0,
             },
             {
                 id: "mu",
                 label: "এই মাসে পাঠানো হয়েছে",
                 type: "number",
                 inputmode: "numeric",
-                value: p.monthlyUsedBase || 0
-            }
+                value: p.monthlyUsedBase || 0,
+            },
         ],
-        submitLabel: "✔ সংরক্ষণ"
+        submitLabel: "✔ সংরক্ষণ",
     });
     if (!result) return;
 
@@ -1053,8 +1132,8 @@ async function editUsed(id) {
                 dailyUsedBase: du,
                 monthlyUsedBase: mu,
                 baseDayKey: dayKey(),
-                baseMonthKey: monthKey()
-            }
+                baseMonthKey: monthKey(),
+            },
         });
         await refreshPerson(id);
         toast("সংরক্ষণ হয়েছে ✔", "success");
@@ -1071,7 +1150,7 @@ function changePersonPhoto(id) {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = async e => {
+    input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -1081,7 +1160,7 @@ function changePersonPhoto(id) {
         try {
             await apiForm("/api/people/" + id, {
                 method: "PATCH",
-                formData: fd
+                formData: fd,
             });
             await refreshPerson(id);
             toast("ছবি বদলানো হয়েছে ✔", "success");
@@ -1099,13 +1178,13 @@ function changePersonPhoto(id) {
 async function exportCSV() {
     toast("তৈরি হচ্ছে...");
     const rows = [
-        ["নাম", "বিকাশ নম্বর", "ধরন", "টাকা", "তারিখ", "কার সাথে", "নোট"]
+        ["নাম", "বিকাশ নম্বর", "ধরন", "টাকা", "তারিখ", "কার সাথে", "নোট"],
     ];
 
     try {
         for (const person of db.people) {
             const full = await api("/api/people/" + person.id);
-            (full.transactions || []).forEach(t => {
+            (full.transactions || []).forEach((t) => {
                 rows.push([
                     person.name,
                     person.bkashNumber,
@@ -1113,7 +1192,7 @@ async function exportCSV() {
                     t.amount,
                     new Date(t.date).toLocaleString("bn-BD"),
                     t.counterparty || "",
-                    t.notes || ""
+                    t.notes || "",
                 ]);
             });
         }
@@ -1128,11 +1207,11 @@ async function exportCSV() {
     }
 
     const csv = rows
-        .map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(","))
+        .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
         .join("\n");
 
     const blob = new Blob(["\uFEFF" + csv], {
-        type: "text/csv;charset=utf-8;"
+        type: "text/csv;charset=utf-8;",
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
