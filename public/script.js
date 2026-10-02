@@ -450,11 +450,20 @@ function confirmModal({
         document.getElementById(`${modalId}_ok`).onclick = () => cleanup(true);
     });
 }
-
+function renderTotals() {
+    const totalPeople = db.people.length;
+    const totalBalance = db.people.reduce(
+        (sum, p) => sum + Number(p.initialBalance || 0),
+        0,
+    );
+    document.getElementById("totalPeople").textContent = totalPeople;
+    document.getElementById("totalBalance").textContent = money(totalBalance);
+}
 /* ============================================================
    DASHBOARD
    ============================================================ */
 function renderDashboard() {
+    renderTotals();
     const grid = document.getElementById("peopleGrid");
     const sb = document.getElementById("searchBar");
 
@@ -666,13 +675,13 @@ function renderPerson(id, all) {
                 <div class="stat">
                     <div class="lbl">দৈনিক লিমিট</div>
                     <div class="val" style="${dailyBlocked ? "color:#b3122f" : ""}">${money(s.remDaily)}</div>
-                    <div class="sub">খরচ ${money(s.dailyUsed)} / ${money(DAILY_LIMIT)}</div>
+                    <div class="sub">খরচ ${money(s.dailyUsed)}</div>
                 </div>
 
                 <div class="stat">
                     <div class="lbl">মাসিক লিমিট</div>
                     <div class="val" style="${monthlyBlocked ? "color:#b3122f" : ""}">${money(s.remMonthly)}</div>
-                    <div class="sub">খরচ ${money(s.monthlyUsed)} / ${money(MONTHLY_LIMIT)}</div>
+                    <div class="sub">খরচ ${money(s.monthlyUsed)} </div>
                 </div>
 
                 <div class="stat stat-bundle ${!p.bundleCount ? "stat-bundle-empty" : ""}">
