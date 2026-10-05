@@ -553,8 +553,22 @@ function renderDashboard() {
 function bundleSubText(p) {
     const bundle = p.bundleCount;
     if (!bundle || bundle == 0) return "";
-    return p.bundleExpiry + " দিন বাকি";
+
+    // Calculate expiry date (Today + bundleExpiry days)
+    const today = new Date();
+    const expiryDateObj = new Date();
+    expiryDateObj.setDate(today.getDate() + parseInt(p.bundleExpiry));
+
+    // Format the date as DD/MM/YYYY
+    const day = String(expiryDateObj.getDate()).padStart(2, '0');
+    const month = String(expiryDateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = expiryDateObj.getFullYear();
+    const formattedExpiryDate = `${day}/${month}/${year}`;
+
+    // Returns e.g., "5 দিন বাকি (মেয়াদ: 10/10/2026)"
+    return p.bundleExpiry + " দিন বাকি (মেয়াদ: " + formattedExpiryDate + ")";
 }
+
 /* ============================================================
    BUNDLE — edit modal
    ============================================================ */
