@@ -520,6 +520,8 @@ function renderDashboard() {
                     <div class="p-name">
                         <h3>
                             ${esc(p.name)}
+                            <span class="bundle-pill ${!p.bundleCount ? "bundle-pill-empty" : ""}"
+                                  title="সেন্ড মানি বান্ডেল">📦 ${p.bundleCount || 0}</span>
                             ${blocked ? '<span class="block-badge">সীমা শেষ</span>' : ""}
                         </h3>
                         <div class="num">${esc(p.bkashNumber)}</div>
@@ -1239,7 +1241,55 @@ async function exportCSV() {
     URL.revokeObjectURL(url);
     toast("ডাউনলোড হয়েছে ✔", "success");
 }
+/* ============================================================
+   DISABLE ZOOM + COPY
+   ============================================================ */
 
+/* Block Ctrl/Cmd + wheel zoom */
+document.addEventListener("wheel", (e) => {
+    if (e.ctrlKey || e.metaKey) e.preventDefault();
+}, { passive: false });
+
+/* Block pinch zoom on iOS Safari */
+document.addEventListener("gesturestart", (e) => e.preventDefault());
+document.addEventListener("gesturechange", (e) => e.preventDefault());
+document.addEventListener("gestureend", (e) => e.preventDefault());
+
+/* Block multi-touch pinch zoom */
+document.addEventListener("touchstart", (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+document.addEventListener("touchmove", (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+/* Block Ctrl+C / Ctrl+A / Ctrl+X — but allow inside inputs */
+document.addEventListener("keydown", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    const isEditable = tag === "input" || tag === "textarea" || e.target.isContentEditable;
+
+    if ((e.ctrlKey || e.metaKey) && !isEditable) {
+        const k = e.key.toLowerCase();
+        if (k === "c" || k === "a" || k === "x" || k === "s" || k === "u") {
+            e.preventDefault();
+        }
+    }
+});
+
+/* Block right-click context menu */
+document.addEventListener("contextmenu", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return; // allow in fields
+    e.preventDefault();
+});
+
+/* Block double-tap zoom on mobile */
+let lastTouchEnd = 0;
+document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+}, { passive: false });
 /* ============================================================
    INIT
    ============================================================ */
