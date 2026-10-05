@@ -7,7 +7,7 @@ process.env.TZ = "Asia/Dhaka";
    IMPORTS
    ============================================================ */
 require("dotenv").config();
-
+const cron = require('node-cron');
 const path = require("path");
 const dns = require("node:dns");
 const express = require("express");
@@ -484,5 +484,25 @@ app.listen(PORT, () => {
     console.log(`Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
     console.log(`Today: ${dayKey(new Date())}`);
 });
+
+
+
+
+// Schedule task to run every day at 12:00 AM (Midnight)
+cron.schedule('0 0 * * *', async () => {
+
+    try {
+        const result = await Person.updateMany(
+            { bundleExpiry: { $gt: 0 } },
+            { $inc: { bundleExpiry: -1 } }
+        );
+
+        console.log(`Updated ${result.modifiedCount} active bundles.`);
+    } catch (error) {
+        console.error('Error updating bundle expiry in MongoDB:', error);
+    }
+});
+
+
 
 module.exports = app;
