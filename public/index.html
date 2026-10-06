@@ -4,213 +4,411 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#d12053" />
-    <title>বিকাশ হিসাব</title>
-
-    <link rel="stylesheet" href="style.css" />
+    <meta name="theme-color" content="#E2136E" />
+    <title>bKash ড্যাশবোর্ড</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      :root {
+        --pink: #e2136e;
+        --pink-soft: #fce4ef;
+        --pink-glow: rgba(226, 19, 110, 0.18);
+        --bg: #f7f7fa;
+        --card: #fff;
+        --text: #1a1a2e;
+        --muted: #8a8a9e;
+        --border: #efeff4;
+        --r: 18px;
+        --shadow: 0 2px 12px rgba(20, 20, 50, 0.06);
+        --shadow-lg: 0 12px 32px rgba(20, 20, 50, 0.1);
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: #efeff4;
+        color: var(--text);
+        font-family:
+          "Hind Siliguri",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border: 0;
+        background: none;
+      }
+      .icon {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      /* ============ APP SHELL ============ */
+      .app {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+      }
+
+      /* ---- HEADER ---- */
+      .topbar {
+        background: linear-gradient(135deg, var(--pink), #ff3d8e);
+        color: #fff;
+        padding: 18px 18px 22px;
+        border-radius: 0 0 26px 26px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        box-shadow: 0 6px 20px var(--pink-glow);
+      }
+      .topbar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+      .brand-logo {
+        background: #fff;
+        color: var(--pink);
+        font-weight: 800;
+        font-size: 13px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        letter-spacing: 0.3px;
+      }
+      .brand-text {
+        min-width: 0;
+      }
+      .brand-text h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 650;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .brand-sub {
+        font-size: 11.5px;
+        opacity: 0.85;
+        display: block;
+      }
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.22);
+        font-weight: 700;
+        font-size: 12.5px;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        flex: 0 0 auto;
+      }
+
+      /* ---- CONTENT ---- */
+      .content {
+        flex: 1;
+        padding: 22px 16px 40px;
+      }
+
+      /* ============ SECTION TITLE ============ */
+      .sec-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 6px 0 14px;
+      }
+      .sec-title h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .sec-title .pill {
+        background: var(--pink-soft);
+        color: var(--pink);
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 99px;
+      }
+
+      /* ============ SERVICES GRID ============ */
+      .services {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .service {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 20px 18px;
+        border-radius: var(--r);
+        background: var(--card);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        text-align: left;
+        transition:
+          transform 0.18s,
+          box-shadow 0.18s,
+          border-color 0.18s;
+        position: relative;
+        overflow: hidden;
+      }
+      .service::after {
+        content: "";
+        position: absolute;
+        right: -30px;
+        top: -30px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: var(--pink-soft);
+        opacity: 0.55;
+        transition: transform 0.35s;
+      }
+      .service:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+        border-color: #f4d0e1;
+      }
+      .service:hover::after {
+        transform: scale(1.25);
+      }
+      .service:active {
+        transform: translateY(-1px);
+      }
+      .service-ico {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--pink), #ff3d8e);
+        color: #fff;
+        box-shadow: 0 6px 14px var(--pink-glow);
+        position: relative;
+        z-index: 1;
+      }
+      .service-ico .icon {
+        width: 24px;
+        height: 24px;
+        stroke-width: 2.1;
+      }
+      .service b {
+        font-size: 15.5px;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+      }
+      .service small {
+        font-size: 12.5px;
+        color: var(--muted);
+        position: relative;
+        z-index: 1;
+        line-height: 1.4;
+        margin-top: -6px;
+      }
+
+      /* ============ TOAST (for feedback) ============ */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: #1a1a2e;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 99px;
+        font-size: 13.5px;
+        font-weight: 600;
+        z-index: 120;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.25s;
+        white-space: nowrap;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
   </head>
-
   <body>
-    <!-- ============================================================
-         TOP BAR
-    ============================================================ -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <img id="brandLogo" alt="লোগো" />
-        <div class="topbar-titles">
-          <h1>বিকাশ হিসাব</h1>
-        </div>
-      </div>
-    </header>
+    <!-- ============ ICON SPRITE ============ -->
+    <svg style="display: none" aria-hidden="true">
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </symbol>
+    </svg>
 
-    <!-- ============================================================
-         MAIN CONTAINER
-    ============================================================ -->
-    <main class="container">
-      <!-- ========================================================
-             VIEW: DASHBOARD
-        ========================================================= -->
-      <section id="viewDashboard" class="view">
-        <div id="searchBar" class="searchbar">
-          <input
-            id="searchBox"
-            type="search"
-            placeholder="নাম বা নম্বর খুঁজুন"
-            oninput="renderDashboard()"
-            autocomplete="off"
-          />
-          <button
-            class="add-btn"
-            onclick="showAddPerson()"
-            aria-label="নতুন মানুষ যোগ করুন"
-          >
-            <i>+</i> যোগ
-          </button>
-        </div>
-        <div class="summary">
-          <div class="summary-item">
-            <span>মোট মানুষ</span><b id="totalPeople">0</b>
+    <!-- ============ APP ============ -->
+    <div class="app">
+      <!-- HEADER -->
+      <header class="topbar">
+        <div class="topbar-row">
+          <div class="brand">
+            <div class="brand-logo">bKash</div>
+            <div class="brand-text">
+              <h1>ড্যাশবোর্ড</h1>
+              <span class="brand-sub">সেবাসমূহ</span>
+            </div>
           </div>
-          <div class="summary-item">
-            <span>মোট ব্যালেন্স</span><b id="totalBalance">৳0</b>
-          </div>
+          <div class="avatar">JC</div>
         </div>
-        <div id="peopleGrid" class="people-grid"></div>
-      </section>
+      </header>
 
-      <!-- ========================================================
-             VIEW: ADD PERSON
-        ========================================================= -->
-      <section id="viewAddPerson" class="view hidden">
-        <button class="back" onclick="showDashboard()">
-          <span>←</span> ফিরে যান
-        </button>
-
-        <div class="panel">
-          <h2 class="panel-title">
-            <span class="panel-title-icon">✨</span>
-            নতুন মানুষের হিসাব
-          </h2>
-
-          <form onsubmit="submitPerson(event)">
-            <!-- Photo -->
-            <div class="field photo-field">
-              <div class="photo-picker">
-                <div id="photoFallback" class="avatar avatar-xl">?</div>
-                <img id="photoPreview" class="avatar avatar-xl hidden" alt="" />
-                <label class="photo-btn">
-                  📷 ছবি নিন
-                  <input
-                    name="photo"
-                    type="file"
-                    accept="image/*"
-                    onchange="previewPhoto(event)"
-                    hidden
-                  />
-                </label>
-              </div>
-            </div>
-
-            <!-- Name -->
-            <div class="field">
-              <label>নাম</label>
-              <input
-                name="name"
-                type="text"
-                required
-                placeholder="যেমন: করিম"
-                autocomplete="off"
-              />
-            </div>
-
-            <!-- bKash number -->
-            <div class="field">
-              <label>বিকাশ নম্বর</label>
-              <input
-                name="bKashNumber"
-                type="tel"
-                required
-                pattern="01[0-9]{9}"
-                placeholder="01XXXXXXXXX"
-                maxlength="11"
-                inputmode="numeric"
-              />
-            </div>
-
-            <!-- WhatsApp -->
-            <div class="field">
-              <label
-                >হোয়াটসঅ্যাপ নম্বর
-                <span class="opt">(না দিলেও চলবে)</span></label
-              >
-              <input
-                name="whatsappNumber"
-                type="tel"
-                placeholder="8801XXXXXXXXX"
-                inputmode="numeric"
-              />
-            </div>
-
-            <!-- Current balance -->
-            <div class="field">
-              <label>এখন কত টাকা আছে?</label>
-              <input
-                name="initialBalance"
-                type="number"
-                step="1"
-                value=""
-                inputmode="numeric"
-              />
-            </div>
-
-            <!-- Used baseline -->
-            <h3 class="section-label">💸 এখন পর্যন্ত কত টাকা পাঠানো হয়েছে?</h3>
-
-            <div class="row">
-              <div class="field">
-                <label>আজ</label>
-                <input
-                  name="dailyUsedBase"
-                  type="number"
-                  min="0"
-                  value=""
-                  inputmode="numeric"
-                />
-              </div>
-              <div class="field">
-                <label>এই মাসে</label>
-                <input
-                  name="monthlyUsedBase"
-                  type="number"
-                  min="0"
-                  value=""
-                  inputmode="numeric"
-                />
-              </div>
-            </div>
-
-            <div class="info">
-              <span class="info-icon">💡</span>
-              <div>
-                আজ ও এই মাসে পাঠানো টাকার পরিমাণ লিখুন। বাকি টাকা অ্যাপ নিজেই
-                হিসাব করে দেখাবে।
-              </div>
-            </div>
-
-            <button class="btn btn-primary btn-block btn-xl" type="submit">
-              ✔ সংরক্ষণ করুন
-            </button>
-          </form>
+      <!-- CONTENT -->
+      <main class="content">
+        <div class="sec-title">
+          <h2>সেবাসমূহ</h2>
+          <span class="pill" id="svcCount">০ টি</span>
         </div>
-      </section>
 
-      <!-- ========================================================
-             VIEW: PERSON DETAIL
-        ========================================================= -->
-      <section id="viewPerson" class="view hidden">
-        <button class="back" onclick="showDashboard()">
-          <span>←</span> ফিরে যান
-        </button>
+        <!-- SERVICES GRID — rendered by JS -->
+        <div class="services" id="servicesGrid"></div>
+      </main>
+    </div>
 
-        <div id="personDetail"></div>
-      </section>
-    </main>
-
-    <!-- ============================================================
-         TOAST + MODAL ROOT
-    ============================================================ -->
     <div class="toast" id="toast"></div>
-    <div id="modalRoot"></div>
 
-    <script src="script.js"></script>
+    <script>
+      (() => {
+        "use strict";
+
+        const $ = (s, c = document) => c.querySelector(s);
+
+        /* =================================================
+     🎯 SERVICES  — add / edit here
+     ---------------------------------------------------
+     icon  : sprite id
+     label : title
+     desc  : small description
+     route : any string → used as the action key
+  ================================================= */
+        const SERVICES = [
+          {
+            icon: "i-edit",
+            label: "এন্ট্রি ম্যানেজার",
+            desc: "দৈনিক হিসাব",
+            route: "entry",
+          },
+          {
+            icon: "i-users",
+            label: "হিসাব",
+            desc: "মানুষের ব্যালেন্স",
+            route: "hisab",
+          },
+
+          // 👇 add more services here — same shape
+        ];
+
+        /* =================================================
+     RENDER
+  ================================================= */
+        const grid = $("#servicesGrid");
+
+        grid.innerHTML = SERVICES.map(
+          (s, i) => `
+    <button class="service" data-idx="${i}">
+      <span class="service-ico">
+        <svg class="icon"><use href="#${s.icon}"/></svg>
+      </span>
+      <b>${s.label}</b>
+      <small>${s.desc}</small>
+    </button>
+  `,
+        ).join("");
+
+        const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+        $("#svcCount").textContent =
+          String(SERVICES.length).replace(/\d/g, (d) => bnDigits[+d]) + " টি";
+
+        /* =================================================
+     ROUTER — plug your existing functions here
+  ================================================= */
+        const ROUTES = {
+          entry: () => {
+            // 👉 e.g. showEntryManager();  or  location.hash = '#entry';
+            window.location.replace("/Entry");
+            toast("এন্ট্রি ম্যানেজার খোলা হচ্ছে…");
+          },
+          hisab: () => {
+            window.location.replace("/Bkash");
+            // 👉 e.g. showHisab();  or  location.hash = '#hisab';
+
+            toast("হিসাব খোলা হচ্ছে…");
+          },
+        };
+
+        grid.addEventListener("click", (e) => {
+          const btn = e.target.closest(".service");
+          if (!btn) return;
+          const s = SERVICES[+btn.dataset.idx];
+          if (!s) return;
+          const go = ROUTES[s.route];
+          if (typeof go === "function") go();
+          else toast(s.label);
+        });
+
+        /* =================================================
+     TOAST
+  ================================================= */
+        function toast(msg) {
+          const el = $("#toast");
+          el.textContent = msg;
+          el.classList.add("show");
+          clearTimeout(el._t);
+          el._t = setTimeout(() => el.classList.remove("show"), 1800);
+        }
+      })();
+    </script>
   </body>
 </html>
