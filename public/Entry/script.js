@@ -331,10 +331,7 @@ function renderMonthList() {
         return `
             <article class="month-card">
                 <button class="month-btn" data-open-month="${ym}" type="button">
-                    <div class="month-badge">
-                        <b>${monthShort(ym)}</b>
-                        <small>${toBn(ym.slice(0, 4))}</small>
-                    </div>
+                  
                     <div class="month-info">
                         <div class="month-name">${monthName(ym)} ${toBn(ym.slice(0, 4))}</div>
                         <div class="month-meta">
@@ -393,7 +390,7 @@ function renderDayCard(date, d) {
             <button class="day-head" data-td="${date}" type="button">
                 <div class="day-chip">
                     <b>${toBn(+date.slice(8))}</b>
-                    <small>${MONTHS[+date.slice(5, 7) - 1].slice(0, 3)}</small>
+                   
                 </div>
                 <div class="day-info">
                     <div class="d1">${weekday(date)}</div>

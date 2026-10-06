@@ -532,9 +532,27 @@ app.get("/entries", async (req, res) => {
 
 
 
+app.delete("/entries/by-date/:date", async (req, res) => {
+    try {
+        const del = await Entries.findOneAndDelete({ date: req.params.date });
 
+        if (!del) {
+            return res.status(404).json({
+                ok: false,
+                message: "এই তারিখে কোনো এন্ট্রি পাওয়া যায়নি"
+            });
+        }
 
-
+        console.log("deleted:", del);
+        return res.json({ ok: true, deleted: del });
+    } catch (err) {
+        console.error("delete error:", err);
+        return res.status(500).json({
+            ok: false,
+            message: err.message || "সার্ভার ত্রুটি"
+        });
+    }
+});
 
 
 
