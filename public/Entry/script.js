@@ -2,10 +2,10 @@
    API CONFIG
    ============================================================ */
 const API_BASE = '';   // 👈 change to your backend
-const API_TOKEN = '';                           // 👈 optional
+const API_TOKEN = '';  // 👈 optional
 
 async function api(path, options = {}) {
-    const res = await fetch(path, {
+    const res = await fetch(API_BASE + path, {
         ...options,
         headers: {
             'Content-Type': 'application/json',
@@ -29,6 +29,7 @@ let records = [];
 const openDays = new Set();
 let confirmCb = null;
 let lastTotals = { amount: 0, numbers: 0, days: 0 };
+let currentRoute = '';
 
 /* ============================================================
    BACKEND CRUD
@@ -116,9 +117,6 @@ document.getElementById('confirmYes').onclick = async () => {
 };
 
 /* ============================================================
-   PARSE
-   ============================================================ */
-/* ============================================================
    PARSE — WhatsApp export + plain text
    শুধু নম্বর ও টাকা বের করে। তারিখ বাদ।
    ============================================================ */
@@ -146,7 +144,7 @@ function normalizePhone(raw) {
 
 /* ---- find phone + position in a line ---- */
 function extractPhone(line) {
-    // Constrained pattern: doesn't swallow the amount that follows
+    // Constrained: stops right after 11 digits, doesn't swallow following amount
     const re = /(?:(?:\+|00)?88[\s\-]?)?0[\s\-]?1[\s\-]?\d{3}[\s\-]?\d{6}/;
     const m = line.match(re);
     if (!m) return null;
@@ -284,7 +282,7 @@ document.getElementById('previewBtn').onclick = () => {
 };
 
 /* ============================================================
-   SAVE  → POST to backend
+   SAVE → POST to backend (smooth incremental update)
    ============================================================ */
 document.getElementById('saveBtn').onclick = async () => {
     const date = document.getElementById('date').value;
@@ -295,7 +293,6 @@ document.getElementById('saveBtn').onclick = async () => {
     if (!entries.length) return toast('বৈধ এন্ট্রি পাওয়া যায়নি', 'err');
 
     const total = entries.reduce((s, e) => s + e.amount, 0);
-
     const saveBtn = document.getElementById('saveBtn');
     saveBtn.disabled = true;
 
@@ -310,17 +307,71 @@ document.getElementById('saveBtn').onclick = async () => {
         closeSheet();
         openDays.add(date);
 
+        const ym = date.slice(0, 7);
+        const wasOnSameMonth = currentRoute === `month/${ym}`;
+
         toast(`সেভ হয়েছে • ${toBn(entries.length)} এন্ট্রি • ৳${bn(total)}`, 'ok');
 
-        const ym = date.slice(0, 7);
-        if (currentRoute === `month/${ym}`) renderMonthView(ym);
-        else navigateTo(`month/${ym}`);
+        if (wasOnSameMonth) {
+            // 🎯 In-place smooth update — no navigation, no full rebuild
+            upsertDayCard(date);
+        } else {
+            navigateTo(`month/${ym}`);
+        }
     } catch (err) {
         toast('সেভ ব্যর্থ: ' + err.message, 'err');
     } finally {
         saveBtn.disabled = false;
     }
 };
+
+/* ============================================================
+   INCREMENTAL DAY CARD — smooth insert/update
+   পুরো list rebuild না করে শুধু পরিবর্তিত দিন DOM-এ update করে
+   ============================================================ */
+function upsertDayCard(date) {
+    const ym = date.slice(0, 7);
+    const months = groupData();
+    const m = months[ym];
+    if (!m) return;
+
+    const d = m.days[date];
+    if (!d) return;
+
+    // Update hero totals
+    document.getElementById('mhTotal').textContent = '৳ ' + bn(m.total);
+    document.getElementById('dayCount').textContent =
+        toBn(Object.keys(m.days).length) + ' দিন';
+
+    const list = document.getElementById('dayList');
+    const existing = list.querySelector(`.day-card[data-day="${date}"]`);
+
+    if (existing) {
+        // Replace the card without animation flicker
+        const wasOpen = existing.classList.contains('is-open');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = renderDayCard(date, d, { animate: false, forceOpen: wasOpen });
+        const newCard = tmp.firstElementChild;
+        existing.replaceWith(newCard);
+        return;
+    }
+
+    // Insert new card at correct sorted position
+    const html = renderDayCard(date, d, { animate: true, forceOpen: false });
+    const allCards = [...list.querySelectorAll('.day-card')];
+    const beforeCard = allCards.find(c => c.dataset.day < date);
+
+    if (beforeCard) beforeCard.insertAdjacentHTML('beforebegin', html);
+    else list.insertAdjacentHTML('beforeend', html);
+
+    // 🎯 Next frame: add is-open → smooth collapse animation
+    requestAnimationFrame(() => {
+        const el = list.querySelector(`.day-card[data-day="${date}"]`);
+        if (el && !el.classList.contains('is-open')) {
+            el.classList.add('is-open');
+        }
+    });
+}
 
 /* ============================================================
    ICONS
@@ -331,7 +382,7 @@ const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
 
 /* ============================================================
-   GROUP  (unchanged — works on the fetched records array)
+   GROUP DATA
    ============================================================ */
 function groupData() {
     const months = {};
@@ -353,8 +404,6 @@ function groupData() {
 /* ============================================================
    ROUTER
    ============================================================ */
-let currentRoute = '';
-
 function navigateTo(route) {
     const hash = route ? '#/' + route : '#/';
     if (location.hash === hash) { handleRoute(); return; }
@@ -417,18 +466,11 @@ function renderMonthList() {
 
     el.innerHTML = keys.map(ym => {
         const m = months[ym];
-        const dates = Object.keys(m.days).length;
         return `
             <article class="month-card">
                 <button class="month-btn" data-open-month="${ym}" type="button">
-                  
                     <div class="month-info">
                         <div class="month-name">${monthName(ym)} ${toBn(ym.slice(0, 4))}</div>
-                        <div class="month-meta">
-                            <span>${toBn(dates)} দিন</span>
-                            <span class="meta-dot"></span>
-                            <span>${toBn(m.count)} টি নম্বর</span>
-                        </div>
                     </div>
                     <div class="month-total">
                         <div class="amt">৳ ${bn(m.total)}</div>
@@ -463,24 +505,32 @@ function renderMonthView(ym) {
     }
 
     mh.style.display = '';
-    document.getElementById('mhBadge').textContent = monthShort(ym);
+
     document.getElementById('mhTitle').textContent = monthName(ym) + ' ' + toBn(ym.slice(0, 4));
     const dates = Object.keys(m.days).sort().reverse();
-    document.getElementById('mhSub').textContent = `${toBn(dates.length)} দিন • ${toBn(m.count)} টি নম্বর`;
+
     document.getElementById('mhTotal').textContent = '৳ ' + bn(m.total);
     dayCountEl.textContent = toBn(dates.length) + ' দিন';
 
     dayListEl.innerHTML = dates.map(date => renderDayCard(date, m.days[date])).join('');
 }
 
-function renderDayCard(date, d) {
-    const isOpen = openDays.has(date);
+/* ============================================================
+   RENDER DAY CARD
+   options:
+     - animate: whether to apply cardIn animation (default true)
+     - forceOpen: if provided, overrides openDays state
+   ============================================================ */
+function renderDayCard(date, d, options = {}) {
+    const { animate = true, forceOpen = null } = options;
+    const isOpen = forceOpen !== null ? forceOpen : openDays.has(date);
+    const animClass = animate ? '' : 'no-animate';
+
     return `
-        <div class="day-card ${isOpen ? 'is-open' : ''}" data-day="${date}">
+        <div class="day-card ${isOpen ? 'is-open' : ''} ${animClass}" data-day="${date}">
             <button class="day-head" data-td="${date}" type="button">
                 <div class="day-chip">
                     <b>${toBn(+date.slice(8))}</b>
-                   
                 </div>
                 <div class="day-info">
                     <div class="d1">${weekday(date)}</div>
@@ -578,7 +628,7 @@ function todayStr(d = new Date()) {
 }
 
 /* ============================================================
-   BOOT  — fetch from backend, then render
+   BOOT — fetch from backend, then render
    ============================================================ */
 (async function init() {
     await fetchRecords();
