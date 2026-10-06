@@ -15,7 +15,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const multer = require("multer");
 const { createClient } = require("@supabase/supabase-js");
-const { PersonSchema, TransactionSchema } = require("./schema");
+const { PersonSchema, TransactionSchema, EntriesSchema } = require("./schema");
 
 /* DNS — helps MongoDB Atlas connect on some hosts */
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
@@ -40,7 +40,7 @@ const BUCKET = "Bkash";
 
 const Person = mongoose.model("Person", PersonSchema);
 const Transaction = mongoose.model("Transaction", TransactionSchema);
-
+const Entries = mongoose.model("Entries", EntriesSchema);
 mongoose
     .connect(process.env.DB_URL)
     .then(() => console.log("Cloud Database connected successfully!"))
@@ -477,6 +477,84 @@ app.use((err, req, res, next) => {
 /* ============================================================
    START
    ============================================================ */
+
+
+
+
+
+
+
+
+
+app.post("/entries", async (req, res) => {
+    try {
+        const { date, entries, total, count, raw } = req.body;
+
+        // 1. validate
+        if (!date || !Array.isArray(entries) || entries.length === 0) {
+            return res.status(400).json({ message: "date and entries required" });
+        }
+
+        // 2. compute fallbacks if the client didn't send them
+        const safeTotal = Number(total) || entries.reduce((s, e) => s + (+e.amount || 0), 0);
+        const safeCount = Number(count) || entries.length;
+
+        // 3. create
+        const saved = await Entries.create({
+            date,
+            raw: raw || "",
+            entries,
+            total: safeTotal,
+            count: safeCount
+        });
+
+        console.log("saved:", saved._id, saved.date, saved.total);
+
+        // 4. return the created doc so the frontend can push it into `records[]`
+        res.status(201).json(saved);
+
+    } catch (err) {
+        console.error("POST /api/entries failed:", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.get("/entries", async (req, res) => {
+    try {
+        const data = await Entries.find().sort({ createdAt: 1 }).lean();
+        res.status(200).json(data);
+    } catch (err) {
+        console.error("GET /entries failed:", err);
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

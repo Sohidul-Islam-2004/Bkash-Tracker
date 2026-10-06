@@ -1,19 +1,67 @@
 /* ============================================================
-   STORAGE
+   API CONFIG
    ============================================================ */
-const KEY = 'bkash_entries_v8';
+const API_BASE = '';   // 👈 change to your backend
+const API_TOKEN = '';                           // 👈 optional
+
+async function api(path, options = {}) {
+    const res = await fetch(path, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
+            ...(options.headers || {})
+        }
+    });
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.message || j.error || msg; } catch { }
+        throw new Error(msg);
+    }
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
 let records = [];
 const openDays = new Set();
 let confirmCb = null;
-
-function load() {
-    try { records = JSON.parse(localStorage.getItem(KEY)) || []; }
-    catch { records = []; }
-}
-function persist() { localStorage.setItem(KEY, JSON.stringify(records)); }
+let lastTotals = { amount: 0, numbers: 0, days: 0 };
 
 /* ============================================================
-   BANGLA
+   BACKEND CRUD
+   ============================================================ */
+async function fetchRecords() {
+    try {
+        const data = await api('/entries', { method: 'GET' });
+        records = Array.isArray(data) ? data : (data?.data || []);
+    } catch (err) {
+        records = [];
+        toast('ডেটা লোড ব্যর্থ: ' + err.message, 'err');
+        console.error(err);
+    }
+}
+
+async function createRecord(payload) {
+    const created = await api('/entries', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    });
+    const record = created?.data || created;
+    records.push(record);
+    return record;
+}
+
+async function removeByDate(date) {
+    await api(`/entries/by-date/${encodeURIComponent(date)}`, { method: 'DELETE' });
+    records = records.filter(r => r.date !== date);
+    openDays.delete(date);
+}
+
+/* ============================================================
+   BANGLA HELPERS
    ============================================================ */
 const BN = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 const toBn = s => String(s).replace(/\d/g, d => BN[+d]);
@@ -43,7 +91,6 @@ function toast(msg, type = '') {
     if (type === 'ok') { toastIcon.textContent = '✓'; toastIcon.style.display = 'grid'; }
     else if (type === 'err') { toastIcon.textContent = '!'; toastIcon.style.display = 'grid'; }
     else { toastIcon.style.display = 'none'; }
-
     clearTimeout(tT);
     tT = setTimeout(() => toastEl.classList.remove('show'), 2400);
 }
@@ -62,9 +109,9 @@ document.getElementById('confirmNo').onclick = () => {
     confirmEl.classList.remove('show');
     confirmCb = null;
 };
-document.getElementById('confirmYes').onclick = () => {
+document.getElementById('confirmYes').onclick = async () => {
     confirmEl.classList.remove('show');
-    if (confirmCb) confirmCb();
+    if (confirmCb) await confirmCb();
     confirmCb = null;
 };
 
@@ -81,24 +128,6 @@ function parseEntries(text) {
         if (number.length === 11 && amount > 0) out.push({ number, amount });
     }
     return out;
-}
-
-/* ============================================================
-   ANIMATED NUMBER
-   ============================================================ */
-function animateNumber(el, from, to, format) {
-    if (from === to) { el.textContent = format(to); return; }
-    const duration = 550;
-    const start = performance.now();
-
-    function tick(now) {
-        const t = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - t, 3);
-        const val = Math.round(from + (to - from) * eased);
-        el.textContent = format(val);
-        if (t < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
 }
 
 /* ============================================================
@@ -119,7 +148,6 @@ function closeSheet() {
     sheetBg.classList.remove('show');
     document.body.style.overflow = '';
 }
-
 document.getElementById('addTop').onclick = openSheet;
 sheetBg.onclick = closeSheet;
 
@@ -133,9 +161,7 @@ document.getElementById('pasteBtn').onclick = async () => {
             document.getElementById('input').value = text;
             toast('পেস্ট হয়েছে', 'ok');
         }
-    } catch {
-        toast('অনুমতি দেওয়া হয়নি', 'err');
-    }
+    } catch { toast('অনুমতি দেওয়া হয়নি', 'err'); }
 };
 
 /* ============================================================
@@ -162,17 +188,15 @@ document.getElementById('previewBtn').onclick = () => {
                 <div class="preview-row">
                     <span class="num">${toBn(fmtNum(e.number))}</span>
                     <span class="amt">৳ ${bn(e.amount)}</span>
-                </div>
-            `).join('')}
-        </div>
-    `;
+                </div>`).join('')}
+        </div>`;
     previewBox.classList.add('show');
 };
 
 /* ============================================================
-   SAVE
+   SAVE  → POST to backend
    ============================================================ */
-document.getElementById('saveBtn').onclick = () => {
+document.getElementById('saveBtn').onclick = async () => {
     const date = document.getElementById('date').value;
     const raw = document.getElementById('input').value.trim();
     if (!date) return toast('তারিখ নির্বাচন করুন', 'err');
@@ -181,28 +205,30 @@ document.getElementById('saveBtn').onclick = () => {
     if (!entries.length) return toast('বৈধ এন্ট্রি পাওয়া যায়নি', 'err');
 
     const total = entries.reduce((s, e) => s + e.amount, 0);
-    records.push({
-        id: Date.now() + '-' + Math.random().toString(36).slice(2),
-        date, raw, entries, total,
-        count: entries.length,
-        createdAt: new Date().toISOString()
-    });
-    persist();
 
-    document.getElementById('input').value = '';
-    previewBox.classList.remove('show');
-    closeSheet();
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.disabled = true;
 
-    openDays.add(date);
-    const ym = date.slice(0, 7);
+    try {
+        await createRecord({
+            date, raw, entries, total,
+            count: entries.length
+        });
 
-    toast(`সেভ হয়েছে • ${toBn(entries.length)} এন্ট্রি • ৳${bn(total)}`, 'ok');
+        document.getElementById('input').value = '';
+        previewBox.classList.remove('show');
+        closeSheet();
+        openDays.add(date);
 
-    // If currently viewing this month, stay; otherwise go to it
-    if (currentRoute === `month/${ym}`) {
-        renderMonthView(ym);
-    } else {
-        navigateTo(`month/${ym}`);
+        toast(`সেভ হয়েছে • ${toBn(entries.length)} এন্ট্রি • ৳${bn(total)}`, 'ok');
+
+        const ym = date.slice(0, 7);
+        if (currentRoute === `month/${ym}`) renderMonthView(ym);
+        else navigateTo(`month/${ym}`);
+    } catch (err) {
+        toast('সেভ ব্যর্থ: ' + err.message, 'err');
+    } finally {
+        saveBtn.disabled = false;
     }
 };
 
@@ -215,12 +241,12 @@ const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
 
 /* ============================================================
-   GROUP
+   GROUP  (unchanged — works on the fetched records array)
    ============================================================ */
 function groupData() {
     const months = {};
     [...records]
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
         .forEach(r => {
             const ym = r.date.slice(0, 7);
             const m = months[ym] || (months[ym] = { total: 0, count: 0, days: {} });
@@ -235,7 +261,7 @@ function groupData() {
 }
 
 /* ============================================================
-   ROUTER (hash-based)
+   ROUTER
    ============================================================ */
 let currentRoute = '';
 
@@ -245,7 +271,7 @@ function navigateTo(route) {
     location.hash = hash;
 }
 
-function handleRoute() {
+async function handleRoute() {
     const hash = location.hash.replace(/^#\/?/, '');
     currentRoute = hash;
 
@@ -272,19 +298,14 @@ function handleRoute() {
         window.scrollTo({ top: 0, behavior: 'instant' });
     }
 }
-
 window.addEventListener('hashchange', handleRoute);
 
 /* ============================================================
    HOME VIEW
    ============================================================ */
-let lastTotals = { amount: 0, numbers: 0, days: 0 };
-
 function renderHome() {
-
     renderMonthList();
 }
-
 
 function renderMonthList() {
     const months = groupData();
@@ -390,8 +411,7 @@ function renderDayCard(date, d) {
                                     <span class="entry-ico">${PHONE}</span>
                                     <span class="n">${toBn(fmtNum(e.number))}</span>
                                     <span class="a">৳ ${bn(e.amount)}</span>
-                                </button>
-                            `).join('')}
+                                </button>`).join('')}
                         </div>
                         <button class="day-delete" data-del="${date}" type="button">
                             ${TRASH}
@@ -404,13 +424,12 @@ function renderDayCard(date, d) {
 }
 
 /* ============================================================
-   DELEGATED EVENTS
+   DELEGATED CLICKS
    ============================================================ */
-document.addEventListener('click', ev => {
+document.addEventListener('click', async ev => {
     const openMonthBtn = ev.target.closest('[data-open-month]');
     if (openMonthBtn) {
-        const ym = openMonthBtn.dataset.openMonth;
-        navigateTo('month/' + ym);
+        navigateTo('month/' + openMonthBtn.dataset.openMonth);
         return;
     }
 
@@ -421,19 +440,20 @@ document.addEventListener('click', ev => {
     if (del) {
         ev.stopPropagation();
         const date = del.dataset.del;
-        askConfirm('এন্ট্রি মুছবেন?', 'এই দিনের সব এন্ট্রি মুছে যাবে। এটি ফেরানো যাবে না।', () => {
-            records = records.filter(r => r.date !== date);
-            openDays.delete(date);
-            persist();
-            const ym = date.slice(0, 7);
-            renderMonthView(ym);
-            toast('মুছে ফেলা হয়েছে', 'ok');
+        askConfirm('এন্ট্রি মুছবেন?', 'এই দিনের সব এন্ট্রি মুছে যাবে। এটি ফেরানো যাবে না।', async () => {
+            try {
+                await removeByDate(date);
+                const ym = date.slice(0, 7);
+                renderMonthView(ym);
+                toast('মুছে ফেলা হয়েছে', 'ok');
+            } catch (err) {
+                toast('মুছা ব্যর্থ: ' + err.message, 'err');
+            }
         });
     } else if (cp) {
         const num = cp.dataset.copy;
         cp.classList.add('copied');
         setTimeout(() => cp.classList.remove('copied'), 900);
-
         (navigator.clipboard ? navigator.clipboard.writeText(num) : Promise.reject())
             .then(() => toast('নম্বর কপি হয়েছে', 'ok'),
                 () => toast(toBn(fmtNum(num))));
@@ -455,7 +475,7 @@ document.getElementById('backBtn').onclick = () => {
 };
 
 /* ============================================================
-   TOPBAR SCROLL SHADOW
+   TOPBAR SHADOW
    ============================================================ */
 const topbar = document.getElementById('topbar');
 window.addEventListener('scroll', () => {
@@ -471,7 +491,9 @@ function todayStr(d = new Date()) {
 }
 
 /* ============================================================
-   INIT
+   BOOT  — fetch from backend, then render
    ============================================================ */
-load();
-handleRoute();
+(async function init() {
+    await fetchRecords();
+    handleRoute();
+})();
