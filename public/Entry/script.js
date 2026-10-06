@@ -118,15 +118,105 @@ document.getElementById('confirmYes').onclick = async () => {
 /* ============================================================
    PARSE
    ============================================================ */
+/* ============================================================
+   PARSE — WhatsApp export + plain text
+   শুধু নম্বর ও টাকা বের করে। তারিখ বাদ।
+   ============================================================ */
+
+/* ---- phone normalization ---- */
+function normalizePhone(raw) {
+    let d = raw.replace(/\D/g, '');
+
+    if (d.startsWith('00')) d = d.slice(2);        // 00880… → 880…
+    if (d.startsWith('880')) d = d.slice(3);       // 8801…  → 1…
+    else if (d.startsWith('88')) d = d.slice(2);   // 881…   → 1…
+
+    if (!d.startsWith('0')) d = '0' + d;
+
+    if (d.length === 11 && d.startsWith('01')) return d;
+
+    if (d.length > 11) {
+        for (let i = 0; i + 11 <= d.length; i++) {
+            const sub = d.slice(i, i + 11);
+            if (sub.startsWith('01')) return sub;
+        }
+    }
+    return null;
+}
+
+/* ---- find phone + position in a line ---- */
+function extractPhone(line) {
+    // Constrained pattern: doesn't swallow the amount that follows
+    const re = /(?:(?:\+|00)?88[\s\-]?)?0[\s\-]?1[\s\-]?\d{3}[\s\-]?\d{6}/;
+    const m = line.match(re);
+    if (!m) return null;
+
+    const number = normalizePhone(m[0]);
+    if (!number) return null;
+
+    return { number, index: m.index, length: m[0].length };
+}
+
+/* ---- extract first amount from text (skips Pin1234) ---- */
+function extractAmount(str) {
+    if (!str) return null;
+    const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
+    const m = cleaned.match(/\d+(?:,\d{3})*/);
+    if (!m) return null;
+    const n = Number(m[0].replace(/,/g, ''));
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/* ---- main parser ---- */
 function parseEntries(text) {
     const out = [];
-    const re = /(01\d{3}-?\d{6})\s*[#\-=]\s*([\d,]+)/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-        const number = m[1].replace(/\D/g, '');
-        const amount = Number(m[2].replace(/,/g, ''));
-        if (number.length === 11 && amount > 0) out.push({ number, amount });
+    const lines = String(text || '').split(/\r?\n/);
+    let pending = null; // { number } — waiting for amount on next line
+
+    const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message|Hi|Ok|Ol|)$/i;
+
+    for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+
+        let body = line;
+
+        // Strip WhatsApp prefix — two common styles
+        let m = line.match(
+            /^\d{1,2}\/\d{1,2}\/\d{2,4},\s*\d{1,2}:\d{2}\s*(?:AM|PM)?\s*-\s*[^:]+:\s*([\s\S]*)$/i
+        );
+        if (m) body = m[1];
+        else {
+            m = line.match(
+                /^\[\d{1,2}\/\d{1,2},\s*\d{1,2}:\d{2}\s*(?:AM|PM)\]\s*[^:]+:\s*([\s\S]*)$/i
+            );
+            if (m) body = m[1];
+        }
+
+        body = body.trim();
+        if (skipRe.test(body)) continue;
+
+        const phone = extractPhone(body);
+
+        if (phone) {
+            const after = body.slice(phone.index + phone.length);
+            const amount = extractAmount(after);
+
+            if (amount != null) {
+                out.push({ number: phone.number, amount });
+                pending = null;
+            } else {
+                pending = { number: phone.number };
+            }
+        } else if (pending) {
+            const amount = extractAmount(body);
+            if (amount != null) {
+                out.push({ number: pending.number, amount });
+                pending = null;
+            }
+        }
     }
+
     return out;
 }
 
