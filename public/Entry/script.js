@@ -793,7 +793,7 @@ document.addEventListener('click', async ev => {
         if (!d || !d.entries.length) return;
 
         const text = [...d.entries].reverse()
-            .map(e => `${e.number}-${e.amount}`)
+            .map(e => `${e.number} = ${e.amount}`)
             .join('\n');
 
         cpAll.classList.add('copied');
