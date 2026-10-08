@@ -75,11 +75,6 @@ async function removeByDate(date) {
     openDays.delete(date);
 }
 
-function getDayMeta(date) {
-    const rec = records.find(r => r.date === date);
-    return { deposit: rec ? (Number(rec.deposit) || 0) : 0 };
-}
-
 /* ============================================================
    NUMERAL HELPERS  —  DISPLAY IS ENGLISH
    ============================================================ */
@@ -103,6 +98,11 @@ const weekday = d => {
     return WEEKDAYS[new Date(y, m - 1, dd).getDay()];
 };
 const fmtNum = n => n.length === 11 ? n.slice(0, 5) + '-' + n.slice(5) : n;
+const fmtDate = iso => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+};
 
 /* ============================================================
    TOAST
@@ -338,13 +338,16 @@ document.getElementById('saveBtn').onclick = async () => {
 
         const ym = date.slice(0, 7);
         const wasOnSameMonth = currentRoute === `month/${ym}`;
+        const wasOnSameDay = currentRoute === `day/${date}`;
 
         toast(`সেভ হয়েছে • ${entries.length} এন্ট্রি • জমা ৳${bn(depositVal)}`, 'ok');
 
-        if (wasOnSameMonth) {
+        if (wasOnSameDay) {
+            renderDayView(date);
+        } else if (wasOnSameMonth) {
             renderMonthView(ym);
         } else {
-            navigateTo(`month/${ym}`);
+            navigateTo(`day/${date}`);
         }
     } catch (err) {
         toast('সেভ ব্যর্থ: ' + err.message, 'err');
@@ -462,9 +465,6 @@ function pawnaState(pawna) {
     if (pawna < 0) return 'advance';
     return 'settled';
 }
-function pawnaDisplay(pawna) {
-    return '৳ ' + bn(pawna);
-}
 
 /* ============================================================
    ROUTER
@@ -481,26 +481,48 @@ async function handleRoute() {
 
     const viewHome = document.getElementById('viewHome');
     const viewMonth = document.getElementById('viewMonth');
+    const viewDay = document.getElementById('viewDay');
 
+    /* ---------- DAY ROUTE ---------- */
+    if (hash.startsWith('day/')) {
+        const date = hash.slice(4);
+        console.log(date);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { navigateTo(''); return; }
+        viewHome.hidden = true;
+        viewMonth.hidden = true;
+        viewDay.hidden = false;
+        document.body.classList.add('in-month');
+        document.getElementById('topTitle').textContent = weekday(date);
+        document.getElementById('topSub').textContent = fmtDate(date);
+        renderDayView(date);
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        return;
+    }
+
+    /* ---------- MONTH ROUTE ---------- */
     if (hash.startsWith('month/')) {
         const ym = hash.slice(6);
         if (!/^\d{4}-\d{2}$/.test(ym)) { navigateTo(''); return; }
         viewHome.hidden = true;
         viewMonth.hidden = false;
+        viewDay.hidden = true;
         document.body.classList.add('in-month');
         document.getElementById('topTitle').textContent = monthName(ym) + ' ' + ym.slice(0, 4);
         document.getElementById('topSub').textContent = 'মাসের বিস্তারিত';
         renderMonthView(ym);
         window.scrollTo({ top: 0, behavior: 'instant' });
-    } else {
-        viewHome.hidden = false;
-        viewMonth.hidden = true;
-        document.body.classList.remove('in-month');
-        document.getElementById('topTitle').textContent = 'এন্ট্রি ম্যানেজার';
-        document.getElementById('topSub').textContent = 'দৈনিক হিসাব • মাসিক রিপোর্ট';
-        renderHome();
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        return;
     }
+
+    /* ---------- HOME ROUTE ---------- */
+    viewHome.hidden = false;
+    viewMonth.hidden = true;
+    viewDay.hidden = true;
+    document.body.classList.remove('in-month');
+    document.getElementById('topTitle').textContent = 'এন্ট্রি ম্যানেজার';
+    document.getElementById('topSub').textContent = 'দৈনিক হিসাব • মাসিক রিপোর্ট';
+    renderHome();
+    window.scrollTo({ top: 0, behavior: 'instant' });
 }
 window.addEventListener('hashchange', handleRoute);
 
@@ -606,60 +628,15 @@ function renderMonthView(ym) {
     if (mhDepositEl) mhDepositEl.textContent = '৳ ' + bn(monthDepositTotal(ym, months));
 
     dayCountEl.textContent = dates.length + ' দিন';
-    dayListEl.innerHTML = dates.map(date => renderDayCard(date, m.days[date])).join('');
+    dayListEl.innerHTML = dates.map(date => renderDayListItem(date, m.days[date])).join('');
 }
 
 /* ============================================================
-   RENDER DAY CARD
+   RENDER DAY LIST ITEM  (month view — collapsed, tappable)
    ============================================================ */
-/* ============================================================
-   RENDER DAY CARD
-   ------------------------------------------------------------
-   .day-body layout:
-     1. .day-entries-block  → নম্বর তালিকা (priority, top)
-     2. .day-summary        → হিসাব card (below, prominent)
-     3. .day-delete
-   ============================================================ */
-function renderDayCard(date, d, options = {}) {
-    const { animate = true, forceOpen = null } = options;
-    const isOpen = forceOpen !== null ? forceOpen : openDays.has(date);
-    const animClass = animate ? '' : 'no-animate';
-
-    const { bkash, ejaa, deposit, total } = computeDay(date, d);
-
-    // Per-day হাসান পাওনা = টোটাল − জমা
-    const pawna = total - deposit;
-    const state = pawnaState(pawna);
-
-    const reversedEntries = [...d.entries].reverse();
-
-    const entryHeader = reversedEntries.length ? `
-        <div class="entry-head">
-            <span class="entry-head-title">
-                <span class="dot"></span>
-                নম্বর তালিকা
-            </span>
-            <button class="entry-copy-all" data-copy-all="${date}" type="button">
-                ${COPY_ALL}
-                সব কপি
-            </button>
-        </div>` : '';
-
-    const entriesBlock = reversedEntries.length ? `
-        <div class="day-entries-block">
-            ${entryHeader}
-            <div class="entry-list">
-                ${reversedEntries.map(e => `
-                    <button class="entry-line" data-copy="${e.number}-${e.amount}" type="button">
-                        <span class="entry-ico">${PHONE}</span>
-                        <span class="n">${fmtNum(e.number)}</span>
-                        <span class="a">৳ ${bn(e.amount)}</span>
-                    </button>`).join('')}
-            </div>
-        </div>` : '';
-
+function renderDayListItem(date, d) {
     return `
-        <div class="day-card ${isOpen ? 'is-open' : ''} ${animClass}" data-day="${date}">
+        <div class="day-card" data-day="${date}">
             <button class="day-head" data-td="${date}" type="button">
                 <div class="day-chip"><b>${+date.slice(8)}</b></div>
                 <div class="day-info">
@@ -667,95 +644,138 @@ function renderDayCard(date, d, options = {}) {
                     <div class="d2">${d.count} টি নম্বর</div>
                 </div>
                 <div class="day-amt">৳ ${bn(d.total)}</div>
-                <span class="chev">${CHEV}</span>
+                <span class="chev">${ARROW_RIGHT}</span>
             </button>
-            <div class="collapse">
-                <div class="collapse-in">
-                    <div class="day-body">
-
-                        ${entriesBlock}
-
-                        <div class="day-summary">
-                            <div class="sum-head">
-                                <span class="sum-head-title">
-                                    <span class="dot"></span>
-                                    হিসাব
-                                </span>
-                                <button class="entry-copy-all" data-copy-sum="${date}" type="button">
-                                    ${COPY_ALL}
-                                    হিসাব কপি
-                                </button>
-                            </div>
-
-                            <div class="sum-grid">
-                                <div class="sum-item sum-item--bkash">
-                                    <span class="sum-label">বিকাশ</span>
-                                    <span class="sum-value" data-sum="bkash">৳ ${bn(bkash)}</span>
-                                </div>
-                                <div class="sum-item sum-item--ejaa">
-                                    <span class="sum-label">ইজা</span>
-                                    <span class="sum-value" data-sum="ejaa">৳ ${bn(ejaa)}</span>
-                                </div>
-                                <div class="sum-item sum-item--total">
-                                    <span class="sum-label">টোটাল</span>
-                                    <span class="sum-value" data-sum="total">৳ ${bn(total)}</span>
-                                </div>
-                                <div class="sum-item sum-item--joma">
-                                    <span class="sum-label">জমা</span>
-                                    <span class="sum-value" data-sum="deposit">৳ ${bn(deposit)}</span>
-                                </div>
-                            </div>
-
-                            <!-- হাসান পাওনা = টোটাল − জমা -->
-                            <div class="sum-pawna" data-pawna-state="${state}">
-                                <span class="sum-pawna-label">
-                                    <span class="ico">${COIN}</span>
-                                    হাসান পাওনা
-                                </span>
-                                <b class="sum-pawna-value" data-sum="pawna">৳ ${bn(pawna)}</b>
-                            </div>
-                        </div>
-
-                        <button class="day-delete" data-del="${date}" type="button">
-                            ${TRASH}
-                            এই দিনের এন্ট্রি মুছুন
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>`;
 }
 
 /* ============================================================
-   INLINE deposit editing
+   RENDER DAY VIEW  (own route — #/day/YYYY-MM-DD)
+   ------------------------------------------------------------
+   Sections:
+     1. Day hero (weekday, date, total)
+     2. Number list (newest first) + copy-all
+     3. Summary card: বিকাশ / ইজা / টোটাল / জমা + হাসান পাওনা
+     4. Delete button
    ============================================================ */
-document.addEventListener('focusin', ev => {
-    const inp = ev.target.closest && ev.target.closest('[data-sum-input]');
-    if (!inp) return;
-    const val = parseNum(inp.value);
-    inp.value = val ? String(val) : '';
-});
+/* ============================================================
+   RENDER DAY VIEW  (own route — #/day/YYYY-MM-DD)
+   ------------------------------------------------------------
+   Builds the hero + body inline inside #viewDay.
+   Only requirement: <main id="viewDay" hidden></main>
+   ============================================================ */
+function renderDayView(date) {
+    const viewDay = document.getElementById('viewDay');
+    if (!viewDay) return;
 
-document.addEventListener('focusout', async ev => {
-    const inp = ev.target.closest && ev.target.closest('[data-sum-input]');
-    if (!inp) return;
-    const date = inp.dataset.date;
-    const val = parseNum(inp.value);
-    inp.value = val ? bn(val) : '';
+    const months = groupData();
+    const m = months[date.slice(0, 7)];
+    const d = m && m.days[date];
 
-    const rec = records.find(r => r.date === date);
-    if (rec) rec.deposit = val;
-
-    try {
-        await updateDeposit(date, val);
-    } catch (err) {
-        toast('জমা সেভ ব্যর্থ: ' + err.message, 'err');
-        if (rec) rec.deposit = 0;
+    /* ---------- no entry for this day ---------- */
+    if (!d) {
+        viewDay.innerHTML = `<div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <h3>এই দিনে কোনো এন্ট্রি নেই</h3>
+            <p>+ বাটনে ক্লিক করে এন্ট্রি যোগ করুন</p>
+        </div>`;
+        return;
     }
 
-    const ym = date.slice(0, 7);
-    renderMonthView(ym);
-});
+    const { bkash, ejaa, deposit, total } = computeDay(date, d);
+    const pawna = total - deposit;
+    const state = pawnaState(pawna);
+
+    const reversed = [...d.entries].reverse();
+
+    viewDay.innerHTML = `
+        <!-- ===== HERO ===== -->
+        <div class="day-hero">
+            <div class="day-hero-top">
+                <div class="day-hero-chip">${+date.slice(8)}</div>
+                <div class="day-hero-title">
+                    <h2>${weekday(date)}</h2>
+                    <p>${fmtDate(date)}</p>
+                </div>
+            </div>
+            <div class="day-hero-total">
+                <span class="dh-lbl">এই দিনের মোট বিকাশ</span>
+                <b>৳ ${bn(d.total)}</b>
+                <span class="dh-count">${d.count} টি নম্বর</span>
+            </div>
+        </div>
+
+        <!-- ===== BODY ===== -->
+        <div class="day-detail-body">
+
+            <div class="day-entries-block">
+                <div class="entry-head">
+                    <span class="entry-head-title">
+                        <span class="dot"></span>
+                        নম্বর তালিকা
+                    </span>
+                    <button class="entry-copy-all" data-copy-all="${date}" type="button">
+                        ${COPY_ALL}
+                        সব কপি
+                    </button>
+                </div>
+                <div class="entry-list">
+                    ${reversed.map(e => `
+                        <button class="entry-line" data-copy="${e.number}-${e.amount}" type="button">
+                            <span class="entry-ico">${PHONE}</span>
+                            <span class="n">${fmtNum(e.number)}</span>
+                            <span class="a">৳ ${bn(e.amount)}</span>
+                        </button>`).join('')}
+                </div>
+            </div>
+
+            <div class="day-summary">
+                <div class="sum-head">
+                    <span class="sum-head-title">
+                        <span class="dot"></span>
+                        হিসাব
+                    </span>
+                    <button class="entry-copy-all" data-copy-sum="${date}" type="button">
+                        ${COPY_ALL}
+                        হিসাব কপি
+                    </button>
+                </div>
+
+                <div class="sum-grid">
+                    <div class="sum-item sum-item--bkash">
+                        <span class="sum-label">বিকাশ</span>
+                        <span class="sum-value">৳ ${bn(bkash)}</span>
+                    </div>
+                    <div class="sum-item sum-item--ejaa">
+                        <span class="sum-label">ইজা</span>
+                        <span class="sum-value">৳ ${bn(ejaa)}</span>
+                    </div>
+                    <div class="sum-item sum-item--total">
+                        <span class="sum-label">টোটাল</span>
+                        <span class="sum-value">৳ ${bn(total)}</span>
+                    </div>
+                    <div class="sum-item sum-item--joma">
+                        <span class="sum-label">জমা</span>
+                        <span class="sum-value">৳ ${bn(deposit)}</span>
+                    </div>
+                </div>
+
+                <div class="sum-pawna" data-pawna-state="${state}">
+                    <span class="sum-pawna-label">
+                        <span class="ico">${COIN}</span>
+                        হাসান পাওনা
+                    </span>
+                    <b class="sum-pawna-value">৳ ${bn(pawna)}</b>
+                </div>
+            </div>
+
+            <button class="day-delete" data-del="${date}" type="button">
+                ${TRASH}
+                এই দিনের এন্ট্রি মুছুন
+            </button>
+        </div>
+    `;
+}
 
 /* ============================================================
    DELEGATED CLICKS
@@ -772,7 +792,6 @@ document.addEventListener('click', async ev => {
         const d = m && m.days[date];
         if (!d || !d.entries.length) return;
 
-        // newest-first, format: "number-amount"
         const text = [...d.entries].reverse()
             .map(e => `${e.number}-${e.amount}`)
             .join('\n');
@@ -788,9 +807,8 @@ document.addEventListener('click', async ev => {
         return;
     }
 
-    /* --- copy-all summary values for a day (5 boxes) --- */
+    /* --- copy-all summary values for a day --- */
     const cpSum = ev.target.closest('[data-copy-sum]');
-
     if (cpSum) {
         ev.stopPropagation();
         const date = cpSum.dataset.copySum;
@@ -802,12 +820,8 @@ document.addEventListener('click', async ev => {
         const { bkash, ejaa, deposit, total } = computeDay(date, d);
         const pawna = total - deposit;
 
-        // ISO "2026-10-09" → "09/10/2026"  (day/month/year)
-        const [y, mo, dd] = date.split('-');
-        const dateDisplay = `${dd}/${mo}/${y}`;
-
         const text =
-            `${dateDisplay}\n\n` +
+            `${fmtDate(date)}\n\n` +
             `বিকাশ: ${bkash}\n` +
             `ইজা: ${ejaa}\n` +
             `টোটাল: ${total}\n` +
@@ -832,25 +846,30 @@ document.addEventListener('click', async ev => {
         return;
     }
 
+    /* --- open day --- */
     const td = ev.target.closest('[data-td]');
+    if (td) {
+        navigateTo('day/' + td.dataset.td);
+        return;
+    }
+
     const cp = ev.target.closest('[data-copy]');
     const del = ev.target.closest('[data-del]');
 
     if (del) {
         ev.stopPropagation();
         const date = del.dataset.del;
+        const ym = date.slice(0, 7);
         askConfirm('এন্ট্রি মুছবেন?', 'এই দিনের সব এন্ট্রি ও হিসাব মুছে যাবে। এটি ফেরানো যাবে না।', async () => {
             try {
                 await removeByDate(date);
-                const ym = date.slice(0, 7);
-                renderMonthView(ym);
                 toast('মুছে ফেলা হয়েছে', 'ok');
+                navigateTo('month/' + ym);
             } catch (err) {
                 toast('মুছা ব্যর্থ: ' + err.message, 'err');
             }
         });
     } else if (cp) {
-        // copy both number and amount (comes as "number-amount")
         const num = cp.dataset.copy;
         cp.classList.add('copied');
         setTimeout(() => cp.classList.remove('copied'), 900);
@@ -859,21 +878,24 @@ document.addEventListener('click', async ev => {
                 () => toast('নম্বর ও টাকা কপি হয়েছে', 'ok'),
                 () => toast(num)
             );
-    } else if (td) {
-        const card = td.closest('.day-card');
-        card.classList.toggle('is-open');
-        card.classList.contains('is-open')
-            ? openDays.add(td.dataset.td)
-            : openDays.delete(td.dataset.td);
     }
 });
 
 /* ============================================================
    BACK BUTTON
+   ------------------------------------------------------------
+   day/*   → back to its month
+   month/* → back to home
+   home   → browser back
    ============================================================ */
 document.getElementById('backBtn').onclick = () => {
-    if (location.hash && location.hash !== '#/') navigateTo('');
-    else history.back();
+    if (currentRoute.startsWith('day/')) {
+        navigateTo('month/' + currentRoute.slice(4, 11));
+    } else if (currentRoute.startsWith('month/')) {
+        navigateTo('');
+    } else {
+        history.back();
+    }
 };
 
 /* ============================================================
