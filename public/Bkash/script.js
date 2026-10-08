@@ -1293,5 +1293,8 @@ document.addEventListener("touchend", (e) => {
 /* ============================================================
    INIT
    ============================================================ */
+document.getElementById("backBtn").onclick = () => {
+    window.location.href = "/";
+};
 renderLogo();
 showDashboard();

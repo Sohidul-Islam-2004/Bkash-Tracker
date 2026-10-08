@@ -2075,3 +2075,540 @@ html {
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
 }
+
+/* ============================================================
+   THEME ALIGNMENT WITH DASHBOARD
+   ------------------------------------------------------------
+   Brings this bKash হিসাব app in line with the dashboard:
+   same pink (#d12053), same surface palette (#f5f3f6),
+   same pink radial glow, same font stack, same radii scale,
+   same pink-tinted shadows, glass topbar, matching cards.
+   Paste at the BOTTOM of style.css.
+   ============================================================ */
+
+/* ---------- 1. TOKENS ---------- */
+:root {
+    /* surface */
+    --bg: #f5f3f6;
+    --card: #ffffff;
+
+    /* ink */
+    --ink: #17181f;
+    --ink-2: #3a3d4a;
+    --ink-soft: #3a3d4a;
+    --muted: #6e7180;
+    --muted-2: #a1a4b3;
+
+    /* lines */
+    --line: #ebe6ec;
+    --line-2: #f3eef4;
+
+    /* brand pink — matches dashboard */
+    --pink: #d12053;
+    --pink-2: #e8437a;
+    --pink-press: #a8153f;
+    --pink-soft: #fde8ef;
+    --pink-tint: #fff6fa;
+
+    /* accents */
+    --green: #12a06a;
+    --amber: #f0a010;
+    --red: #dc2648;
+    --wa: #128c4a;
+
+    /* radii — dashboard scale */
+    --r-sm: 12px;
+    --r: 16px;
+    --r-md: 20px;
+    --r-lg: 24px;
+
+    /* shadows — dashboard pink-tinted */
+    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
+    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
+    --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
+    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
+    --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
+    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+
+    /* fonts — dashboard stack */
+    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    /* layout — the dashboard shell feel, still room for 2-col grid */
+    --wrap: 720px;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- 2. BODY — pink radial glow ---------- */
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg);
+    background-image: radial-gradient(1200px 600px at 50% -200px,
+            rgba(209, 32, 83, 0.08),
+            transparent 70%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* numbers use the tabular numeral font, like the dashboard */
+.p-bal,
+.tx-amount,
+.stat .val,
+.summary-item b,
+.limit-row b,
+.p-name .num,
+.person-header-val,
+.tx-date,
+.bundle-pill {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 3. TOPBAR — glass + blur like dashboard ---------- */
+.topbar {
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid var(--line-2);
+    padding: calc(10px + var(--top)) 16px 10px;
+    transition: box-shadow 0.25s var(--ease);
+}
+
+.topbar-left {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* brand logo — dashboard tile treatment */
+#brandLogo {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    object-fit: cover;
+    background: transparent;
+    padding: 0;
+    box-shadow: var(--shadow-pink);
+    flex-shrink: 0;
+}
+
+.topbar-titles h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: var(--ink);
+}
+
+/* ---------- 4. LAYOUT ---------- */
+.container {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 16px 14px calc(32px + var(--bottom));
+}
+
+#viewAddPerson {
+    max-width: 560px;
+    margin-inline: auto;
+}
+
+#viewPerson {
+    max-width: 720px;
+    margin-inline: auto;
+}
+
+/* ---------- 5. PANELS — dashboard radius + soft shadow ---------- */
+.panel {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    padding: 18px 16px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 12px;
+}
+
+.panel-title,
+.panel h2 {
+    font-size: 16px;
+    letter-spacing: -0.2px;
+    margin: 0 0 14px;
+    color: var(--ink);
+}
+
+/* ---------- 6. PERSON CARD — clean, dashboard-shaped ---------- */
+.person {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: transform 0.2s var(--ease),
+        box-shadow 0.25s var(--ease),
+        border-color 0.2s var(--ease);
+}
+
+/* remove the old decorative glows on person cards */
+.person::before,
+.person::after {
+    display: none;
+}
+
+.person:hover {
+    transform: translateY(-2px);
+    border-color: rgba(209, 32, 83, 0.18);
+    box-shadow: var(--shadow-md);
+}
+
+.person:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.person.blocked {
+    background: var(--pink-tint);
+}
+
+/* ---------- 7. SUMMARY + STAT tiles ---------- */
+.summary-item {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-xs);
+}
+
+.stat {
+    background: #fdfbfc;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+}
+
+.stat:first-child,
+.person-stats .stat-balance {
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: var(--shadow-pink);
+}
+
+/* ---------- 8. BUTTONS — dashboard look ---------- */
+.btn {
+    border-radius: 14px;
+    font-weight: 700;
+    transition: transform 0.15s var(--ease),
+        box-shadow 0.2s var(--ease),
+        background 0.15s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    color: #fff;
+    box-shadow: var(--shadow-pink);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--pink-2), var(--pink-press));
+    box-shadow: 0 10px 26px rgba(209, 32, 83, 0.36);
+}
+
+.btn-light {
+    background: #f5f1f4;
+    color: var(--ink-2);
+}
+
+.btn-light:hover {
+    background: #ece5ea;
+}
+
+.btn-ghost {
+    background: #ffffff;
+    color: var(--ink-2);
+    border: 1px solid var(--line);
+}
+
+.btn-danger {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+}
+
+.btn-danger:hover {
+    background: #fbd5e2;
+}
+
+.btn-wa {
+    background: linear-gradient(135deg, #14b866, #0a8347);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(18, 160, 106, 0.28);
+}
+
+.btn-wa:hover {
+    box-shadow: 0 10px 26px rgba(18, 160, 106, 0.36);
+}
+
+.btn-muted {
+    background: #f5f1f4;
+    color: var(--muted-2);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.add-btn {
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    box-shadow: var(--shadow-pink);
+    border-radius: 14px;
+}
+
+.add-btn:hover {
+    box-shadow: 0 10px 26px rgba(209, 32, 83, 0.42);
+}
+
+.back {
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--ink-2);
+}
+
+.back:hover {
+    background: var(--pink-tint);
+    border-color: rgba(209, 32, 83, 0.2);
+}
+
+/* ---------- 9. INPUTS — dashboard radius + focus ring ---------- */
+input,
+select,
+textarea {
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    background: #fdfbfc;
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--pink);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+}
+
+.searchbar input {
+    border-radius: 14px;
+    background-color: #ffffff;
+}
+
+.searchbar input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+}
+
+/* ---------- 10. TAGS + BADGES ---------- */
+.tag.send {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+}
+
+.tag.receive,
+.tag.verified {
+    background: #dcf6ec;
+    color: #0a6b45;
+}
+
+.tag.pending {
+    background: #fef3d6;
+    color: #7a4600;
+}
+
+.block-badge {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    box-shadow: none;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.bundle-pill {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    border-color: #f7d3e0;
+    box-shadow: none;
+}
+
+.bundle-pill-empty {
+    background: #f3eef4;
+    color: var(--muted-2);
+    border-color: var(--line);
+}
+
+/* ---------- 11. LIMIT BARS ---------- */
+.bar {
+    background: #f3eef4;
+    box-shadow: inset 0 1px 2px rgba(20, 22, 34, 0.04);
+}
+
+/* ---------- 12. MODAL — dashboard sheet ---------- */
+.modal {
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -20px 60px rgba(20, 22, 34, 0.15);
+}
+
+.modal::before {
+    background: var(--line);
+}
+
+.modal h3 {
+    font-size: 17px;
+    letter-spacing: -0.2px;
+}
+
+@media (min-width: 720px) {
+    .modal {
+        border-radius: 24px;
+    }
+}
+
+/* ---------- 13. TOAST — dashboard style ---------- */
+.toast {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+    font-weight: 600;
+}
+
+.toast.success {
+    background: #0d7a51;
+}
+
+.toast.error {
+    background: #b81d38;
+}
+
+/* ---------- 14. EMPTY / WARN / INFO ---------- */
+.empty {
+    background: var(--card);
+    border: 1.5px dashed #e0d3db;
+    border-radius: var(--r-lg);
+    color: var(--muted);
+}
+
+.empty h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.empty p {
+    font-size: 13.5px;
+}
+
+.warn {
+    background: #fef6e6;
+    border: 1px solid #f3d29b;
+    border-radius: 14px;
+    color: #7a4600;
+}
+
+.info {
+    background: var(--pink-soft);
+    border-radius: 14px;
+    color: var(--pink-press);
+}
+
+/* ---------- 15. TX LIST — lighter dividers ---------- */
+.tx-item {
+    border-bottom: 1px solid var(--line-2);
+}
+
+.tx-notes {
+    color: var(--ink-soft);
+}
+
+/* ---------- 16. STAGGER — match dashboard card entrance ---------- */
+.person:nth-child(1) {
+    animation-delay: 0.02s;
+}
+
+.person:nth-child(2) {
+    animation-delay: 0.05s;
+}
+
+.person:nth-child(3) {
+    animation-delay: 0.08s;
+}
+
+.person:nth-child(4) {
+    animation-delay: 0.11s;
+}
+
+.person:nth-child(5) {
+    animation-delay: 0.14s;
+}
+
+.person:nth-child(6) {
+    animation-delay: 0.17s;
+}
+
+/* ---------- 17. RESPONSIVE — dashboard shell rhythm ---------- */
+@media (min-width: 480px) {
+    .container {
+        padding: 18px 16px calc(36px + var(--bottom));
+    }
+}
+
+@media (min-width: 720px) {
+    .container {
+        padding: 24px 20px calc(40px + var(--bottom));
+    }
+
+    /* keep the 2×2 stat grid tight */
+    .stats,
+    .person-stats {
+        gap: 12px;
+    }
+}
+
+/* ---------- 18. REDUCED MOTION — respect user choice ---------- */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================================
+   BACK BUTTON — matches the dashboard / entry manager style
+   ============================================================ */
+.back-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 12px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn:hover {
+    background: #fbd5e2;
+}
+
+.back-btn:active {
+    transform: scale(0.92);
+}
+
+.back-btn svg {
+    width: 20px;
+    height: 20px;
+}
+

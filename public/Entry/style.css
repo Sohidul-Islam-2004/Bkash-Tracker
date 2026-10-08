@@ -3494,3 +3494,99 @@ body.in-month .brand-logo {
 body.in-month .back-btn { display: grid; }
 body.in-month .brand-logo { display: none; }
 */
+
+/* ============================================================
+   THEME ALIGNMENT WITH DASHBOARD
+   ------------------------------------------------------------
+   Matches the dashboard's 480px app shell, brand logo treatment,
+   and spacing rhythm. Paste at the BOTTOM of style.css so it
+   wins the cascade over the earlier duplicate rules.
+   ============================================================ */
+
+/* ---------- 1. App shell width (480px, same as dashboard) ---------- */
+.topbar-inner {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px 14px calc(32px + var(--bottom));
+}
+
+/* ---------- 2. Brand logo — same as dashboard ---------- */
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    /* SVG already paints the pink tile — kill the CSS gradient */
+    background: transparent;
+    box-shadow: var(--shadow-pink);
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+/* Remove the old CSS sheen — the SVG has its own */
+.brand-logo::after {
+    display: none;
+}
+
+/* ← THE MISSING RULE that was breaking the logo */
+.brand-logo .brand-mark {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ---------- 3. Sheet — match the 480px phone-width feel ---------- */
+.sheet {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ---------- 4. Toast — align bottom offset with new shell ---------- */
+.toast {
+    max-width: min(90vw, 440px);
+}
+
+/* ---------- 5. Confirm dialog — keep phone-width on desktop ---------- */
+.confirm-box {
+    max-width: 400px;
+}
+
+/* ---------- 6. Desktop: container stays 480px, only padding grows ---------- */
+@media (min-width: 720px) {
+    .container {
+        max-width: 480px;
+        padding: 20px 16px calc(40px + var(--bottom));
+    }
+
+    /* 4-col sum grid no longer fits comfortably at 480px — keep 2×2 */
+    .sum-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .month-btn {
+        padding: 18px 18px;
+    }
+
+    .day-hero {
+        padding: 22px;
+    }
+}
+
+/* ---------- 7. Small screens: keep safe-area on the shell ---------- */
+@media (max-width: 380px) {
+    .container {
+        padding: 16px 12px calc(32px + var(--bottom));
+    }
+
+    .topbar {
+        padding: calc(10px + var(--top)) 12px 10px;
+    }
+}
