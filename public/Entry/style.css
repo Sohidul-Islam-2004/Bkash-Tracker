@@ -3130,3 +3130,330 @@ body.in-month .brand-logo {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
 }
+
+.day-hero {
+    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+    color: #fff;
+    border-radius: var(--r-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+    position: relative;
+    overflow: hidden;
+}
+
+.day-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.day-hero-chip {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-num);
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.day-hero-title h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.day-hero-title p {
+    margin: 3px 0 0;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.day-hero-total {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
+.day-hero-total .dh-lbl {
+    display: block;
+    font-size: 12.5px;
+    opacity: 0.85;
+    margin-bottom: 4px;
+}
+
+.day-hero-total b {
+    font-family: var(--font-num);
+    font-size: 32px;
+    font-weight: 800;
+}
+
+/* ============================================================
+   DAY HERO  (day view route)
+   ============================================================ */
+.day-hero {
+    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+    color: #fff;
+    border-radius: var(--r-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s var(--ease);
+}
+
+.day-hero::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.day-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.day-hero-chip {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-num);
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.day-hero-title h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+}
+
+.day-hero-title p {
+    margin: 3px 0 0;
+    font-size: 13px;
+    opacity: 0.88;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+.day-hero-total {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    position: relative;
+    z-index: 1;
+}
+
+.day-hero-total .dh-lbl {
+    display: block;
+    font-size: 12.5px;
+    opacity: 0.85;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin-bottom: 4px;
+}
+
+.day-hero-total b {
+    font-family: var(--font-num);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    display: block;
+}
+
+.day-hero-total .dh-count {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12.5px;
+    opacity: 0.85;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+/* #dayDetailBody uses the same flex layout as .day-body */
+#dayDetailBody {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+@media (min-width: 720px) {
+    .day-hero {
+        padding: 24px;
+    }
+
+    .day-hero-title h2 {
+        font-size: 22px;
+    }
+
+    .day-hero-total b {
+        font-size: 36px;
+    }
+}
+
+/* day-view body — same rhythm as month's .day-body */
+.day-detail-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* hide the [hidden] view too */
+#viewHome[hidden],
+#viewMonth[hidden],
+#viewDay[hidden] {
+    display: none;
+}
+
+/* ---- day hero (same as before) ---- */
+.day-hero {
+    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+    color: #fff;
+    border-radius: var(--r-lg);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s var(--ease);
+}
+
+.day-hero::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.day-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.day-hero-chip {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-num);
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.day-hero-title h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+}
+
+.day-hero-title p {
+    margin: 3px 0 0;
+    font-size: 13px;
+    opacity: 0.88;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+.day-hero-total {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    position: relative;
+    z-index: 1;
+}
+
+.day-hero-total .dh-lbl {
+    display: block;
+    font-size: 12.5px;
+    opacity: 0.85;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin-bottom: 4px;
+}
+
+.day-hero-total b {
+    font-family: var(--font-num);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    display: block;
+}
+
+.day-hero-total .dh-count {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12.5px;
+    opacity: 0.85;
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 720px) {
+    .day-hero {
+        padding: 24px;
+    }
+
+    .day-hero-title h2 {
+        font-size: 22px;
+    }
+
+    .day-hero-total b {
+        font-size: 36px;
+    }
+}
+
+#viewDay .entry-list {
+    max-height: none;
+    overflow: visible;
+}
+
+/* keep the day body from creating a second scroll container */
+#viewDay .day-detail-body {
+    overflow: visible;
+}

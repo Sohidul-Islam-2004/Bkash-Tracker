@@ -51,28 +51,29 @@
     </main>
 
     <!-- ============ MONTH VIEW ============ -->
-   <main class="container view-detail" id="viewMonth" hidden>
-  <div class="month-hero" id="monthHero">
-    <div class="month-hero-top">
-      <div class="month-hero-title">
-        <h2 id="mhTitle">অক্টোবর ২০২৬</h2>
+    <main class="container view-detail" id="viewMonth" hidden>
+      <div class="month-hero" id="monthHero">
+        <div class="month-hero-top">
+          <div class="month-hero-title">
+            <h2 id="mhTitle">অক্টোবর ২০২৬</h2>
+          </div>
+        </div>
+
+        <div class="month-hero-amount">
+          <span class="mh-lbl">এই মাসের মোট বিকাশ</span>
+          <b id="mhTotal">৳ ০</b>
+        </div>
       </div>
-    </div>
 
-    <div class="month-hero-amount">
-      <span class="mh-lbl">এই মাসের মোট বিকাশ</span>
-      <b id="mhTotal">৳ ০</b>
-    </div>
+      <div class="section-head">
+        <h2 class="section-title"><span class="title-dot"></span>দৈনিক হিসাব</h2>
+        <span class="section-count" id="dayCount">০ দিন</span>
+      </div>
+      <div id="dayList"></div>
+    </main>
 
-   
-  </div>
-
-  <div class="section-head">
-    <h2 class="section-title"><span class="title-dot"></span>দৈনিক হিসাব</h2>
-    <span class="section-count" id="dayCount">০ দিন</span>
-  </div>
-  <div id="dayList"></div>
-</main>
+    <!-- ============ DAY VIEW ============ -->
+    <main class="container view-detail" id="viewDay" hidden></main>
 
     <!-- ============ SHEET ============ -->
     <div class="sheet-bg" id="sheetBg"></div>
