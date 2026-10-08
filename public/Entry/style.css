@@ -3457,3 +3457,40 @@ body.in-month .brand-logo {
 #viewDay .day-detail-body {
     overflow: visible;
 }
+
+
+
+/* ============================================================
+   BACK BUTTON  — always visible (goes to dashboard)
+   ============================================================ */
+.back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    /* ← always visible now */
+    place-items: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.12s;
+}
+
+.back-btn:hover {
+    background: #fbd5e2;
+}
+
+.back-btn:active {
+    transform: scale(0.92);
+}
+
+.back-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* REMOVE these old rules (they're no longer needed): */
+/*
+body.in-month .back-btn { display: grid; }
+body.in-month .brand-logo { display: none; }
+*/

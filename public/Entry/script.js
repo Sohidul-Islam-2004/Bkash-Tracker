@@ -746,14 +746,15 @@ function renderDayView(date) {
                         <span class="sum-label">বিকাশ</span>
                         <span class="sum-value">৳ ${bn(bkash)}</span>
                     </div>
+                      <div class="sum-item sum-item--total">
+                        <span class="sum-label">টোটাল</span>
+                        <span class="sum-value">৳ ${bn(total)}</span>
+                    </div>
                     <div class="sum-item sum-item--ejaa">
                         <span class="sum-label">ইজা</span>
                         <span class="sum-value">৳ ${bn(ejaa)}</span>
                     </div>
-                    <div class="sum-item sum-item--total">
-                        <span class="sum-label">টোটাল</span>
-                        <span class="sum-value">৳ ${bn(total)}</span>
-                    </div>
+                  
                     <div class="sum-item sum-item--joma">
                         <span class="sum-label">জমা</span>
                         <span class="sum-value">৳ ${bn(deposit)}</span>
@@ -904,7 +905,7 @@ document.getElementById('backBtn').onclick = () => {
     } else if (currentRoute.startsWith('month/')) {
         navigateTo('');
     } else {
-        history.back();
+        window.location.replace('/');
     }
 };
 
@@ -923,6 +924,32 @@ function todayStr(d = new Date()) {
     const off = d.getTimezoneOffset();
     return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
+
+
+
+
+
+
+/* ============================================================
+   BACK BUTTON
+   ------------------------------------------------------------
+   home  → /  (dashboard)
+   month → home
+   day   → back to that month
+   ============================================================ */
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================================
    BOOT
