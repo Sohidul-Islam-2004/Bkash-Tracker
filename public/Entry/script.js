@@ -819,14 +819,24 @@ document.addEventListener('click', async ev => {
 
         const { bkash, ejaa, deposit, total } = computeDay(date, d);
         const pawna = total - deposit;
-
+        // const text =
+        //     `${fmtDate(date)}\n\n` +
+        //     `বিকাশ: ${bkash}\n` +
+        //     `ইজা: ${ejaa}\n` +
+        //     `টোটাল: ${total}\n` +
+        //     `জমা: ${deposit}\n` +
+        //     `হাসান পাওনা: ${pawna}`; 
         const text =
-            `${fmtDate(date)}\n\n` +
-            `বিকাশ: ${bkash}\n` +
-            `ইজা: ${ejaa}\n` +
-            `টোটাল: ${total}\n` +
-            `জমা: ${deposit}\n` +
-            `হাসান পাওনা: ${pawna}`;
+            ` ${fmtDate(date)}\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `   বিকাশ : ${bkash}\n` +
+            `   ইজা   : ${ejaa}\n` +
+            `   ─────────────\n` +
+            `   টোটাল : ${total}\n` +
+            `\n` +
+            `   জমা  : ${deposit}\n` +
+            `   ─────────────\n` +
+            `   হাসান পাওনা : ${pawna}`;
 
         cpSum.classList.add('copied');
         setTimeout(() => cpSum.classList.remove('copied'), 900);
