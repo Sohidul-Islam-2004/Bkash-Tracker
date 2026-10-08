@@ -702,17 +702,11 @@ function renderDayCard(date, d, options = {}) {
                                 </div>
                                 <div class="sum-item sum-item--joma">
                                     <span class="sum-label">জমা</span>
-                                    <input class="sum-input"
-                                           data-sum-input="deposit"
-                                           data-date="${date}"
-                                           type="tel"
-                                           inputmode="numeric"
-                                           autocomplete="off"
-                                           value="${deposit ? bn(deposit) : ''}"
-                                           placeholder="0" />
+                                    <span class="sum-value" data-sum="deposit">৳ ${bn(deposit)}</span>
                                 </div>
                             </div>
 
+                            <!-- হাসান পাওনা = টোটাল − জমা -->
                             <div class="sum-pawna" data-pawna-state="${state}">
                                 <span class="sum-pawna-label">
                                     <span class="ico">${COIN}</span>
