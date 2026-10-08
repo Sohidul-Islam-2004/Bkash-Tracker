@@ -880,8 +880,8 @@ body.in-month .brand-logo {
 }
 
 .entry-list {
-    border-top: 1px solid var(--line);
-    padding-top: 4px;
+    border-top: 0;
+    padding-top: 0;
 }
 
 .entry-line {
@@ -1689,4 +1689,441 @@ body.in-month .brand-logo {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+
+/* ============================================================
+   DAY SUMMARY  ·  বিকাশ / ইজা / টোটাল / জমা / হাসান পাওনা
+   ------------------------------------------------------------
+   Expected markup (inside .day-body, after .entry-list):
+
+   <div class="day-summary">
+     <div class="sum-grid">
+       <div class="sum-item sum-item--bkash">
+         <span class="sum-label">বিকাশ</span>
+         <span class="sum-value" data-sum="bkash">৳ ০</span>
+       </div>
+       <div class="sum-item sum-item--ejaa">
+         <span class="sum-label">ইজা</span>
+         <input class="sum-input" data-sum-input="ejaa" type="tel" inputmode="numeric" placeholder="০" />
+       </div>
+       <div class="sum-item sum-item--total">
+         <span class="sum-label">টোটাল</span>
+         <span class="sum-value" data-sum="total">৳ ০</span>
+       </div>
+       <div class="sum-item sum-item--joma">
+         <span class="sum-label">জমা</span>
+         <input class="sum-input" data-sum-input="joma" type="tel" inputmode="numeric" placeholder="০" />
+       </div>
+     </div>
+
+     <div class="sum-pawna" data-pawna-state="settled">
+       <span class="sum-pawna-label">
+         <span class="ico">…svg…</span>
+         হাসান পাওনা
+       </span>
+       <b class="sum-pawna-value" data-sum="pawna">৳ ০</b>
+     </div>
+   </div>
+   ============================================================ */
+
+/* ---------- container ---------- */
+.day-summary {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: slideDown 0.3s var(--ease);
+}
+
+/* ---------- 2 × 2 grid ---------- */
+.sum-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.sum-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    padding: 10px 12px 10px 14px;
+    background: #fdfbfc;
+    border: 1.5px solid var(--line-2);
+    border-radius: 13px;
+    overflow: hidden;
+    transition: border-color 0.18s var(--ease),
+        background 0.18s var(--ease),
+        box-shadow 0.18s var(--ease),
+        transform 0.18s var(--ease);
+}
+
+/* left accent bar */
+.sum-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--muted-2);
+    transition: background 0.25s var(--ease), width 0.2s var(--ease);
+}
+
+.sum-item:focus-within {
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+/* ---------- accent colours ---------- */
+.sum-item--bkash::before {
+    background: linear-gradient(180deg, var(--pink-2), var(--pink));
+}
+
+.sum-item--ejaa::before {
+    background: linear-gradient(180deg, #4f8bf5, var(--blue));
+}
+
+.sum-item--total::before {
+    background: linear-gradient(180deg, #9aa0b4, var(--ink-2));
+}
+
+.sum-item--joma::before {
+    background: linear-gradient(180deg, #2fc98c, var(--green));
+}
+
+.sum-item--bkash:focus-within {
+    border-color: rgba(209, 32, 83, 0.32);
+    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.08);
+}
+
+.sum-item--ejaa:focus-within {
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
+}
+
+.sum-item--total:focus-within {
+    border-color: rgba(58, 61, 74, 0.3);
+    box-shadow: 0 0 0 3px rgba(58, 61, 74, 0.07);
+}
+
+.sum-item--joma:focus-within {
+    border-color: rgba(18, 160, 106, 0.35);
+    box-shadow: 0 0 0 3px rgba(18, 160, 106, 0.1);
+}
+
+/* ---------- label ---------- */
+.sum-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- value ---------- */
+.sum-value {
+    font-family: var(--font-num);
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sum-item--bkash .sum-value {
+    color: var(--pink);
+}
+
+.sum-item--ejaa .sum-value {
+    color: var(--blue);
+}
+
+.sum-item--total .sum-value {
+    color: var(--ink);
+}
+
+.sum-item--joma .sum-value {
+    color: var(--green);
+}
+
+/* ---------- input (ইজা / জমা) ---------- */
+.sum-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-num);
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    border-radius: 0;
+}
+
+.sum-item--ejaa .sum-input {
+    color: var(--blue);
+}
+
+.sum-item--joma .sum-input {
+    color: var(--green);
+}
+
+.sum-input::placeholder {
+    color: var(--muted-2);
+    font-weight: 700;
+    opacity: 0.7;
+}
+
+/* hide number spinners */
+.sum-input::-webkit-outer-spin-button,
+.sum-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.sum-input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ---------- হাসান পাওনা row ---------- */
+.sum-pawna {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #fff5f8, #fde8ef);
+    border: 1.5px solid #f7d3e0;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.25s var(--ease),
+        border-color 0.25s var(--ease);
+}
+
+.sum-pawna::after {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(209, 32, 83, 0.06);
+    pointer-events: none;
+}
+
+.sum-pawna-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+    color: var(--pink-press);
+    position: relative;
+    z-index: 1;
+}
+
+.sum-pawna-label .ico {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: rgba(209, 32, 83, 0.12);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+}
+
+.sum-pawna-label .ico svg {
+    width: 14px;
+    height: 14px;
+}
+
+.sum-pawna-value {
+    font-family: var(--font-num);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    font-variant-numeric: tabular-nums;
+    color: var(--pink);
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------- pawna states ---------- */
+/* পাওনা আছে (positive) — default pink */
+.sum-pawna[data-pawna-state="due"] {
+    background: linear-gradient(135deg, #fff5f8, #fde8ef);
+    border-color: #f7d3e0;
+}
+
+/* পরিশোধিত (zero) — green */
+.sum-pawna[data-pawna-state="settled"] {
+    background: linear-gradient(135deg, #f2fbf7, var(--green-soft));
+    border-color: #c8eedd;
+}
+
+.sum-pawna[data-pawna-state="settled"] .sum-pawna-label {
+    color: #0b6b47;
+}
+
+.sum-pawna[data-pawna-state="settled"] .sum-pawna-label .ico {
+    background: rgba(18, 160, 106, 0.14);
+    color: var(--green);
+}
+
+.sum-pawna[data-pawna-state="settled"] .sum-pawna-value {
+    color: var(--green);
+}
+
+.sum-pawna[data-pawna-state="settled"]::after {
+    background: rgba(18, 160, 106, 0.07);
+}
+
+/* অগ্রিম (negative) — blue */
+.sum-pawna[data-pawna-state="advance"] {
+    background: linear-gradient(135deg, #f2f7ff, var(--blue-soft));
+    border-color: #cfe0fb;
+}
+
+.sum-pawna[data-pawna-state="advance"] .sum-pawna-label {
+    color: #1a4fbf;
+}
+
+.sum-pawna[data-pawna-state="advance"] .sum-pawna-label .ico {
+    background: rgba(37, 99, 235, 0.14);
+    color: var(--blue);
+}
+
+.sum-pawna[data-pawna-state="advance"] .sum-pawna-value {
+    color: var(--blue);
+}
+
+.sum-pawna[data-pawna-state="advance"]::after {
+    background: rgba(37, 99, 235, 0.07);
+}
+
+/* ---------- value flash on change ---------- */
+@keyframes sumFlash {
+    0% {
+        background: rgba(209, 32, 83, 0.12);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+.sum-value.flash,
+.sum-pawna-value.flash {
+    animation: sumFlash 0.7s var(--ease);
+    border-radius: 6px;
+}
+
+/* ---------- entry list sits above summary ---------- */
+.entry-list:has(+ .day-summary) {
+    padding-bottom: 2px;
+}
+
+/* ---------- dark/edge safety ---------- */
+.sum-item:last-child,
+.sum-item:nth-last-child(2) {
+    /* keeps rounded corners crisp on Safari when grid wraps */
+    transform: translateZ(0);
+}
+
+/* ============================================================
+   SMALL SCREENS
+   ============================================================ */
+@media (max-width: 380px) {
+
+    .sum-grid {
+        gap: 7px;
+    }
+
+    .sum-item {
+        padding: 9px 10px 9px 12px;
+        border-radius: 12px;
+    }
+
+    .sum-label {
+        font-size: 11px;
+    }
+
+    .sum-value,
+    .sum-input {
+        font-size: 15px;
+    }
+
+    .sum-pawna {
+        padding: 11px 12px;
+    }
+
+    .sum-pawna-value {
+        font-size: 17px;
+    }
+
+    .sum-pawna-label {
+        font-size: 12.5px;
+    }
+}
+
+/* ============================================================
+   DESKTOP
+   ============================================================ */
+@media (min-width: 720px) {
+
+    .sum-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .sum-value,
+    .sum-input {
+        font-size: 17.5px;
+    }
+
+    .sum-pawna {
+        padding: 14px 18px;
+    }
+
+    .sum-pawna-value {
+        font-size: 21px;
+    }
+}
+
+/* জমা input in the sheet */
+#joma {
+    font-family: var(--font-num);
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.2px;
+}
+
+/* ইজা as read-only display in day summary */
+.sum-item--ejaa .sum-value {
+    color: var(--blue);
+    opacity: 0.95;
+    font-style: normal;
 }

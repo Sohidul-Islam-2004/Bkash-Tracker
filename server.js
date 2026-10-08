@@ -488,7 +488,7 @@ app.use((err, req, res, next) => {
 
 app.post("/entries", async (req, res) => {
     try {
-        const { date, entries, total, count, raw } = req.body;
+        const { date, entries, total, count, raw, deposit } = req.body;
 
         // 1. validate
         if (!date || !Array.isArray(entries) || entries.length === 0) {
@@ -505,6 +505,7 @@ app.post("/entries", async (req, res) => {
             raw: raw || "",
             entries,
             total: safeTotal,
+            deposit,
             count: safeCount
         });
 

@@ -127,6 +127,11 @@ const EntriesSchema = new mongoose.Schema(
                 amount: { type: Number, required: true, min: 1 },
             },
         ],
+        deposit: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
         total: { type: Number, required: true, default: 0 },
         count: { type: Number, required: true, default: 0 },
     },
@@ -153,5 +158,5 @@ TransactionSchema.index(
 module.exports = {
     PersonSchema,
     TransactionSchema,
-    EntriesSchema
+    EntriesSchema,
 };

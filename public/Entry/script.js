@@ -1,9 +1,9 @@
 /* ============================================================
    API CONFIG
    ============================================================ */
-const API_BASE = '';   // 👈 change to your backend
-const API_TOKEN = '';  // 👈 optional
-
+const API_BASE = '';
+const API_TOKEN = '';
+const InitialCarry = 648990;
 async function api(path, options = {}) {
     const res = await fetch(API_BASE + path, {
         ...options,
@@ -25,14 +25,13 @@ async function api(path, options = {}) {
 /* ============================================================
    STATE
    ============================================================ */
-let records = [];
+let records = [];            // each record: { date, raw, entries, total, count, deposit }
 const openDays = new Set();
 let confirmCb = null;
-let lastTotals = { amount: 0, numbers: 0, days: 0 };
 let currentRoute = '';
 
 /* ============================================================
-   BACKEND CRUD
+   BACKEND CRUD — entries (deposit lives inside each record)
    ============================================================ */
 async function fetchRecords() {
     try {
@@ -55,10 +54,31 @@ async function createRecord(payload) {
     return record;
 }
 
+/* Update only deposit for a given date */
+async function updateDeposit(date, deposit) {
+    const val = Number(deposit) || 0;
+    const updated = await api(`/entries/by-date/${encodeURIComponent(date)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ deposit: val })
+    });
+    const rec = records.find(r => r.date === date);
+    if (rec) {
+        rec.deposit = val;
+    } else if (updated && (updated.date || updated.data)) {
+        records.push(updated.data || updated);
+    }
+}
+
 async function removeByDate(date) {
     await api(`/entries/by-date/${encodeURIComponent(date)}`, { method: 'DELETE' });
     records = records.filter(r => r.date !== date);
     openDays.delete(date);
+}
+
+/* Look up deposit for a date from loaded records */
+function getDayMeta(date) {
+    const rec = records.find(r => r.date === date);
+    return { deposit: rec ? (Number(rec.deposit) || 0) : 0 };
 }
 
 /* ============================================================
@@ -67,10 +87,18 @@ async function removeByDate(date) {
 const BN = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
 const toBn = s => String(s).replace(/\d/g, d => BN[+d]);
 const bn = n => toBn(Number(n).toLocaleString('en-US'));
+
+const BN_TO_EN = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
+function parseNum(str) {
+    const cleaned = fromBn(str).replace(/[^\d.\-]/g, '');
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+}
+
 const MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
     'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 const monthName = ym => MONTHS[+ym.split('-')[1] - 1];
-const monthShort = ym => monthName(ym).slice(0, 4);
 const WEEKDAYS = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
 const weekday = d => {
     const [y, m, dd] = d.split('-').map(Number);
@@ -117,22 +145,15 @@ document.getElementById('confirmYes').onclick = async () => {
 };
 
 /* ============================================================
-   PARSE — WhatsApp export + plain text
-   শুধু নম্বর ও টাকা বের করে। তারিখ বাদ।
+   PARSE
    ============================================================ */
-
-/* ---- phone normalization ---- */
 function normalizePhone(raw) {
     let d = raw.replace(/\D/g, '');
-
-    if (d.startsWith('00')) d = d.slice(2);        // 00880… → 880…
-    if (d.startsWith('880')) d = d.slice(3);       // 8801…  → 1…
-    else if (d.startsWith('88')) d = d.slice(2);   // 881…   → 1…
-
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.startsWith('880')) d = d.slice(3);
+    else if (d.startsWith('88')) d = d.slice(2);
     if (!d.startsWith('0')) d = '0' + d;
-
     if (d.length === 11 && d.startsWith('01')) return d;
-
     if (d.length > 11) {
         for (let i = 0; i + 11 <= d.length; i++) {
             const sub = d.slice(i, i + 11);
@@ -142,20 +163,15 @@ function normalizePhone(raw) {
     return null;
 }
 
-/* ---- find phone + position in a line ---- */
 function extractPhone(line) {
-    // Constrained: stops right after 11 digits, doesn't swallow following amount
     const re = /(?:(?:\+|00)?88[\s\-]?)?0[\s\-]?1[\s\-]?\d{3}[\s\-]?\d{6}/;
     const m = line.match(re);
     if (!m) return null;
-
     const number = normalizePhone(m[0]);
     if (!number) return null;
-
     return { number, index: m.index, length: m[0].length };
 }
 
-/* ---- extract first amount from text (skips Pin1234) ---- */
 function extractAmount(str) {
     if (!str) return null;
     const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
@@ -165,21 +181,16 @@ function extractAmount(str) {
     return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/* ---- main parser ---- */
 function parseEntries(text) {
     const out = [];
     const lines = String(text || '').split(/\r?\n/);
-    let pending = null; // { number } — waiting for amount on next line
-
+    let pending = null;
     const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message|Hi|Ok|Ol|)$/i;
 
     for (const raw of lines) {
         const line = raw.trim();
         if (!line) continue;
-
         let body = line;
-
-        // Strip WhatsApp prefix — two common styles
         let m = line.match(
             /^\d{1,2}\/\d{1,2}\/\d{2,4},\s*\d{1,2}:\d{2}\s*(?:AM|PM)?\s*-\s*[^:]+:\s*([\s\S]*)$/i
         );
@@ -190,16 +201,13 @@ function parseEntries(text) {
             );
             if (m) body = m[1];
         }
-
         body = body.trim();
         if (skipRe.test(body)) continue;
 
         const phone = extractPhone(body);
-
         if (phone) {
             const after = body.slice(phone.index + phone.length);
             const amount = extractAmount(after);
-
             if (amount != null) {
                 out.push({ number: phone.number, amount });
                 pending = null;
@@ -214,7 +222,6 @@ function parseEntries(text) {
             }
         }
     }
-
     return out;
 }
 
@@ -225,7 +232,11 @@ const sheet = document.getElementById('sheet');
 const sheetBg = document.getElementById('sheetBg');
 
 function openSheet() {
-    document.getElementById('date').value = todayStr();
+    const today = todayStr();
+    document.getElementById('date').value = today;
+    document.getElementById('input').value = '';
+    document.getElementById('joma').value = '';   // input element still has id="joma"
+    updateSheetEjaaHint(today);
     sheet.classList.add('show');
     sheetBg.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -238,6 +249,22 @@ function closeSheet() {
 }
 document.getElementById('addTop').onclick = openSheet;
 sheetBg.onclick = closeSheet;
+
+document.getElementById('date').addEventListener('change', ev => {
+    updateSheetEjaaHint(ev.target.value);
+});
+
+function updateSheetEjaaHint(date) {
+    const hint = document.getElementById('ejaaHint');
+    if (!hint) return;
+    if (!date) {
+        hint.textContent = 'ইজা স্বয়ংক্রিয়ভাবে আগের দিনের হাসান পাওনা থেকে আসবে';
+        return;
+    }
+    const all = computeAllDays();
+    const ejaa = all[date] ? all[date].ejaa : 0;
+    hint.textContent = `এই দিনের ইজা (আগের দিনের পাওনা): ৳ ${bn(ejaa)}`;
+}
 
 /* ============================================================
    PASTE
@@ -282,11 +309,12 @@ document.getElementById('previewBtn').onclick = () => {
 };
 
 /* ============================================================
-   SAVE → POST to backend (smooth incremental update)
+   SAVE — one POST with entries + deposit together
    ============================================================ */
 document.getElementById('saveBtn').onclick = async () => {
     const date = document.getElementById('date').value;
     const raw = document.getElementById('input').value.trim();
+    const depositVal = parseNum(document.getElementById('joma').value);
     if (!date) return toast('তারিখ নির্বাচন করুন', 'err');
 
     const entries = parseEntries(raw);
@@ -297,12 +325,18 @@ document.getElementById('saveBtn').onclick = async () => {
     saveBtn.disabled = true;
 
     try {
+        // Single POST — entries + deposit together
         await createRecord({
-            date, raw, entries, total,
-            count: entries.length
+            date,
+            raw,
+            entries,
+            total,
+            count: entries.length,
+            deposit: depositVal
         });
 
         document.getElementById('input').value = '';
+        document.getElementById('joma').value = '';
         previewBox.classList.remove('show');
         closeSheet();
         openDays.add(date);
@@ -310,11 +344,10 @@ document.getElementById('saveBtn').onclick = async () => {
         const ym = date.slice(0, 7);
         const wasOnSameMonth = currentRoute === `month/${ym}`;
 
-        toast(`সেভ হয়েছে • ${toBn(entries.length)} এন্ট্রি • ৳${bn(total)}`, 'ok');
+        toast(`সেভ হয়েছে • ${toBn(entries.length)} এন্ট্রি • জমা ৳${bn(depositVal)}`, 'ok');
 
         if (wasOnSameMonth) {
-            // 🎯 In-place smooth update — no navigation, no full rebuild
-            upsertDayCard(date);
+            renderMonthView(ym);
         } else {
             navigateTo(`month/${ym}`);
         }
@@ -326,60 +359,13 @@ document.getElementById('saveBtn').onclick = async () => {
 };
 
 /* ============================================================
-   INCREMENTAL DAY CARD — smooth insert/update
-   পুরো list rebuild না করে শুধু পরিবর্তিত দিন DOM-এ update করে
-   ============================================================ */
-function upsertDayCard(date) {
-    const ym = date.slice(0, 7);
-    const months = groupData();
-    const m = months[ym];
-    if (!m) return;
-
-    const d = m.days[date];
-    if (!d) return;
-
-    // Update hero totals
-    document.getElementById('mhTotal').textContent = '৳ ' + bn(m.total);
-    document.getElementById('dayCount').textContent =
-        toBn(Object.keys(m.days).length) + ' দিন';
-
-    const list = document.getElementById('dayList');
-    const existing = list.querySelector(`.day-card[data-day="${date}"]`);
-
-    if (existing) {
-        // Replace the card without animation flicker
-        const wasOpen = existing.classList.contains('is-open');
-        const tmp = document.createElement('div');
-        tmp.innerHTML = renderDayCard(date, d, { animate: false, forceOpen: wasOpen });
-        const newCard = tmp.firstElementChild;
-        existing.replaceWith(newCard);
-        return;
-    }
-
-    // Insert new card at correct sorted position
-    const html = renderDayCard(date, d, { animate: true, forceOpen: false });
-    const allCards = [...list.querySelectorAll('.day-card')];
-    const beforeCard = allCards.find(c => c.dataset.day < date);
-
-    if (beforeCard) beforeCard.insertAdjacentHTML('beforebegin', html);
-    else list.insertAdjacentHTML('beforeend', html);
-
-    // 🎯 Next frame: add is-open → smooth collapse animation
-    requestAnimationFrame(() => {
-        const el = list.querySelector(`.day-card[data-day="${date}"]`);
-        if (el && !el.classList.contains('is-open')) {
-            el.classList.add('is-open');
-        }
-    });
-}
-
-/* ============================================================
    ICONS
    ============================================================ */
 const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
 const ARROW_RIGHT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>';
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+const COIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>';
 
 /* ============================================================
    GROUP DATA
@@ -391,14 +377,71 @@ function groupData() {
         .forEach(r => {
             const ym = r.date.slice(0, 7);
             const m = months[ym] || (months[ym] = { total: 0, count: 0, days: {} });
-            const d = m.days[r.date] || (m.days[r.date] = { total: 0, count: 0, entries: [] });
+            const d = m.days[r.date] || (m.days[r.date] = { total: 0, count: 0, entries: [], deposit: 0 });
             m.total += r.total;
             m.count += r.count;
             d.total += r.total;
             d.count += r.count;
             d.entries.push(...r.entries);
+            // deposit comes from the record itself
+            if (r.deposit) d.deposit = Number(r.deposit) || 0;
         });
     return months;
+}
+
+/* ============================================================
+   COMPUTE ALL DAYS  —  carry previous pawna forward as ইজা
+   ============================================================ */
+function computeAllDays() {
+    const allDates = [...new Set(records.map(r => r.date))].sort();
+    const months = groupData();
+    const result = {};
+    let carry = InitialCarry;
+
+    for (const date of allDates) {
+        const ym = date.slice(0, 7);
+        const d = months[ym] && months[ym].days[date];
+        if (!d) continue;
+
+        const deposit = d.deposit || 0;
+        const bkash = d.total;
+        const ejaa = carry;
+        const total = bkash + ejaa;
+        const pawna = total - deposit;
+
+        result[date] = { bkash, ejaa, deposit, total, pawna };
+        console.log(carry);
+        console.log(result, date);
+        carry = pawna;
+    }
+    return result;
+}
+
+function computeDay(date, d) {
+    const all = computeAllDays();
+    return all[date] || { bkash: d.total, ejaa: 0, deposit: d.deposit || 0, total: d.total, pawna: d.total };
+}
+
+function monthTotal(ym, monthsInput) {
+    const months = monthsInput || groupData();
+    const m = months[ym];
+    if (!m) return 0;
+    const all = computeAllDays();
+    let sum = 0;
+    for (const date in m.days) {
+        if (all[date]) sum += all[date].total;
+        else sum += m.days[date].total;
+    }
+    return sum;
+}
+
+function pawnaState(pawna) {
+    if (pawna > 0) return 'due';
+    if (pawna < 0) return 'advance';
+    return 'settled';
+}
+function pawnaDisplay(pawna) {
+    return '৳ ' + bn(pawna);
 }
 
 /* ============================================================
@@ -464,22 +507,19 @@ function renderMonthList() {
         return;
     }
 
-    el.innerHTML = keys.map(ym => {
-        const m = months[ym];
-        return `
-            <article class="month-card">
-                <button class="month-btn" data-open-month="${ym}" type="button">
-                    <div class="month-info">
-                        <div class="month-name">${monthName(ym)} ${toBn(ym.slice(0, 4))}</div>
-                    </div>
-                    <div class="month-total">
-                        <div class="amt">৳ ${bn(m.total)}</div>
-                        <div class="cnt">মোট</div>
-                    </div>
-                    <span class="month-arrow">${ARROW_RIGHT}</span>
-                </button>
-            </article>`;
-    }).join('');
+    el.innerHTML = keys.map(ym => `
+        <article class="month-card">
+            <button class="month-btn" data-open-month="${ym}" type="button">
+                <div class="month-info">
+                    <div class="month-name">${monthName(ym)} ${toBn(ym.slice(0, 4))}</div>
+                </div>
+                <div class="month-total">
+                    <div class="amt">৳ ${bn(monthTotal(ym, months))}</div>
+                    <div class="cnt">মোট</div>
+                </div>
+                <span class="month-arrow">${ARROW_RIGHT}</span>
+            </button>
+        </article>`).join('');
 }
 
 /* ============================================================
@@ -505,11 +545,10 @@ function renderMonthView(ym) {
     }
 
     mh.style.display = '';
-
     document.getElementById('mhTitle').textContent = monthName(ym) + ' ' + toBn(ym.slice(0, 4));
     const dates = Object.keys(m.days).sort().reverse();
 
-    document.getElementById('mhTotal').textContent = '৳ ' + bn(m.total);
+    document.getElementById('mhTotal').textContent = '৳ ' + bn(monthTotal(ym, months));
     dayCountEl.textContent = toBn(dates.length) + ' দিন';
 
     dayListEl.innerHTML = dates.map(date => renderDayCard(date, m.days[date])).join('');
@@ -517,21 +556,19 @@ function renderMonthView(ym) {
 
 /* ============================================================
    RENDER DAY CARD
-   options:
-     - animate: whether to apply cardIn animation (default true)
-     - forceOpen: if provided, overrides openDays state
    ============================================================ */
 function renderDayCard(date, d, options = {}) {
     const { animate = true, forceOpen = null } = options;
     const isOpen = forceOpen !== null ? forceOpen : openDays.has(date);
     const animClass = animate ? '' : 'no-animate';
 
+    const { bkash, ejaa, deposit, total, pawna } = computeDay(date, d);
+    const state = pawnaState(pawna);
+
     return `
         <div class="day-card ${isOpen ? 'is-open' : ''} ${animClass}" data-day="${date}">
             <button class="day-head" data-td="${date}" type="button">
-                <div class="day-chip">
-                    <b>${toBn(+date.slice(8))}</b>
-                </div>
+                <div class="day-chip"><b>${toBn(+date.slice(8))}</b></div>
                 <div class="day-info">
                     <div class="d1">${weekday(date)}</div>
                     <div class="d2">${toBn(d.count)} টি নম্বর</div>
@@ -542,6 +579,42 @@ function renderDayCard(date, d, options = {}) {
             <div class="collapse">
                 <div class="collapse-in">
                     <div class="day-body">
+
+                        <div class="day-summary">
+                            <div class="sum-grid">
+                                <div class="sum-item sum-item--bkash">
+                                    <span class="sum-label">বিকাশ</span>
+                                    <span class="sum-value" data-sum="bkash">৳ ${bn(bkash)}</span>
+                                </div>
+                                <div class="sum-item sum-item--ejaa">
+                                    <span class="sum-label">ইজা</span>
+                                    <span class="sum-value" data-sum="ejaa">৳ ${bn(ejaa)}</span>
+                                </div>
+                                <div class="sum-item sum-item--total">
+                                    <span class="sum-label">টোটাল</span>
+                                    <span class="sum-value" data-sum="total">৳ ${bn(total)}</span>
+                                </div>
+                                <div class="sum-item sum-item--joma">
+                                    <span class="sum-label">জমা</span>
+                                    <input class="sum-input"
+                                           data-sum-input="deposit"
+                                           data-date="${date}"
+                                           type="tel"
+                                           inputmode="numeric"
+                                           autocomplete="off"
+                                           value="${deposit ? bn(deposit) : ''}"
+                                           placeholder="০" />
+                                </div>
+                            </div>
+                            <div class="sum-pawna" data-pawna-state="${state}">
+                                <span class="sum-pawna-label">
+                                    <span class="ico">${COIN}</span>
+                                    হাসান পাওনা
+                                </span>
+                                <b class="sum-pawna-value" data-sum="pawna">${pawnaDisplay(pawna)}</b>
+                            </div>
+                        </div>
+
                         <div class="entry-list">
                             ${d.entries.map(e => `
                                 <button class="entry-line" data-copy="${e.number}" type="button">
@@ -550,6 +623,7 @@ function renderDayCard(date, d, options = {}) {
                                     <span class="a">৳ ${bn(e.amount)}</span>
                                 </button>`).join('')}
                         </div>
+
                         <button class="day-delete" data-del="${date}" type="button">
                             ${TRASH}
                             এই দিনের এন্ট্রি মুছুন
@@ -559,6 +633,40 @@ function renderDayCard(date, d, options = {}) {
             </div>
         </div>`;
 }
+
+/* ============================================================
+   INLINE deposit editing → PATCH the record → rerender
+   ============================================================ */
+document.addEventListener('focusin', ev => {
+    const inp = ev.target.closest && ev.target.closest('[data-sum-input]');
+    if (!inp) return;
+    const val = parseNum(inp.value);
+    inp.value = val ? String(val) : '';
+});
+
+document.addEventListener('focusout', async ev => {
+    const inp = ev.target.closest && ev.target.closest('[data-sum-input]');
+    if (!inp) return;
+    const date = inp.dataset.date;
+    const val = parseNum(inp.value);
+    inp.value = val ? bn(val) : '';
+
+    // Optimistically update local record so UI is instant
+    const rec = records.find(r => r.date === date);
+    if (rec) rec.deposit = val;
+
+    // Persist to backend
+    try {
+        await updateDeposit(date, val);
+    } catch (err) {
+        toast('জমা সেভ ব্যর্থ: ' + err.message, 'err');
+        if (rec) rec.deposit = 0;
+    }
+
+    // Rerender month so downstream days' ইজা recalculates
+    const ym = date.slice(0, 7);
+    renderMonthView(ym);
+});
 
 /* ============================================================
    DELEGATED CLICKS
@@ -577,7 +685,7 @@ document.addEventListener('click', async ev => {
     if (del) {
         ev.stopPropagation();
         const date = del.dataset.del;
-        askConfirm('এন্ট্রি মুছবেন?', 'এই দিনের সব এন্ট্রি মুছে যাবে। এটি ফেরানো যাবে না।', async () => {
+        askConfirm('এন্ট্রি মুছবেন?', 'এই দিনের সব এন্ট্রি ও হিসাব মুছে যাবে। এটি ফেরানো যাবে না।', async () => {
             try {
                 await removeByDate(date);
                 const ym = date.slice(0, 7);
@@ -628,7 +736,7 @@ function todayStr(d = new Date()) {
 }
 
 /* ============================================================
-   BOOT — fetch from backend, then render
+   BOOT
    ============================================================ */
 (async function init() {
     await fetchRecords();
