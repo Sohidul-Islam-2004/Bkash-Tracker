@@ -26,7 +26,7 @@ async function api(path, options = {}) {
 /* ============================================================
    STATE
    ============================================================ */
-let records = [];            // each record: { date, raw, entries, total, count, deposit }
+let records = [];
 const openDays = new Set();
 let confirmCb = null;
 let currentRoute = '';
@@ -81,23 +81,17 @@ function getDayMeta(date) {
 }
 
 /* ============================================================
-   NUMERAL HELPERS
+   NUMERAL HELPERS  —  DISPLAY IS ENGLISH
    ------------------------------------------------------------
-   Numbers / amounts are displayed in ENGLISH numerals.
-   `toBn` and `bn` are kept as function names for compatibility,
-   but now simply pass through English digits.
+   toBn / bn are kept as function names for compatibility,
+   but now output plain English numerals.
    ============================================================ */
-
-// pass-through (kept for call-site compatibility)
-const toBn = s => String(s);
-
-// English formatted number with commas
+const toBn = s => String(s);                     // pass-through
 const bn = n => Number(n).toLocaleString('en-US');
 
-// still parse Bengali digits typed into inputs
+/* still let users TYPE Bengali digits into inputs */
 const BN_TO_EN = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
 const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
-
 function parseNum(str) {
     const cleaned = fromBn(str).replace(/[^\d.\-]/g, '');
     const n = parseFloat(cleaned);
@@ -335,10 +329,7 @@ document.getElementById('saveBtn').onclick = async () => {
 
     try {
         await createRecord({
-            date,
-            raw,
-            entries,
-            total,
+            date, raw, entries, total,
             count: entries.length,
             deposit: depositVal
         });
@@ -429,7 +420,7 @@ function computeDay(date, d) {
     return all[date] || { bkash: d.total, ejaa: 0, deposit: d.deposit || 0, total: d.total, pawna: d.total };
 }
 
-/* ---------- MONTH TOTALS (bkash only) ---------- */
+/* ---------- MONTH TOTALS ---------- */
 function monthBkashTotal(ym, monthsInput) {
     const months = monthsInput || groupData();
     const m = months[ym];
@@ -451,7 +442,6 @@ function monthDepositTotal(ym, monthsInput) {
     return sum;
 }
 
-/* হাসান পাওনা at end of month = pawna of the last date in that month */
 function monthFinalPawna(ym, monthsInput) {
     const months = monthsInput || groupData();
     const m = months[ym];
@@ -462,7 +452,24 @@ function monthFinalPawna(ym, monthsInput) {
     return all[last] ? all[last].pawna : 0;
 }
 
+/* Overall হাসান পাওনা — pawna of the very last recorded day */
+function overallPawna() {
+    const all = computeAllDays();
+    const dates = Object.keys(all).sort();
+    if (!dates.length) return InitialCarry;
+    return all[dates[dates.length - 1]].pawna;
+}
+
 const monthTotal = monthBkashTotal;
+
+function pawnaState(pawna) {
+    if (pawna > 0) return 'due';
+    if (pawna < 0) return 'advance';
+    return 'settled';
+}
+function pawnaDisplay(pawna) {
+    return '৳ ' + bn(pawna);
+}
 
 /* ============================================================
    ROUTER
@@ -504,9 +511,40 @@ window.addEventListener('hashchange', handleRoute);
 
 /* ============================================================
    HOME VIEW
+   ------------------------------------------------------------
+   Adds a হাসান পাওনা hero at the top of #viewHome
    ============================================================ */
 function renderHome() {
+    renderHomeHero();
     renderMonthList();
+}
+
+function renderHomeHero() {
+    const viewHome = document.getElementById('viewHome');
+    if (!viewHome) return;
+
+    const pawna = overallPawna();
+    const state = pawnaState(pawna);
+
+    let hero = document.getElementById('homeHero');
+    if (!hero) {
+        hero = document.createElement('div');
+        hero.id = 'homeHero';
+        hero.className = 'home-hero';
+        viewHome.insertBefore(hero, viewHome.firstChild);
+    }
+
+    hero.innerHTML = `
+        <div class="home-hero-top">
+            <span class="home-hero-label">
+                <span class="home-hero-ico">${COIN}</span>
+                হাসান পাওনা
+            </span>
+            <span class="home-hero-badge" data-pawna-state="${state}">
+                ${state === 'due' ? 'বাকি' : state === 'advance' ? 'অগ্রিম' : 'পরিশোধিত'}
+            </span>
+        </div>
+        <b class="home-hero-value" data-pawna-state="${state}">৳ ${bn(pawna)}</b>`;
 }
 
 function renderMonthList() {
@@ -544,8 +582,6 @@ function renderMonthList() {
 
 /* ============================================================
    MONTH VIEW
-   ------------------------------------------------------------
-   হাসান পাওনা is shown HERE (month level), not in each day card.
    ============================================================ */
 function renderMonthView(ym) {
     const months = groupData();
@@ -570,12 +606,10 @@ function renderMonthView(ym) {
     document.getElementById('mhTitle').textContent = monthName(ym) + ' ' + ym.slice(0, 4);
     const dates = Object.keys(m.days).sort().reverse();
 
-    // Month hero: bKash total + deposit total + month-end হাসান পাওনা
+    // Month hero: bKash total + deposit total (stacked)
     document.getElementById('mhTotal').textContent = '৳ ' + bn(monthBkashTotal(ym, months));
     const mhDepositEl = document.getElementById('mhDeposit');
-    const mhPawnaEl = document.getElementById('mhPawna');
     if (mhDepositEl) mhDepositEl.textContent = '৳ ' + bn(monthDepositTotal(ym, months));
-    if (mhPawnaEl) mhPawnaEl.textContent = '৳ ' + bn(monthFinalPawna(ym, months));
 
     dayCountEl.textContent = dates.length + ' দিন';
     dayListEl.innerHTML = dates.map(date => renderDayCard(date, m.days[date])).join('');
@@ -583,9 +617,6 @@ function renderMonthView(ym) {
 
 /* ============================================================
    RENDER DAY CARD
-   ------------------------------------------------------------
-   NOTE: হাসান পাওনা row is intentionally REMOVED from here.
-   It appears only at the month level (see renderMonthView).
    ============================================================ */
 function renderDayCard(date, d, options = {}) {
     const { animate = true, forceOpen = null } = options;
@@ -594,7 +625,6 @@ function renderDayCard(date, d, options = {}) {
 
     const { bkash, ejaa, deposit, total } = computeDay(date, d);
 
-    // Newest-first entry list (last pasted line appears on top)
     const reversedEntries = [...d.entries].reverse();
 
     const entryHeader = reversedEntries.length ? `
@@ -709,7 +739,6 @@ document.addEventListener('focusout', async ev => {
    ============================================================ */
 document.addEventListener('click', async ev => {
 
-    /* --- copy-all numbers for a day --- */
     const cpAll = ev.target.closest('[data-copy-all]');
     if (cpAll) {
         ev.stopPropagation();
@@ -732,7 +761,6 @@ document.addEventListener('click', async ev => {
         return;
     }
 
-    /* --- open month --- */
     const openMonthBtn = ev.target.closest('[data-open-month]');
     if (openMonthBtn) {
         navigateTo('month/' + openMonthBtn.dataset.openMonth);
