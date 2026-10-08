@@ -519,8 +519,8 @@ async function handleRoute() {
     viewMonth.hidden = true;
     viewDay.hidden = true;
     document.body.classList.remove('in-month');
-    document.getElementById('topTitle').textContent = 'এন্ট্রি ম্যানেজার';
-    document.getElementById('topSub').textContent = 'দৈনিক হিসাব • মাসিক রিপোর্ট';
+    document.getElementById('topTitle').textContent = 'ইজি লেনদেন';
+    document.getElementById('topSub').textContent = 'সালাম ভাইয়ের সাথে লেনদেন';
     renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
