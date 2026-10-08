@@ -58,9 +58,21 @@
             <h2 id="mhTitle">অক্টোবর ২০২৬</h2>
           </div>
         </div>
+
         <div class="month-hero-amount">
-          <span class="mh-lbl">এই মাসের মোট</span>
+          <span class="mh-lbl">এই মাসের মোট বিকাশ</span>
           <b id="mhTotal">৳ ০</b>
+        </div>
+
+        <div class="month-hero-stats">
+          <div class="mh-stat">
+            <span class="mh-stat-lbl">মোট জমা</span>
+            <b class="mh-stat-val" id="mhDeposit">৳ ০</b>
+          </div>
+          <div class="mh-stat">
+            <span class="mh-stat-lbl">হাসান পাওনা</span>
+            <b class="mh-stat-val" id="mhPawna">৳ ০</b>
+          </div>
         </div>
       </div>
 
@@ -130,7 +142,7 @@
         <div class="input-hint">প্রতি লাইনে: ১১-ডিজিট নম্বর, তারপর # বা - চিহ্ন, তারপর টাকা</div>
       </div>
 
-      <!-- ═══════ NEW : জমা ═══════ -->
+      <!-- জমা -->
       <div class="field">
         <label for="joma">
           <span class="label-icon">
@@ -145,7 +157,6 @@
         <input type="tel" id="joma" inputmode="numeric" autocomplete="off" placeholder="০" />
         <div class="input-hint" id="ejaaHint">ইজা স্বয়ংক্রিয়ভাবে আগের দিনের হাসান পাওনা থেকে আসবে</div>
       </div>
-      <!-- ═════════════════════════ -->
 
       <div class="btn-row">
         <button class="btn btn-ghost" id="previewBtn" type="button">

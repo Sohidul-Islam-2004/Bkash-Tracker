@@ -42,7 +42,6 @@
 
     --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
-    /* Numerals: dedicated Bengali-capable stack for digits */
     --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
         BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
@@ -407,7 +406,6 @@ body.in-month .brand-logo {
     background: var(--pink-soft);
 }
 
-/* -------- Month badge (home card) : cleaner "tile" look -------- */
 .month-badge {
     width: 54px;
     height: 54px;
@@ -550,7 +548,7 @@ body.in-month .brand-logo {
 }
 
 /* ============================================================
-   MONTH DETAIL VIEW
+   MONTH DETAIL VIEW  —  HERO
    ============================================================ */
 .month-hero {
     background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
@@ -594,28 +592,6 @@ body.in-month .brand-logo {
     gap: 14px;
     position: relative;
     z-index: 1;
-}
-
-/* -------- Month hero badge : glassy tile -------- */
-.month-hero-badge {
-    width: 58px;
-    height: 58px;
-    border-radius: 17px;
-    background: rgba(255, 255, 255, 0.14);
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.32),
-        0 6px 16px rgba(0, 0, 0, 0.12);
-    display: grid;
-    place-items: center;
-    font-family: var(--font-num);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    flex-shrink: 0;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
 }
 
 .month-hero-title {
@@ -665,6 +641,61 @@ body.in-month .brand-logo {
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- NEW: month hero stats (মোট জমা / হাসান পাওনা) ---------- */
+.month-hero-stats {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.22);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.mh-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 11px 13px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    min-width: 0;
+}
+
+.mh-stat-lbl {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mh-stat-val {
+    font-family: var(--font-num);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* হাসান পাওনা stat tile gets a soft highlighted glow */
+.mh-stat:last-child {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* ============================================================
@@ -730,7 +761,6 @@ body.in-month .brand-logo {
     background: var(--pink-tint);
 }
 
-/* -------- Day chip : calendar-tile redesign -------- */
 .day-chip {
     width: 48px;
     height: 48px;
@@ -756,7 +786,6 @@ body.in-month .brand-logo {
     overflow: hidden;
 }
 
-/* small coloured top bar — like a calendar tile */
 .day-chip::before {
     content: "";
     position: absolute;
@@ -873,15 +902,416 @@ body.in-month .brand-logo {
 }
 
 /* ============================================================
-   ENTRY LIST
+   DAY SUMMARY  ·  হাসান পাওনা → বিকাশ / ইজা / টোটাল / জমা
+   (হাসান পাওনা now appears FIRST, at the top)
+   ============================================================ */
+.day-summary {
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: slideDown 0.3s var(--ease);
+}
+
+/* ---------- 2 × 2 grid ---------- */
+.sum-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.sum-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    padding: 10px 12px 10px 14px;
+    background: #fdfbfc;
+    border: 1.5px solid var(--line-2);
+    border-radius: 13px;
+    overflow: hidden;
+    transition: border-color 0.18s var(--ease),
+        background 0.18s var(--ease),
+        box-shadow 0.18s var(--ease),
+        transform 0.18s var(--ease);
+}
+
+.sum-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--muted-2);
+    transition: background 0.25s var(--ease), width 0.2s var(--ease);
+}
+
+.sum-item:focus-within {
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+.sum-item--bkash::before {
+    background: linear-gradient(180deg, var(--pink-2), var(--pink));
+}
+
+.sum-item--ejaa::before {
+    background: linear-gradient(180deg, #4f8bf5, var(--blue));
+}
+
+.sum-item--total::before {
+    background: linear-gradient(180deg, #9aa0b4, var(--ink-2));
+}
+
+.sum-item--joma::before {
+    background: linear-gradient(180deg, #2fc98c, var(--green));
+}
+
+.sum-item--bkash:focus-within {
+    border-color: rgba(209, 32, 83, 0.32);
+    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.08);
+}
+
+.sum-item--ejaa:focus-within {
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
+}
+
+.sum-item--total:focus-within {
+    border-color: rgba(58, 61, 74, 0.3);
+    box-shadow: 0 0 0 3px rgba(58, 61, 74, 0.07);
+}
+
+.sum-item--joma:focus-within {
+    border-color: rgba(18, 160, 106, 0.35);
+    box-shadow: 0 0 0 3px rgba(18, 160, 106, 0.1);
+}
+
+.sum-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sum-value {
+    font-family: var(--font-num);
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sum-item--bkash .sum-value {
+    color: var(--pink);
+}
+
+.sum-item--ejaa .sum-value {
+    color: var(--blue);
+}
+
+.sum-item--total .sum-value {
+    color: var(--ink);
+}
+
+.sum-item--joma .sum-value {
+    color: var(--green);
+}
+
+.sum-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-num);
+    font-size: 16.5px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    border-radius: 0;
+}
+
+.sum-item--ejaa .sum-input {
+    color: var(--blue);
+}
+
+.sum-item--joma .sum-input {
+    color: var(--green);
+}
+
+.sum-input::placeholder {
+    color: var(--muted-2);
+    font-weight: 700;
+    opacity: 0.7;
+}
+
+.sum-input::-webkit-outer-spin-button,
+.sum-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.sum-input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ---------- হাসান পাওনা row  (NOW at the TOP) ---------- */
+.sum-pawna {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #fff5f8, #fde8ef);
+    border: 1.5px solid #f7d3e0;
+    position: relative;
+    overflow: hidden;
+    /* sits above the grid — bigger, bolder */
+    box-shadow: 0 4px 12px rgba(209, 32, 83, 0.08);
+    transition: background 0.25s var(--ease),
+        border-color 0.25s var(--ease),
+        box-shadow 0.25s var(--ease);
+}
+
+.sum-pawna::after {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(209, 32, 83, 0.06);
+    pointer-events: none;
+}
+
+.sum-pawna-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+    color: var(--pink-press);
+    position: relative;
+    z-index: 1;
+}
+
+.sum-pawna-label .ico {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: rgba(209, 32, 83, 0.14);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+}
+
+.sum-pawna-label .ico svg {
+    width: 15px;
+    height: 15px;
+}
+
+.sum-pawna-value {
+    font-family: var(--font-num);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    font-variant-numeric: tabular-nums;
+    color: var(--pink);
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------- pawna states ---------- */
+.sum-pawna[data-pawna-state="due"] {
+    background: linear-gradient(135deg, #fff5f8, #fde8ef);
+    border-color: #f7d3e0;
+    box-shadow: 0 4px 12px rgba(209, 32, 83, 0.08);
+}
+
+.sum-pawna[data-pawna-state="settled"] {
+    background: linear-gradient(135deg, #f2fbf7, var(--green-soft));
+    border-color: #c8eedd;
+    box-shadow: 0 4px 12px rgba(18, 160, 106, 0.08);
+}
+
+.sum-pawna[data-pawna-state="settled"] .sum-pawna-label {
+    color: #0b6b47;
+}
+
+.sum-pawna[data-pawna-state="settled"] .sum-pawna-label .ico {
+    background: rgba(18, 160, 106, 0.14);
+    color: var(--green);
+}
+
+.sum-pawna[data-pawna-state="settled"] .sum-pawna-value {
+    color: var(--green);
+}
+
+.sum-pawna[data-pawna-state="settled"]::after {
+    background: rgba(18, 160, 106, 0.07);
+}
+
+.sum-pawna[data-pawna-state="advance"] {
+    background: linear-gradient(135deg, #f2f7ff, var(--blue-soft));
+    border-color: #cfe0fb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.sum-pawna[data-pawna-state="advance"] .sum-pawna-label {
+    color: #1a4fbf;
+}
+
+.sum-pawna[data-pawna-state="advance"] .sum-pawna-label .ico {
+    background: rgba(37, 99, 235, 0.14);
+    color: var(--blue);
+}
+
+.sum-pawna[data-pawna-state="advance"] .sum-pawna-value {
+    color: var(--blue);
+}
+
+.sum-pawna[data-pawna-state="advance"]::after {
+    background: rgba(37, 99, 235, 0.07);
+}
+
+/* ---------- value flash on change ---------- */
+@keyframes sumFlash {
+    0% {
+        background: rgba(209, 32, 83, 0.12);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+.sum-value.flash,
+.sum-pawna-value.flash {
+    animation: sumFlash 0.7s var(--ease);
+    border-radius: 6px;
+}
+
+.sum-item:last-child,
+.sum-item:nth-last-child(2) {
+    transform: translateZ(0);
+}
+
+/* ============================================================
+   ENTRY LIST  —  newest on top, friendly header
    ============================================================ */
 .day-body {
     padding: 0 12px 12px;
 }
 
+/* NEW: number list header with count + copy-all */
+.entry-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 4px 10px;
+    margin-top: 2px;
+}
+
+.entry-head-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1px;
+}
+
+.entry-head-title .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--pink);
+    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.1);
+}
+
+.entry-head-count {
+    font-family: var(--font-num);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--pink);
+    background: var(--pink-soft);
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-variant-numeric: tabular-nums;
+}
+
+.entry-copy-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border-radius: 9px;
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+    font-size: 11.5px;
+    font-weight: 700;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.entry-copy-all:hover {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    border-color: #fbd5e2;
+}
+
+.entry-copy-all:active {
+    transform: scale(0.95);
+}
+
+.entry-copy-all svg {
+    width: 12px;
+    height: 12px;
+}
+
 .entry-list {
     border-top: 0;
     padding-top: 0;
+    /* scroll if there are lots of numbers */
+    max-height: 420px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+}
+
+/* subtle scroll affordance */
+.entry-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.entry-list::-webkit-scrollbar-thumb {
+    background: #ecd7e0;
+    border-radius: 4px;
 }
 
 .entry-line {
@@ -901,6 +1331,11 @@ body.in-month .brand-logo {
 
 .entry-line:last-child {
     border-bottom: 0;
+}
+
+/* first row (newest) gets a subtle highlight */
+.entry-line:first-child {
+    background: linear-gradient(90deg, rgba(209, 32, 83, 0.035), transparent 65%);
 }
 
 .entry-line:hover {
@@ -974,7 +1409,7 @@ body.in-month .brand-logo {
 .day-delete {
     width: 100%;
     padding: 11px;
-    margin-top: 8px;
+    margin-top: 10px;
     background: transparent;
     color: var(--red);
     border-radius: 10px;
@@ -1667,6 +2102,14 @@ body.in-month .brand-logo {
         font-size: 36px;
     }
 
+    .mh-stat-val {
+        font-size: 19px;
+    }
+
+    .mh-stat-lbl {
+        font-size: 12.5px;
+    }
+
     .day-chip {
         width: 52px;
         height: 52px;
@@ -1676,387 +2119,30 @@ body.in-month .brand-logo {
     .day-chip b {
         font-size: 19px;
     }
-}
 
-/* ============================================================
-   REDUCED MOTION
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-    }
-}
-
-
-/* ============================================================
-   DAY SUMMARY  ·  বিকাশ / ইজা / টোটাল / জমা / হাসান পাওনা
-   ------------------------------------------------------------
-   Expected markup (inside .day-body, after .entry-list):
-
-   <div class="day-summary">
-     <div class="sum-grid">
-       <div class="sum-item sum-item--bkash">
-         <span class="sum-label">বিকাশ</span>
-         <span class="sum-value" data-sum="bkash">৳ ০</span>
-       </div>
-       <div class="sum-item sum-item--ejaa">
-         <span class="sum-label">ইজা</span>
-         <input class="sum-input" data-sum-input="ejaa" type="tel" inputmode="numeric" placeholder="০" />
-       </div>
-       <div class="sum-item sum-item--total">
-         <span class="sum-label">টোটাল</span>
-         <span class="sum-value" data-sum="total">৳ ০</span>
-       </div>
-       <div class="sum-item sum-item--joma">
-         <span class="sum-label">জমা</span>
-         <input class="sum-input" data-sum-input="joma" type="tel" inputmode="numeric" placeholder="০" />
-       </div>
-     </div>
-
-     <div class="sum-pawna" data-pawna-state="settled">
-       <span class="sum-pawna-label">
-         <span class="ico">…svg…</span>
-         হাসান পাওনা
-       </span>
-       <b class="sum-pawna-value" data-sum="pawna">৳ ০</b>
-     </div>
-   </div>
-   ============================================================ */
-
-/* ---------- container ---------- */
-.day-summary {
-    margin-bottom: 14px;
-    padding-bottom: 14px;
-    border-bottom: 1px dashed var(--line);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    animation: slideDown 0.3s var(--ease);
-}
-
-/* ---------- 2 × 2 grid ---------- */
-.sum-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-}
-
-.sum-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-width: 0;
-    padding: 10px 12px 10px 14px;
-    background: #fdfbfc;
-    border: 1.5px solid var(--line-2);
-    border-radius: 13px;
-    overflow: hidden;
-    transition: border-color 0.18s var(--ease),
-        background 0.18s var(--ease),
-        box-shadow 0.18s var(--ease),
-        transform 0.18s var(--ease);
-}
-
-/* left accent bar */
-.sum-item::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--muted-2);
-    transition: background 0.25s var(--ease), width 0.2s var(--ease);
-}
-
-.sum-item:focus-within {
-    background: #fff;
-    transform: translateY(-1px);
-}
-
-/* ---------- accent colours ---------- */
-.sum-item--bkash::before {
-    background: linear-gradient(180deg, var(--pink-2), var(--pink));
-}
-
-.sum-item--ejaa::before {
-    background: linear-gradient(180deg, #4f8bf5, var(--blue));
-}
-
-.sum-item--total::before {
-    background: linear-gradient(180deg, #9aa0b4, var(--ink-2));
-}
-
-.sum-item--joma::before {
-    background: linear-gradient(180deg, #2fc98c, var(--green));
-}
-
-.sum-item--bkash:focus-within {
-    border-color: rgba(209, 32, 83, 0.32);
-    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.08);
-}
-
-.sum-item--ejaa:focus-within {
-    border-color: rgba(37, 99, 235, 0.35);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
-}
-
-.sum-item--total:focus-within {
-    border-color: rgba(58, 61, 74, 0.3);
-    box-shadow: 0 0 0 3px rgba(58, 61, 74, 0.07);
-}
-
-.sum-item--joma:focus-within {
-    border-color: rgba(18, 160, 106, 0.35);
-    box-shadow: 0 0 0 3px rgba(18, 160, 106, 0.1);
-}
-
-/* ---------- label ---------- */
-.sum-label {
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ---------- value ---------- */
-.sum-value {
-    font-family: var(--font-num);
-    font-size: 16.5px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    line-height: 1.25;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.sum-item--bkash .sum-value {
-    color: var(--pink);
-}
-
-.sum-item--ejaa .sum-value {
-    color: var(--blue);
-}
-
-.sum-item--total .sum-value {
-    color: var(--ink);
-}
-
-.sum-item--joma .sum-value {
-    color: var(--green);
-}
-
-/* ---------- input (ইজা / জমা) ---------- */
-.sum-input {
-    width: 100%;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-family: var(--font-num);
-    font-size: 16.5px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    line-height: 1.25;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-    border-radius: 0;
-}
-
-.sum-item--ejaa .sum-input {
-    color: var(--blue);
-}
-
-.sum-item--joma .sum-input {
-    color: var(--green);
-}
-
-.sum-input::placeholder {
-    color: var(--muted-2);
-    font-weight: 700;
-    opacity: 0.7;
-}
-
-/* hide number spinners */
-.sum-input::-webkit-outer-spin-button,
-.sum-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.sum-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-/* ---------- হাসান পাওনা row ---------- */
-.sum-pawna {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 14px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #fff5f8, #fde8ef);
-    border: 1.5px solid #f7d3e0;
-    position: relative;
-    overflow: hidden;
-    transition: background 0.25s var(--ease),
-        border-color 0.25s var(--ease);
-}
-
-.sum-pawna::after {
-    content: "";
-    position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: rgba(209, 32, 83, 0.06);
-    pointer-events: none;
-}
-
-.sum-pawna-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: -0.1px;
-    color: var(--pink-press);
-    position: relative;
-    z-index: 1;
-}
-
-.sum-pawna-label .ico {
-    width: 26px;
-    height: 26px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    background: rgba(209, 32, 83, 0.12);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-}
-
-.sum-pawna-label .ico svg {
-    width: 14px;
-    height: 14px;
-}
-
-.sum-pawna-value {
-    font-family: var(--font-num);
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-    font-variant-numeric: tabular-nums;
-    color: var(--pink);
-    white-space: nowrap;
-    position: relative;
-    z-index: 1;
-}
-
-/* ---------- pawna states ---------- */
-/* পাওনা আছে (positive) — default pink */
-.sum-pawna[data-pawna-state="due"] {
-    background: linear-gradient(135deg, #fff5f8, #fde8ef);
-    border-color: #f7d3e0;
-}
-
-/* পরিশোধিত (zero) — green */
-.sum-pawna[data-pawna-state="settled"] {
-    background: linear-gradient(135deg, #f2fbf7, var(--green-soft));
-    border-color: #c8eedd;
-}
-
-.sum-pawna[data-pawna-state="settled"] .sum-pawna-label {
-    color: #0b6b47;
-}
-
-.sum-pawna[data-pawna-state="settled"] .sum-pawna-label .ico {
-    background: rgba(18, 160, 106, 0.14);
-    color: var(--green);
-}
-
-.sum-pawna[data-pawna-state="settled"] .sum-pawna-value {
-    color: var(--green);
-}
-
-.sum-pawna[data-pawna-state="settled"]::after {
-    background: rgba(18, 160, 106, 0.07);
-}
-
-/* অগ্রিম (negative) — blue */
-.sum-pawna[data-pawna-state="advance"] {
-    background: linear-gradient(135deg, #f2f7ff, var(--blue-soft));
-    border-color: #cfe0fb;
-}
-
-.sum-pawna[data-pawna-state="advance"] .sum-pawna-label {
-    color: #1a4fbf;
-}
-
-.sum-pawna[data-pawna-state="advance"] .sum-pawna-label .ico {
-    background: rgba(37, 99, 235, 0.14);
-    color: var(--blue);
-}
-
-.sum-pawna[data-pawna-state="advance"] .sum-pawna-value {
-    color: var(--blue);
-}
-
-.sum-pawna[data-pawna-state="advance"]::after {
-    background: rgba(37, 99, 235, 0.07);
-}
-
-/* ---------- value flash on change ---------- */
-@keyframes sumFlash {
-    0% {
-        background: rgba(209, 32, 83, 0.12);
+    .sum-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    100% {
-        background: transparent;
+    .sum-value,
+    .sum-input {
+        font-size: 17.5px;
     }
-}
 
-.sum-value.flash,
-.sum-pawna-value.flash {
-    animation: sumFlash 0.7s var(--ease);
-    border-radius: 6px;
-}
+    .sum-pawna {
+        padding: 14px 18px;
+    }
 
-/* ---------- entry list sits above summary ---------- */
-.entry-list:has(+ .day-summary) {
-    padding-bottom: 2px;
-}
-
-/* ---------- dark/edge safety ---------- */
-.sum-item:last-child,
-.sum-item:nth-last-child(2) {
-    /* keeps rounded corners crisp on Safari when grid wraps */
-    transform: translateZ(0);
+    .sum-pawna-value {
+        font-size: 22px;
+    }
 }
 
 /* ============================================================
    SMALL SCREENS
    ============================================================ */
 @media (max-width: 380px) {
-
     .sum-grid {
         gap: 7px;
     }
@@ -2080,39 +2166,42 @@ body.in-month .brand-logo {
     }
 
     .sum-pawna-value {
-        font-size: 17px;
+        font-size: 18px;
     }
 
     .sum-pawna-label {
         font-size: 12.5px;
     }
+
+    .mh-stat {
+        padding: 10px 11px;
+    }
+
+    .mh-stat-val {
+        font-size: 15.5px;
+    }
+
+    .mh-stat-lbl {
+        font-size: 11px;
+    }
 }
 
 /* ============================================================
-   DESKTOP
+   REDUCED MOTION
    ============================================================ */
-@media (min-width: 720px) {
+@media (prefers-reduced-motion: reduce) {
 
-    .sum-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-    }
-
-    .sum-value,
-    .sum-input {
-        font-size: 17.5px;
-    }
-
-    .sum-pawna {
-        padding: 14px 18px;
-    }
-
-    .sum-pawna-value {
-        font-size: 21px;
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
 }
 
-/* জমা input in the sheet */
+/* ============================================================
+   জমা input in the sheet
+   ============================================================ */
 #joma {
     font-family: var(--font-num);
     font-size: 16px;
