@@ -6,90 +6,57 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#d12053" />
-    <title>bKash এন্ট্রি ম্যানেজার</title>
+    <meta name="theme-color" content="#2563eb" />
+    <title>ব্যক্তি হিসাব</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <!-- ============ TOPBAR ============ -->
     <header class="topbar" id="topbar">
       <div class="topbar-inner">
-        <button class="back-btn" id="backBtn" aria-label="ড্যাশবোর্ডে ফিরুন">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+               stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
         <div class="brand">
           <div class="brand-logo" aria-hidden="true">
-            <svg
-              class="brand-mark"
-              viewBox="0 0 100 100"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient
-                  id="el-grad"
-                  x1="0"
-                  y1="0"
-                  x2="100"
-                  y2="100"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop offset="0%" stop-color="#e8437a" />
-                  <stop offset="55%" stop-color="#d12053" />
-                  <stop offset="100%" stop-color="#a8153f" />
+                <linearGradient id="el-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#4f8bf5" />
+                  <stop offset="55%" stop-color="#2563eb" />
+                  <stop offset="100%" stop-color="#1e3a8a" />
                 </linearGradient>
               </defs>
               <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
-              <path
-                d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
-                fill="rgba(255,255,255,0.10)"
-              />
-              <text
-                x="50"
-                y="74"
-                text-anchor="middle"
-                font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
-                font-size="60"
-                font-weight="800"
-                fill="#ffffff"
-              >
-                ই
-              </text>
+              <path d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
+                    fill="rgba(255,255,255,0.10)" />
+              <text x="50" y="74" text-anchor="middle"
+                    font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
+                    font-size="60" font-weight="800" fill="#ffffff">ই</text>
               <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
-              <circle cx="80" cy="22" r="2.2" fill="#d12053" />
+              <circle cx="80" cy="22" r="2.2" fill="#2563eb" />
             </svg>
           </div>
 
           <div class="brand-text">
-            <h1 id="topTitle">ইজি লেনদেন</h1>
-            <span class="brand-sub" id="topSub">সালাম ভাইয়ের সাথে লেনদেন</span>
+            <h1 id="topTitle">ব্যক্তি হিসাব</h1>
+            <span class="brand-sub" id="topSub">গিলার হিসাব</span>
           </div>
         </div>
 
-        <button class="icon-btn" id="addTop" aria-label="নতুন এন্ট্রি">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+        <button class="icon-btn" id="addTop" aria-label="নতুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+               stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -99,364 +66,109 @@
 
     <!-- ============ HOME VIEW ============ -->
     <main class="container" id="viewHome">
-      <!-- TABS -->
-      <div class="tabs" id="homeTabs" role="tablist">
-        <button class="tab is-active" data-tab="bkash" type="button" role="tab">
-          বিকাশ
-        </button>
-        <button class="tab" data-tab="person" type="button" role="tab">
-          ব্যক্তি
-        </button>
-      </div>
-
-      <!-- ===== BKASH PANEL ===== -->
-      <section class="tab-panel" id="panelBkash">
-        <div id="homeHero"></div>
-        <div class="section-head">
-          <h2 class="section-title"><span class="title-dot"></span>মাসসমূহ</h2>
-          <span class="section-count" id="monthCount">০ মাস</span>
-        </div>
-        <div id="monthList"></div>
-      </section>
-
-      <!-- ===== PERSON PANEL ===== -->
-      <section class="tab-panel" id="panelPerson" hidden>
-        <div id="personHero"></div>
-        <div class="section-head">
-          <h2 class="section-title">
-            <span class="title-dot"></span>ব্যক্তির তালিকা
-          </h2>
-          <span class="section-count" id="personCount">০ জন</span>
-        </div>
-        <div id="personList"></div>
-      </section>
-    </main>
-
-    <!-- ============ MONTH VIEW ============ -->
-    <main class="container view-detail" id="viewMonth" hidden>
-      <div class="month-hero" id="monthHero">
-        <div class="month-hero-top">
-          <div class="month-hero-title">
-            <h2 id="mhTitle">অক্টোবর ২০২৬</h2>
-          </div>
-        </div>
-
-        <div class="month-hero-amount">
-          <span class="mh-lbl">এই মাসের মোট বিকাশ</span>
-          <b id="mhTotal">৳ ০</b>
-        </div>
-      </div>
-
       <div class="section-head">
-        <h2 class="section-title">
-          <span class="title-dot"></span>দৈনিক হিসাব
-        </h2>
-        <span class="section-count" id="dayCount">০ দিন</span>
+        <h2 class="section-title"><span class="title-dot"></span>ব্যক্তিগণ</h2>
+        <span class="section-count" id="personCount">০ জন</span>
       </div>
-      <div id="dayList"></div>
+      <div id="personList"></div>
+
+      <button class="add-person-card" id="personAddCard" type="button">
+        <span class="add-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </span>
+        <span>নতুন ব্যক্তি যোগ করুন</span>
+      </button>
     </main>
 
-    <!-- ============ DAY VIEW ============ -->
-    <main class="container view-detail" id="viewDay" hidden></main>
-
-    <!-- ============ PERSON VIEW (months list) ============ -->
+    <!-- ============ PERSON VIEW ============ -->
     <main class="container view-detail" id="viewPerson" hidden></main>
 
-    <!-- ============ PERSON MONTH VIEW (days list) ============ -->
+    <!-- ============ PERSON MONTH VIEW ============ -->
     <main class="container view-detail" id="viewPersonMonth" hidden></main>
 
-    <!-- ============ SHEET BACKDROP (shared) ============ -->
+    <!-- ============ SHEET BACKGROUND ============ -->
     <div class="sheet-bg" id="sheetBg"></div>
 
-    <!-- ============ BKASH ENTRY SHEET ============ -->
-    <div
-      class="sheet"
-      id="sheet"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="sheetTitle"
-    >
+    <!-- ============ PERSON SHEET ============ -->
+    <div class="sheet" id="personSheet" role="dialog" aria-modal="true"
+         aria-labelledby="personSheetTitle">
       <div class="sheet-handle"></div>
 
       <div class="sheet-head">
         <div class="sheet-head-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-        </div>
-        <div>
-          <h2 class="sheet-title" id="sheetTitle">নতুন এন্ট্রি যোগ করুন</h2>
-          <p class="sheet-sub">তারিখ নির্বাচন করে নিচে এন্ট্রি পেস্ট করুন</p>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="date">
-          <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-          </span>
-          তারিখ
-        </label>
-        <input type="date" id="date" />
-      </div>
-
-      <div class="field">
-        <label for="input">
-          <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-          </span>
-          এন্ট্রি পেস্ট করুন
-        </label>
-        <div class="textarea-wrap">
-          <textarea
-            id="input"
-            rows="5"
-            placeholder="01609496296 # 26520&#10;01806-289077- 10200&#10;01711210046-510&#10;01977988097-5100"
-          ></textarea>
-          <button
-            class="paste-btn"
-            id="pasteBtn"
-            type="button"
-            title="পেস্ট করুন"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-              />
-              <rect x="8" y="2" width="8" height="4" rx="1" />
-            </svg>
-            পেস্ট
-          </button>
-        </div>
-        <div class="input-hint">
-          প্রতি লাইনে: ১১-ডিজিট নম্বর, তারপর # বা - চিহ্ন, তারপর টাকা
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="joma">
-          <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="2" y="6" width="20" height="14" rx="3" />
-              <path d="M2 10h20" />
-              <circle cx="12" cy="15" r="2" />
-            </svg>
-          </span>
-          জমা
-        </label>
-        <input
-          type="tel"
-          id="joma"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="০"
-        />
-        <div class="input-hint" id="ejaaHint">
-          ইজা স্বয়ংক্রিয়ভাবে আগের দিনের হাসান পাওনা থেকে আসবে
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-ghost" id="previewBtn" type="button">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          প্রিভিউ
-        </button>
-        <button class="btn btn-primary" id="saveBtn" type="button">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          সেভ করুন
-        </button>
-      </div>
-
-      <div class="preview-box" id="previewBox"></div>
-    </div>
-
-    <!-- ============ PERSON FORM SHEET ============ -->
-    <div class="sheet" id="personSheet" role="dialog" aria-modal="true">
-      <div class="sheet-handle"></div>
-
-      <div class="sheet-head">
-        <div class="sheet-head-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
         </div>
         <div>
           <h2 class="sheet-title" id="personSheetTitle">নতুন ব্যক্তি</h2>
-          <p class="sheet-sub">নাম, অগ্রিম ও প্রতি গিলার দাম দিন</p>
+          <p class="sheet-sub">নাম, অগ্রিম ও গিলার দাম দিন</p>
         </div>
       </div>
 
       <div class="field">
         <label for="pName">
           <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
           </span>
           নাম
         </label>
-        <input
-          type="text"
-          id="pName"
-          autocomplete="off"
-          placeholder="যেমন: করিম মিয়া"
-        />
+        <input type="text" id="pName" autocomplete="off" placeholder="ব্যক্তির নাম" />
       </div>
 
       <div class="field">
         <label for="pAdvance">
           <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="6" width="20" height="14" rx="3" />
               <path d="M2 10h20" />
               <circle cx="12" cy="15" r="2" />
             </svg>
           </span>
-          অগ্রিম
+          অগ্রিম (৳)
         </label>
-        <input
-          type="tel"
-          id="pAdvance"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="০"
-        />
-        <div class="input-hint">শুরুতেই যে টাকা অগ্রিম দেওয়া হয়েছে</div>
+        <input type="tel" id="pAdvance" inputmode="numeric" autocomplete="off" placeholder="০" />
       </div>
 
       <div class="field">
         <label for="pPrice">
           <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v10M9 10h6M9 14h6" />
             </svg>
           </span>
-          প্রতি গিলার দাম
+          গিলার দাম (৳/গিলা)
         </label>
-        <input
-          type="tel"
-          id="pPrice"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="০"
-        />
+        <input type="tel" id="pPrice" inputmode="numeric" autocomplete="off" placeholder="০" />
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-ghost" id="personCancel" type="button">
-          বাতিল
-        </button>
+        <button class="btn btn-ghost" id="personCancel" type="button">বাতিল</button>
         <button class="btn btn-primary" id="personSave" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
           সেভ করুন
         </button>
       </div>
 
       <button class="day-delete" id="personDelete" type="button" hidden>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.4"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
           <path d="M10 11v6M14 11v6" />
@@ -466,39 +178,31 @@
     </div>
 
     <!-- ============ PERSON DAY SHEET ============ -->
-    <div class="sheet" id="pdaySheet" role="dialog" aria-modal="true">
+    <div class="sheet" id="pdaySheet" role="dialog" aria-modal="true"
+         aria-labelledby="pdayTitle">
       <div class="sheet-handle"></div>
 
       <div class="sheet-head">
         <div class="sheet-head-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
           </svg>
         </div>
         <div>
-          <h2 class="sheet-title" id="pdayTitle">আজকের গিলা</h2>
-          <p class="sheet-sub" id="pdaySub">কত গিলা কাজ হয়েছে লিখুন</p>
+          <h2 class="sheet-title" id="pdayTitle">নাম</h2>
+          <p class="sheet-sub" id="pdaySub">আজ কত গিলা হয়েছে?</p>
         </div>
       </div>
 
       <div class="field">
         <label for="pdayDate">
           <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -513,54 +217,49 @@
       <div class="field">
         <label for="pdayPieces">
           <span class="label-icon">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 7h18M3 12h18M3 17h18" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
             </svg>
           </span>
-          গিলা (আজ কত হয়েছে)
+          গিলা সংখ্যা
         </label>
-        <input
-          type="tel"
-          id="pdayPieces"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="০"
-        />
+        <input type="tel" id="pdayPieces" inputmode="numeric" autocomplete="off" placeholder="০" />
         <div class="input-hint" id="pdayHint"></div>
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-ghost" id="pdayDelete" type="button">
-          মুছুন
-        </button>
+        <button class="btn btn-ghost" id="pdayCancel" type="button">বাতিল</button>
         <button class="btn btn-primary" id="pdaySave" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
           সেভ করুন
         </button>
       </div>
+
+      <button class="day-delete" id="pdayDelete" type="button" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6M14 11v6" />
+        </svg>
+        এই দিনের এন্ট্রি মুছুন
+      </button>
     </div>
 
     <!-- ============ CONFIRM ============ -->
     <div class="confirm" id="confirm">
       <div class="confirm-box">
         <div class="confirm-icon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-            />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
@@ -568,12 +267,8 @@
         <h3 id="confirmTitle">নিশ্চিত করুন</h3>
         <p id="confirmMsg">আপনি কি নিশ্চিত?</p>
         <div class="confirm-actions">
-          <button class="btn btn-ghost" id="confirmNo" type="button">
-            বাতিল
-          </button>
-          <button class="btn btn-danger" id="confirmYes" type="button">
-            হ্যাঁ, মুছুন
-          </button>
+          <button class="btn btn-ghost" id="confirmNo" type="button">বাতিল</button>
+          <button class="btn btn-danger" id="confirmYes" type="button">হ্যাঁ, মুছুন</button>
         </div>
       </div>
     </div>

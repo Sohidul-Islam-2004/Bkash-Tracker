@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#d12053" />
+    <title>নোটপ্যাড</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================================================
+   TOKENS
+   ============================================================ */
+      :root {
+        --bg: #f5f3f6;
+        --card: #ffffff;
+
+        --ink: #17181f;
+        --ink-2: #3a3d4a;
+        --muted: #6e7180;
+        --muted-2: #a1a4b3;
+        --line: #ebe6ec;
+        --line-2: #f3eef4;
+
+        --pink: #d12053;
+        --pink-2: #e8437a;
+        --pink-press: #a8153f;
+        --pink-soft: #fde8ef;
+        --pink-tint: #fff6fa;
+
+        --blue: #2563eb;
+        --green: #12a06a;
+        --green-soft: #dcf6ec;
+        --red: #dc2648;
+        --red-soft: #fde8ec;
+
+        --top: env(safe-area-inset-top, 0px);
+        --bottom: env(safe-area-inset-bottom, 0px);
+
+        --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
+        --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
+        --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
+        --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
+        --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
+        --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+
+        --r-sm: 12px;
+        --r: 16px;
+        --r-md: 20px;
+        --r-lg: 24px;
+
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+        --font-num:
+          "Noto Sans Bengali", "Hind Siliguri", -apple-system,
+          BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-body:
+          "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+          BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      /* ============================================================
+   BASE
+   ============================================================ */
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        font-family: var(--font-body);
+        background: var(--bg);
+        background-image: radial-gradient(
+          1200px 600px at 50% -200px,
+          rgba(209, 32, 83, 0.08),
+          transparent 70%
+        );
+        color: var(--ink);
+        font-size: 16px;
+        line-height: 1.5;
+        min-height: 100vh;
+        padding-bottom: calc(110px + var(--bottom));
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overscroll-behavior-y: none;
+      }
+
+      button {
+        font-family: inherit;
+        cursor: pointer;
+        border: 0;
+        background: none;
+        color: inherit;
+      }
+      input,
+      textarea {
+        font-family: inherit;
+      }
+      :focus-visible {
+        outline: 3px solid var(--pink);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      /* ============================================================
+   TOPBAR
+   ============================================================ */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: saturate(180%) blur(14px);
+        -webkit-backdrop-filter: saturate(180%) blur(14px);
+        border-bottom: 1px solid var(--line-2);
+        padding: calc(10px + var(--top)) 16px 10px;
+        transition: box-shadow 0.25s var(--ease);
+      }
+      .topbar.scrolled {
+        box-shadow: 0 1px 10px rgba(20, 22, 34, 0.05);
+      }
+
+      .topbar-inner {
+        max-width: 480px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .back-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--pink-soft);
+        color: var(--pink);
+        display: none;
+        place-items: center;
+        flex-shrink: 0;
+        transition:
+          background 0.15s,
+          transform 0.12s;
+      }
+      .back-btn:hover {
+        background: #fbd5e2;
+      }
+      .back-btn:active {
+        transform: scale(0.92);
+      }
+      .back-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+      body.in-editor .back-btn {
+        display: grid;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .brand-logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        background: transparent;
+        box-shadow: var(--shadow-pink);
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        position: relative;
+      }
+      .brand-logo .brand-mark {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .brand-text {
+        min-width: 0;
+        line-height: 1.2;
+      }
+      .brand-text h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .brand-sub {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .icon-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        background: var(--pink-soft);
+        color: var(--pink);
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        transition:
+          background 0.15s,
+          transform 0.12s;
+      }
+      .icon-btn:hover {
+        background: #fbd5e2;
+      }
+      .icon-btn:active {
+        transform: scale(0.92);
+      }
+      .icon-btn svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* ============================================================
+   LAYOUT
+   ============================================================ */
+      .container {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 16px 14px calc(32px + var(--bottom));
+      }
+
+      .view-detail {
+        animation: viewIn 0.35s var(--ease);
+      }
+      @keyframes viewIn {
+        from {
+          opacity: 0;
+          transform: translateX(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ============================================================
+   SECTION HEAD
+   ============================================================ */
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 4px 2px 12px;
+      }
+      .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: -0.2px;
+      }
+      .title-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--pink);
+        box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12);
+      }
+      .section-count {
+        font-family: var(--font-num);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--pink);
+        background: var(--pink-soft);
+        padding: 4px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.2px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ============================================================
+   SEARCH
+   ============================================================ */
+      .search-wrap {
+        position: relative;
+        margin-bottom: 14px;
+      }
+      .search-wrap .s-ico {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 17px;
+        height: 17px;
+        color: var(--muted-2);
+        pointer-events: none;
+      }
+      .search-wrap input {
+        width: 100%;
+        padding: 13px 40px 13px 42px;
+        border: 1.5px solid var(--line);
+        border-radius: 14px;
+        font-size: 14.5px;
+        color: var(--ink);
+        background: #fdfbfc;
+        -webkit-appearance: none;
+        appearance: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s,
+          background 0.15s;
+      }
+      .search-wrap input:focus {
+        outline: none;
+        border-color: var(--pink);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+      }
+      .search-wrap input::placeholder {
+        color: #b4a7b3;
+      }
+      .search-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: none;
+        place-items: center;
+        color: var(--muted);
+        background: transparent;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .search-clear:hover {
+        background: var(--pink-soft);
+        color: var(--pink);
+      }
+      .search-clear svg {
+        width: 14px;
+        height: 14px;
+      }
+      .search-wrap.has-value .search-clear {
+        display: grid;
+      }
+
+      /* ============================================================
+   NOTE LIST
+   ============================================================ */
+      #noteList {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .note-card {
+        background: var(--card);
+        border: 1px solid var(--line-2);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: cardIn 0.4s var(--ease) backwards;
+        transition:
+          transform 0.2s var(--ease),
+          box-shadow 0.25s var(--ease),
+          border-color 0.25s;
+      }
+      .note-card:nth-child(1) {
+        animation-delay: 0.02s;
+      }
+      .note-card:nth-child(2) {
+        animation-delay: 0.04s;
+      }
+      .note-card:nth-child(3) {
+        animation-delay: 0.06s;
+      }
+      .note-card:nth-child(4) {
+        animation-delay: 0.08s;
+      }
+      .note-card:nth-child(5) {
+        animation-delay: 0.1s;
+      }
+      .note-card:nth-child(6) {
+        animation-delay: 0.12s;
+      }
+
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .note-card:hover {
+        border-color: rgba(209, 32, 83, 0.18);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+      }
+
+      .note-btn {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 15px 16px;
+        text-align: left;
+        color: inherit;
+        transition: background 0.15s;
+      }
+      .note-btn:hover {
+        background: var(--pink-tint);
+      }
+      .note-btn:active {
+        background: var(--pink-soft);
+      }
+
+      /* date chip — same language as the day-chip */
+      .note-chip {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 13px;
+        background: #fff;
+        color: var(--ink-2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        border: 1px solid var(--line);
+        box-shadow:
+          0 1px 2px rgba(20, 22, 34, 0.05),
+          inset 0 -2px 0 rgba(20, 22, 34, 0.03);
+        position: relative;
+        overflow: hidden;
+      }
+      .note-chip::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--pink), var(--pink-2));
+      }
+      .note-chip b {
+        font-family: var(--font-num);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -0.4px;
+        line-height: 1;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+      .note-chip small {
+        font-family: var(--font-num);
+        font-size: 9px;
+        font-weight: 600;
+        opacity: 0.7;
+        letter-spacing: 0.2px;
+        margin-top: 3px;
+        line-height: 1;
+      }
+
+      .note-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .note-title {
+        font-size: 15.5px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+      }
+      .note-preview {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 3px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+      }
+      .note-meta {
+        font-family: var(--font-num);
+        font-size: 11.5px;
+        color: var(--muted-2);
+        margin-top: 6px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+      .note-meta .dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--muted-2);
+      }
+      .note-meta .tag {
+        background: var(--pink-soft);
+        color: var(--pink);
+        padding: 2px 7px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 10.5px;
+      }
+
+      .note-arrow {
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #f6f1f4;
+        color: var(--muted);
+        display: grid;
+        place-items: center;
+        align-self: center;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          transform 0.2s;
+      }
+      .note-arrow svg {
+        width: 13px;
+        height: 13px;
+      }
+      .note-card:hover .note-arrow {
+        background: var(--pink);
+        color: #fff;
+        transform: translateX(2px);
+      }
+
+      /* ============================================================
+   EMPTY
+   ============================================================ */
+      .empty {
+        text-align: center;
+        padding: 56px 24px;
+        color: var(--muted);
+        background: var(--card);
+        border: 1.5px dashed #e0d3db;
+        border-radius: var(--r-lg);
+        animation: cardIn 0.5s var(--ease);
+      }
+      .empty-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--pink-tint), var(--pink-soft));
+        display: grid;
+        place-items: center;
+        color: var(--pink);
+        box-shadow: 0 10px 24px rgba(209, 32, 83, 0.1);
+      }
+      .empty-icon svg {
+        width: 32px;
+        height: 32px;
+      }
+      .empty h3 {
+        font-size: 16px;
+        color: var(--ink);
+        margin: 0 0 6px;
+        font-weight: 700;
+      }
+      .empty p {
+        font-size: 13.5px;
+        margin: 0;
+      }
+
+      /* ============================================================
+   EDITOR HERO
+   ============================================================ */
+      .editor-hero {
+        background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+        color: #fff;
+        border-radius: var(--r-lg);
+        padding: 18px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+        position: relative;
+        overflow: hidden;
+        animation: cardIn 0.4s var(--ease);
+      }
+      .editor-hero::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
+      .editor-hero::after {
+        content: "";
+        position: absolute;
+        bottom: -80px;
+        left: -40px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+      }
+      .editor-hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+      .editor-hero-title h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: -0.4px;
+        line-height: 1.25;
+      }
+      .editor-hero-title p {
+        font-family: var(--font-num);
+        margin: 4px 0 0;
+        font-size: 12.5px;
+        opacity: 0.88;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+      .editor-status {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        padding: 5px 11px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        white-space: nowrap;
+        transition:
+          background 0.25s var(--ease),
+          border-color 0.25s var(--ease);
+      }
+      .editor-status[data-state="saving"] {
+        background: rgba(255, 214, 102, 0.28);
+        border-color: rgba(255, 214, 102, 0.5);
+      }
+      .editor-status[data-state="saved"] {
+        background: rgba(18, 200, 130, 0.28);
+        border-color: rgba(18, 200, 130, 0.5);
+      }
+
+      /* ============================================================
+   NOTEPAD PAPER
+   ============================================================ */
+      .notepad {
+        background: #fff;
+        border: 1px solid var(--line-2);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: cardIn 0.45s var(--ease) 0.04s backwards;
+      }
+
+      .notepad textarea {
+        display: block;
+        width: 100%;
+        min-height: min(52vh, 420px);
+        padding: 14px 16px 20px;
+        border: 0;
+        outline: none;
+        resize: vertical;
+        background: transparent;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 31px,
+          var(--line-2) 31px,
+          var(--line-2) 32px
+        );
+        background-origin: border-box;
+        background-position: 0 14px;
+        background-attachment: local;
+
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 32px;
+        color: var(--ink);
+        letter-spacing: 0.1px;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      .notepad textarea::placeholder {
+        color: #bdb0bb;
+      }
+
+      /* ============================================================
+   BUTTONS
+   ============================================================ */
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .btn {
+        min-height: 52px;
+        padding: 0 20px;
+        border-radius: 15px;
+        font-size: 15px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition:
+          background 0.15s,
+          transform 0.12s,
+          box-shadow 0.2s,
+          color 0.15s;
+        flex: 1;
+      }
+      .btn svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--pink), var(--pink-press));
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(209, 32, 83, 0.3);
+      }
+      .btn-primary:hover {
+        box-shadow: 0 8px 22px rgba(209, 32, 83, 0.42);
+      }
+
+      .btn-ghost {
+        background: #f5f1f4;
+        color: var(--ink-2);
+      }
+      .btn-ghost:hover {
+        background: #ece5ea;
+      }
+
+      .btn-ghost.is-danger {
+        color: var(--red);
+        background: var(--red-soft);
+      }
+      .btn-ghost.is-danger:hover {
+        background: #fbd8de;
+      }
+
+      .btn-danger {
+        background: var(--red);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(220, 38, 72, 0.3);
+      }
+      .btn-danger:hover {
+        background: #b81d38;
+        box-shadow: 0 8px 22px rgba(220, 38, 72, 0.42);
+      }
+
+      /* ============================================================
+   FAB
+   ============================================================ */
+      .fab {
+        position: fixed;
+        right: 20px;
+        bottom: calc(24px + var(--bottom));
+        width: 60px;
+        height: 60px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--pink), var(--pink-press));
+        color: #fff;
+        box-shadow:
+          0 12px 30px rgba(209, 32, 83, 0.42),
+          0 4px 12px rgba(209, 32, 83, 0.28);
+        display: grid;
+        place-items: center;
+        z-index: 50;
+        transition:
+          transform 0.15s var(--ease),
+          box-shadow 0.25s,
+          opacity 0.2s;
+        overflow: hidden;
+        animation: fabIn 0.4s var(--ease) 0.2s backwards;
+      }
+      @keyframes fabIn {
+        from {
+          opacity: 0;
+          transform: scale(0.7);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .fab::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: 0 0 0 0 rgba(209, 32, 83, 0.4);
+        animation: fabPulse 2.6s ease-out infinite;
+        pointer-events: none;
+      }
+      @keyframes fabPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(209, 32, 83, 0.35);
+        }
+        100% {
+          box-shadow: 0 0 0 20px rgba(209, 32, 83, 0);
+        }
+      }
+      .fab:hover {
+        transform: scale(1.06) translateY(-2px);
+      }
+      .fab:active {
+        transform: scale(0.94);
+      }
+      .fab svg {
+        width: 26px;
+        height: 26px;
+        position: relative;
+        z-index: 1;
+      }
+      body.in-editor .fab {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.7);
+      }
+
+      /* ============================================================
+   CONFIRM
+   ============================================================ */
+      .confirm {
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 24, 31, 0.5);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 200;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s;
+      }
+      .confirm.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .confirm-box {
+        background: #fff;
+        border-radius: 22px;
+        padding: 24px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: var(--shadow-lg);
+        transform: scale(0.94);
+        transition: transform 0.24s var(--ease);
+        text-align: center;
+      }
+      .confirm.show .confirm-box {
+        transform: scale(1);
+      }
+
+      .confirm-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: var(--red-soft);
+        color: var(--red);
+        display: grid;
+        place-items: center;
+      }
+      .confirm-icon svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      .confirm-box h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+      }
+      .confirm-box p {
+        margin: 0 0 20px;
+        font-size: 13.5px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .confirm-actions {
+        display: flex;
+        gap: 10px;
+      }
+      .confirm-actions .btn {
+        flex: 1;
+        min-height: 48px;
+        font-size: 14.5px;
+      }
+
+      /* ============================================================
+   TOAST
+   ============================================================ */
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(100px + var(--bottom));
+        transform: translate(-50%, 24px);
+        background: var(--ink);
+        color: #fff;
+        padding: 13px 20px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.28s var(--ease),
+          transform 0.32s var(--ease);
+        z-index: 300;
+        max-width: min(90vw, 440px);
+        text-align: center;
+        line-height: 1.5;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+      .toast-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: none;
+        place-items: center;
+        flex-shrink: 0;
+        font-size: 12px;
+        font-weight: 800;
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .toast.ok {
+        background: #0d7a51;
+      }
+      .toast.err {
+        background: #b81d38;
+      }
+
+      /* ============================================================
+   SCROLLBAR
+   ============================================================ */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #e5d5de;
+        border-radius: 6px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #d0b8c5;
+      }
+
+      /* ============================================================
+   DESKTOP / SMALL
+   ============================================================ */
+      @media (min-width: 720px) {
+        .container {
+          padding: 20px 16px calc(40px + var(--bottom));
+        }
+        .fab {
+          display: none;
+        }
+        .toast {
+          bottom: 32px;
+        }
+        .note-btn {
+          padding: 17px 18px;
+        }
+        .notepad textarea {
+          min-height: 460px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .container {
+          padding: 16px 12px calc(32px + var(--bottom));
+        }
+        .topbar {
+          padding: calc(10px + var(--top)) 12px 10px;
+        }
+        .note-btn {
+          gap: 11px;
+          padding: 13px 13px;
+        }
+        .note-chip {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+        }
+        .note-chip b {
+          font-size: 16px;
+        }
+        .btn-row {
+          gap: 8px;
+        }
+        .btn {
+          padding: 0 14px;
+          font-size: 14px;
+        }
+      }
+
+      /* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ TOPBAR ============ -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-inner">
+        <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg
+              class="brand-mark"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient
+                  id="el-grad"
+                  x1="0"
+                  y1="0"
+                  x2="100"
+                  y2="100"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stop-color="#e8437a" />
+                  <stop offset="55%" stop-color="#d12053" />
+                  <stop offset="100%" stop-color="#a8153f" />
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
+              <path
+                d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
+                fill="rgba(255,255,255,0.10)"
+              />
+              <text
+                x="50"
+                y="74"
+                text-anchor="middle"
+                font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
+                font-size="60"
+                font-weight="800"
+                fill="#ffffff"
+              >
+                ই
+              </text>
+              <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
+              <circle cx="80" cy="22" r="2.2" fill="#d12053" />
+            </svg>
+          </div>
+
+          <div class="brand-text">
+            <h1 id="topTitle">নোটপ্যাড</h1>
+            <span class="brand-sub" id="topSub">আপনার ব্যক্তিগত নোট</span>
+          </div>
+        </div>
+
+        <button class="icon-btn" id="addTop" aria-label="নতুন নোট">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============ LIST VIEW ============ -->
+    <main class="container" id="viewList">
+      <div class="search-wrap" id="searchWrap">
+        <svg
+          class="s-ico"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="নোট খুঁজুন…"
+          autocomplete="off"
+        />
+        <button
+          class="search-clear"
+          id="searchClear"
+          type="button"
+          aria-label="মুছুন"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="section-head">
+        <h2 class="section-title"><span class="title-dot"></span>নোট সমূহ</h2>
+        <span class="section-count" id="noteCount">০ টি</span>
+      </div>
+
+      <div id="noteList"></div>
+    </main>
+
+    <!-- ============ EDITOR VIEW ============ -->
+    <main class="container view-detail" id="viewEditor" hidden>
+      <div class="editor-hero">
+        <div class="editor-hero-top">
+          <div class="editor-hero-title">
+            <h2 id="editorTitle">নোট</h2>
+            <p id="editorMeta">—</p>
+          </div>
+          <span class="editor-status" id="editorStatus" data-state="saved"
+            >সেভড</span
+          >
+        </div>
+      </div>
+
+      <div class="notepad">
+        <textarea
+          id="noteInput"
+          spellcheck="false"
+          placeholder="এখানে যা খুশি লিখুন…"
+        ></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" id="copyBtn" type="button">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          সব কপি
+        </button>
+        <button class="btn btn-ghost is-danger" id="deleteBtn" type="button">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+          নোট মুছুন
+        </button>
+      </div>
+    </main>
+
+    <!-- ============ FAB ============ -->
+    <button class="fab" id="fab" aria-label="নতুন নোট">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    </button>
+
+    <!-- ============ CONFIRM ============ -->
+    <div class="confirm" id="confirm">
+      <div class="confirm-box">
+        <div class="confirm-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+            />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <h3 id="confirmTitle">নিশ্চিত করুন</h3>
+        <p id="confirmMsg">আপনি কি নিশ্চিত?</p>
+        <div class="confirm-actions">
+          <button class="btn btn-ghost" id="confirmNo" type="button">
+            বাতিল
+          </button>
+          <button class="btn btn-danger" id="confirmYes" type="button">
+            হ্যাঁ, মুছুন
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TOAST ============ -->
+    <div class="toast" id="toast">
+      <span class="toast-icon" id="toastIcon"></span>
+      <span class="toast-msg" id="toastMsg"></span>
+    </div>
+
+    <script>
+      /* ============================================================
+   STATE
+   ============================================================ */
+      const STORE_KEY = "bkash_theme_notepad_v1";
+
+      let notes = []; // [{ id, text, createdAt, updatedAt }]
+      let currentId = null; // open note id
+      let saveTimer = null;
+      let confirmCb = null;
+      let searchQuery = "";
+
+      /* ============================================================
+   HELPERS
+   ============================================================ */
+      const MONTHS = [
+        "জানুয়ারি",
+        "ফেব্রুয়ারি",
+        "মার্চ",
+        "এপ্রিল",
+        "মে",
+        "জুন",
+        "জুলাই",
+        "আগস্ট",
+        "সেপ্টেম্বর",
+        "অক্টোবর",
+        "নভেম্বর",
+        "ডিসেম্বর",
+      ];
+      const MONTHS_SHORT = [
+        "জানু",
+        "ফেব্রু",
+        "মার্চ",
+        "এপ্রি",
+        "মে",
+        "জুন",
+        "জুলা",
+        "আগ",
+        "সেপ্ট",
+        "অক্টো",
+        "নভে",
+        "ডিসে",
+      ];
+
+      const uid = () =>
+        Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+      function fmtDateTime(ts) {
+        const d = new Date(ts);
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        let h = d.getHours();
+        const ap = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+        const mi = String(d.getMinutes()).padStart(2, "0");
+        return `${dd}/${mm}/${d.getFullYear()} · ${h}:${mi} ${ap}`;
+      }
+
+      function noteTitle(text) {
+        const line = (text.split("\n").find((l) => l.trim()) || "").trim();
+        if (!line) return "শিরোনামহীন নোট";
+        return line.length > 52 ? line.slice(0, 52) + "…" : line;
+      }
+
+      function notePreview(text) {
+        const lines = text
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean);
+        const rest = lines.slice(1).join(" ");
+        return rest.length > 100 ? rest.slice(0, 100) + "…" : rest;
+      }
+
+      /* ============================================================
+   STORAGE
+   ============================================================ */
+      function loadNotes() {
+        try {
+          const raw = localStorage.getItem(STORE_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          notes = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          notes = [];
+        }
+        notes = notes.filter((n) => n && typeof n.text === "string" && n.id);
+      }
+
+      function persist() {
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify(notes));
+        } catch {}
+      }
+
+      /* ============================================================
+   TOAST
+   ============================================================ */
+      const toastEl = document.getElementById("toast");
+      const toastIcon = document.getElementById("toastIcon");
+      const toastMsg = document.getElementById("toastMsg");
+      let toastTimer;
+
+      function toast(msg, type = "") {
+        toastMsg.textContent = msg;
+        toastEl.className = "toast show " + type;
+
+        if (type === "ok") {
+          toastIcon.textContent = "✓";
+          toastIcon.style.display = "grid";
+        } else if (type === "err") {
+          toastIcon.textContent = "!";
+          toastIcon.style.display = "grid";
+        } else {
+          toastIcon.style.display = "none";
+        }
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+      }
+
+      /* ============================================================
+   CONFIRM
+   ============================================================ */
+      const confirmEl = document.getElementById("confirm");
+
+      function askConfirm(title, msg, cb) {
+        document.getElementById("confirmTitle").textContent = title;
+        document.getElementById("confirmMsg").textContent = msg;
+        confirmCb = cb;
+        confirmEl.classList.add("show");
+      }
+
+      document.getElementById("confirmNo").onclick = () => {
+        confirmEl.classList.remove("show");
+        confirmCb = null;
+      };
+
+      document.getElementById("confirmYes").onclick = async () => {
+        confirmEl.classList.remove("show");
+        const cb = confirmCb;
+        confirmCb = null;
+        if (cb) await cb();
+      };
+
+      /* ============================================================
+   ROUTER
+   ============================================================ */
+      function navigate(hash) {
+        const next = hash ? "#/" + hash : "#/";
+        if (location.hash === next) {
+          handleRoute();
+          return;
+        }
+        location.hash = next;
+      }
+
+      function handleRoute() {
+        const h = location.hash.replace(/^#\/?/, "");
+
+        if (h.startsWith("note/")) {
+          const id = h.slice(5);
+          if (!notes.some((n) => n.id === id)) {
+            navigate("");
+            return;
+          }
+          renderEditor(id);
+        } else {
+          renderList();
+        }
+      }
+
+      window.addEventListener("hashchange", handleRoute);
+
+      /* ============================================================
+   LIST VIEW
+   ============================================================ */
+      const viewList = document.getElementById("viewList");
+      const viewEditor = document.getElementById("viewEditor");
+      const noteListEl = document.getElementById("noteList");
+      const noteCountEl = document.getElementById("noteCount");
+
+      function renderList() {
+        currentId = null;
+        document.body.classList.remove("in-editor");
+        document.getElementById("topTitle").textContent = "নোটপ্যাড";
+        document.getElementById("topSub").textContent = "আপনার ব্যক্তিগত নোট";
+
+        viewList.hidden = false;
+        viewEditor.hidden = true;
+
+        const q = searchQuery.trim().toLowerCase();
+        const list = [...notes]
+          .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+          .filter((n) => !q || n.text.toLowerCase().includes(q));
+
+        noteCountEl.textContent = list.length + " টি";
+
+        if (!notes.length) {
+          noteListEl.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          </svg>
+        </div>
+        <h3>এখনো কোনো নোট নেই</h3>
+        <p>নিচের + বাটনে চাপ দিয়ে লিখা শুরু করুন</p>
+      </div>`;
+          return;
+        }
+
+        if (!list.length) {
+          noteListEl.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </div>
+        <h3>কিছু পাওয়া যায়নি</h3>
+        <p>অন্য কিছু লিখে খুঁজে দেখুন</p>
+      </div>`;
+          return;
+        }
+
+        noteListEl.innerHTML = list
+          .map((n) => {
+            const d = new Date(n.updatedAt || n.createdAt);
+            const dd = String(d.getDate()).padStart(2, "0");
+            const mon = MONTHS_SHORT[d.getMonth()];
+            const title = noteTitle(n.text);
+            const prev = notePreview(n.text);
+            const chars = n.text.length;
+
+            return `
+      <article class="note-card">
+        <button class="note-btn" data-open="${n.id}" type="button">
+          <span class="note-chip">
+            <b>${dd}</b>
+            <small>${mon}</small>
+          </span>
+
+          <span class="note-info">
+            <span class="note-title">${escapeHtml(title)}</span>
+            ${prev ? `<span class="note-preview">${escapeHtml(prev)}</span>` : ""}
+            <span class="note-meta">
+              <span class="tag">${chars} অক্ষর</span>
+              <span class="dot"></span>
+              <span>${fmtDateTime(n.updatedAt || n.createdAt)}</span>
+            </span>
+          </span>
+
+          <span class="note-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </span>
+        </button>
+      </article>`;
+          })
+          .join("");
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      /* ============================================================
+   EDITOR VIEW
+   ============================================================ */
+      const noteInput = document.getElementById("noteInput");
+      const editorTitle = document.getElementById("editorTitle");
+      const editorMeta = document.getElementById("editorMeta");
+      const editorStatus = document.getElementById("editorStatus");
+
+      function renderEditor(id) {
+        const note = notes.find((n) => n.id === id);
+        if (!note) {
+          navigate("");
+          return;
+        }
+
+        currentId = id;
+        document.body.classList.add("in-editor");
+        document.getElementById("topTitle").textContent = "নোট";
+        document.getElementById("topSub").textContent = fmtDateTime(
+          note.createdAt,
+        );
+
+        viewList.hidden = true;
+        viewEditor.hidden = false;
+
+        noteInput.value = note.text;
+        setStatus("saved");
+        updateEditorMeta(note);
+
+        window.scrollTo({ top: 0, behavior: "instant" });
+        setTimeout(() => noteInput.focus(), 200);
+      }
+
+      function updateEditorMeta(note) {
+        const chars = noteInput.value.length;
+        const words = noteInput.value.trim()
+          ? noteInput.value.trim().split(/\s+/).length
+          : 0;
+
+        editorTitle.textContent = noteTitle(noteInput.value);
+        editorMeta.textContent = `${chars} অক্ষর · ${words} শব্দ · ${fmtDateTime(note.createdAt)}`;
+      }
+
+      function setStatus(state) {
+        editorStatus.dataset.state = state;
+        editorStatus.textContent = state === "saving" ? "সেভ হচ্ছে…" : "সেভড";
+      }
+
+      /* ---------- typing → autosave ---------- */
+      noteInput.addEventListener("input", () => {
+        const note = notes.find((n) => n.id === currentId);
+        if (!note) return;
+
+        note.text = noteInput.value;
+        note.updatedAt = Date.now();
+
+        updateEditorMeta(note);
+        setStatus("saving");
+
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          persist();
+          setStatus("saved");
+        }, 400);
+      });
+
+      /* ---------- leaving an empty note → drop it ---------- */
+      function cleanupEmptyNote() {
+        if (!currentId) return;
+        const note = notes.find((n) => n.id === currentId);
+        if (note && !note.text.trim()) {
+          notes = notes.filter((n) => n.id !== currentId);
+          persist();
+        }
+      }
+
+      /* ============================================================
+   ACTIONS
+   ============================================================ */
+      function createNote() {
+        const now = Date.now();
+        const note = { id: uid(), text: "", createdAt: now, updatedAt: now };
+        notes.unshift(note);
+        persist();
+        navigate("note/" + note.id);
+      }
+
+      document.getElementById("addTop").onclick = createNote;
+      document.getElementById("fab").onclick = createNote;
+
+      document.getElementById("backBtn").onclick = () => {
+        cleanupEmptyNote();
+        navigate("");
+      };
+
+      document.getElementById("copyBtn").onclick = () => {
+        const note = notes.find((n) => n.id === currentId);
+        if (!note || !note.text) {
+          toast("নোট খালি", "err");
+          return;
+        }
+
+        (navigator.clipboard
+          ? navigator.clipboard.writeText(note.text)
+          : Promise.reject()
+        ).then(
+          () => toast("নোট কপি হয়েছে", "ok"),
+          () => toast("কপি ব্যর্থ", "err"),
+        );
+      };
+
+      document.getElementById("deleteBtn").onclick = () => {
+        const note = notes.find((n) => n.id === currentId);
+        if (!note) return;
+
+        askConfirm(
+          "নোট মুছবেন?",
+          "এই নোটটি স্থায়ীভাবে মুছে যাবে। এটি ফেরানো যাবে না।",
+          () => {
+            notes = notes.filter((n) => n.id !== currentId);
+            persist();
+            currentId = null;
+            toast("নোট মুছে ফেলা হয়েছে", "ok");
+            navigate("");
+          },
+        );
+      };
+
+      /* ============================================================
+   DELEGATED CLICKS
+   ============================================================ */
+      document.addEventListener("click", (ev) => {
+        const openBtn = ev.target.closest("[data-open]");
+        if (openBtn) {
+          cleanupEmptyNote();
+          navigate("note/" + openBtn.dataset.open);
+        }
+      });
+
+      /* ============================================================
+   SEARCH
+   ============================================================ */
+      const searchWrap = document.getElementById("searchWrap");
+      const searchInput = document.getElementById("searchInput");
+
+      searchInput.addEventListener("input", () => {
+        searchQuery = searchInput.value;
+        searchWrap.classList.toggle("has-value", !!searchQuery);
+        if (!location.hash || location.hash === "#/") renderList();
+      });
+
+      document.getElementById("searchClear").onclick = () => {
+        searchInput.value = "";
+        searchQuery = "";
+        searchWrap.classList.remove("has-value");
+        renderList();
+        searchInput.focus();
+      };
+
+      /* ============================================================
+   TOPBAR SHADOW
+   ============================================================ */
+      const topbar = document.getElementById("topbar");
+      window.addEventListener(
+        "scroll",
+        () => {
+          topbar.classList.toggle("scrolled", window.scrollY > 8);
+        },
+        { passive: true },
+      );
+
+      /* ============================================================
+   SAVE ON EXIT
+   ============================================================ */
+      window.addEventListener("beforeunload", () => {
+        const note = notes.find((n) => n.id === currentId);
+        if (note) {
+          note.text = noteInput.value;
+          note.updatedAt = Date.now();
+        }
+        cleanupEmptyNote();
+        persist();
+      });
+
+      /* ============================================================
+   BOOT
+   ============================================================ */
+      (function init() {
+        loadNotes();
+        handleRoute();
+      })();
+    </script>
+  </body>
+</html>
