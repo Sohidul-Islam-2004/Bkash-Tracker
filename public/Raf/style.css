@@ -840,3 +840,45 @@ textarea {
         min-height: 110px;
     }
 }
+
+/* ============================================================
+   CARD ACTIONS  (copy + delete in header)
+   ============================================================ */
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.card-copy {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, transform 0.12s;
+}
+
+.card-copy:hover {
+    background: #fbd5e2;
+    color: var(--pink-press);
+}
+
+.card-copy:active {
+    transform: scale(0.9);
+}
+
+.card-copy svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* flash green after a successful copy */
+.card-copy.copied {
+    background: var(--green-soft) !important;
+    color: var(--green) !important;
+}
