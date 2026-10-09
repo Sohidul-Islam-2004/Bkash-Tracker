@@ -830,14 +830,13 @@ document.addEventListener('click', async ev => {
         const text =
             ` ${fmtDate(date)}\n` +
             `━━━━━━━━━━━━━━━━━━━━\n` +
-            `   বিকাশ : ${bkash}\n` +
-            `   ইজা   : ${ejaa}\n` +
-            `   ─────────────\n` +
-            `   টোটাল : ${total}\n` +
-            `\n` +
-            `   জমা  : ${deposit}\n` +
-            `   ─────────────\n` +
-            `   হাসান পাওনা : ${pawna}`;
+            `   বিকাশ :     ${bkash}\n` +
+            `   ইজা    :     ${ejaa}\n` +
+            `   ──────────────\n` +
+            `   টোটাল :     ${total}\n` +
+            `   জমা  :        ${deposit}\n` +
+            `   ──────────────\n` +
+            `   হাসান পাওনা :   ${pawna}`;
 
         cpSum.classList.add('copied');
         setTimeout(() => cpSum.classList.remove('copied'), 900);
