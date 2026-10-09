@@ -2,15 +2,33 @@
 <html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#d12053" />
     <title>ইজিলেনদেন — ড্যাশবোর্ড</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='100' y2='100' gradientUnits='userSpaceOnUse'><stop offset='0%25' stop-color='%23e8437a'/><stop offset='55%25' stop-color='%23d12053'/><stop offset='100%25' stop-color='%23a8153f'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><path d='M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z' fill='rgba(255,255,255,0.10)'/><text x='50' y='74' text-anchor='middle' font-family='Noto Sans Bengali,Hind Siliguri,sans-serif' font-size='60' font-weight='800' fill='%23ffffff'>ই</text><circle cx='80' cy='22' r='5.5' fill='%23ffffff'/><circle cx='80' cy='22' r='2.2' fill='%23d12053'/></svg>"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='100' y2='100' gradientUnits='userSpaceOnUse'><stop offset='0%25' stop-color='%23e8437a'/><stop offset='55%25' stop-color='%23d12053'/><stop offset='100%25' stop-color='%23a8153f'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><path d='M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z' fill='rgba(255,255,255,0.10)'/><text x='50' y='74' text-anchor='middle' font-family='Noto Sans Bengali,Hind Siliguri,sans-serif' font-size='60' font-weight='800' fill='%23ffffff'>ই</text><circle cx='80' cy='22' r='5.5' fill='%23ffffff'/><circle cx='80' cy='22' r='2.2' fill='%23d12053'/></svg>"
+    />
     <style>
-      *, *::before, *::after { box-sizing: border-box; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
 
       :root {
         --bg: #f5f3f6;
@@ -39,16 +57,27 @@
         --r-md: 20px;
         --r-lg: 24px;
         --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-        --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-num:
+          "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
+          BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-body:
+          "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+          BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
 
-      html, body { height: 100%; }
+      html,
+      body {
+        height: 100%;
+      }
 
       body {
         margin: 0;
         background: var(--bg);
-        background-image: radial-gradient(1200px 600px at 50% -200px, rgba(209, 32, 83, 0.08), transparent 70%);
+        background-image: radial-gradient(
+          1200px 600px at 50% -200px,
+          rgba(209, 32, 83, 0.08),
+          transparent 70%
+        );
         color: var(--ink);
         font-family: var(--font-body);
         font-size: 15px;
@@ -57,9 +86,25 @@
         -moz-osx-font-smoothing: grayscale;
       }
 
-      button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; -webkit-tap-highlight-color: transparent; }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border: 0;
+        background: none;
+        -webkit-tap-highlight-color: transparent;
+      }
 
-      .icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+      .icon {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
 
       .app {
         max-width: 480px;
@@ -83,11 +128,24 @@
         transition: box-shadow 0.25s var(--ease);
       }
 
-      .topbar.scrolled { box-shadow: 0 1px 10px rgba(20, 22, 34, 0.05); }
+      .topbar.scrolled {
+        box-shadow: 0 1px 10px rgba(20, 22, 34, 0.05);
+      }
 
-      .topbar-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
 
-      .brand { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+      }
 
       .brand-logo {
         width: 42px;
@@ -102,9 +160,16 @@
         position: relative;
       }
 
-      .brand-logo .brand-mark { width: 100%; height: 100%; display: block; }
+      .brand-logo .brand-mark {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
 
-      .brand-text { min-width: 0; line-height: 1.2; }
+      .brand-text {
+        min-width: 0;
+        line-height: 1.2;
+      }
 
       .brand-text h1 {
         margin: 0;
@@ -117,15 +182,46 @@
         color: var(--ink);
       }
 
-      .brand-sub { display: block; font-size: 12px; color: var(--muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .brand-sub {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-      .content { flex: 1; padding: 16px 14px calc(32px + var(--bottom)); }
+      .content {
+        flex: 1;
+        padding: 16px 14px calc(32px + var(--bottom));
+      }
 
-      .section-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 2px 12px; }
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 4px 2px 12px;
+      }
 
-      .section-title { font-size: 15px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--ink); letter-spacing: -0.2px; }
+      .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+      }
 
-      .title-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12); }
+      .title-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--pink);
+        box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12);
+      }
 
       .section-count {
         font-family: var(--font-num);
@@ -139,7 +235,11 @@
         font-variant-numeric: tabular-nums;
       }
 
-      .services { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .services {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
 
       .service {
         display: flex;
@@ -152,25 +252,49 @@
         border: 1px solid var(--line-2);
         box-shadow: var(--shadow-sm);
         text-align: left;
-        transition: transform 0.2s var(--ease), box-shadow 0.25s var(--ease), border-color 0.2s var(--ease);
+        transition:
+          transform 0.2s var(--ease),
+          box-shadow 0.25s var(--ease),
+          border-color 0.2s var(--ease);
         position: relative;
         overflow: hidden;
         animation: cardIn 0.4s var(--ease) backwards;
         min-height: 130px;
       }
 
-      .service:nth-child(1) { animation-delay: 0.05s; }
-      .service:nth-child(2) { animation-delay: 0.1s; }
-      .service:nth-child(3) { animation-delay: 0.15s; }
-      .service:nth-child(4) { animation-delay: 0.2s; }
-
-      @keyframes cardIn {
-        from { opacity: 0; transform: translateY(10px) scale(0.98); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+      .service:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .service:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .service:nth-child(3) {
+        animation-delay: 0.15s;
+      }
+      .service:nth-child(4) {
+        animation-delay: 0.2s;
       }
 
-      .service:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(209, 32, 83, 0.18); }
-      .service:active { transform: translateY(0) scale(0.99); background: var(--pink-tint); }
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .service:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: rgba(209, 32, 83, 0.18);
+      }
+      .service:active {
+        transform: translateY(0) scale(0.99);
+        background: var(--pink-tint);
+      }
 
       .service-ico {
         width: 48px;
@@ -186,7 +310,11 @@
         flex-shrink: 0;
       }
 
-      .service-ico .icon { width: 22px; height: 22px; stroke-width: 2.4; }
+      .service-ico .icon {
+        width: 22px;
+        height: 22px;
+        stroke-width: 2.4;
+      }
 
       .service b {
         font-size: 15px;
@@ -212,7 +340,9 @@
         box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
         opacity: 0;
         pointer-events: none;
-        transition: opacity 0.28s var(--ease), transform 0.32s var(--ease);
+        transition:
+          opacity 0.28s var(--ease),
+          transform 0.32s var(--ease);
         z-index: 300;
         max-width: 90vw;
         text-align: center;
@@ -221,14 +351,24 @@
         text-overflow: ellipsis;
       }
 
-      .toast.show { opacity: 1; transform: translate(-50%, 0); }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
 
       @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
       }
 
       @media (min-width: 480px) {
-        .content { padding: 20px 18px calc(40px + var(--bottom)); }
+        .content {
+          padding: 20px 18px calc(40px + var(--bottom));
+        }
       }
     </style>
   </head>
@@ -262,17 +402,41 @@
         <div class="topbar-inner">
           <div class="brand">
             <div class="brand-logo" aria-hidden="true">
-              <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                class="brand-mark"
+                viewBox="0 0 100 100"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <defs>
-                  <linearGradient id="el-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                  <linearGradient
+                    id="el-grad"
+                    x1="0"
+                    y1="0"
+                    x2="100"
+                    y2="100"
+                    gradientUnits="userSpaceOnUse"
+                  >
                     <stop offset="0%" stop-color="#e8437a" />
                     <stop offset="55%" stop-color="#d12053" />
                     <stop offset="100%" stop-color="#a8153f" />
                   </linearGradient>
                 </defs>
                 <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
-                <path d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z" fill="rgba(255,255,255,0.10)" />
-                <text x="50" y="74" text-anchor="middle" font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif" font-size="60" font-weight="800" fill="#ffffff">ই</text>
+                <path
+                  d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
+                  fill="rgba(255,255,255,0.10)"
+                />
+                <text
+                  x="50"
+                  y="74"
+                  text-anchor="middle"
+                  font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
+                  font-size="60"
+                  font-weight="800"
+                  fill="#ffffff"
+                >
+                  ই
+                </text>
                 <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
                 <circle cx="80" cy="22" r="2.2" fill="#d12053" />
               </svg>
@@ -302,21 +466,27 @@
         const $ = (s, c = document) => c.querySelector(s);
 
         const SERVICES = [
-          { icon: "i-edit",  label: "সালাম ভাইয়ের সাথে লেনদেন", route: "entry" },
-          { icon: "i-users", label: "বিকাশ ম্যানেজমেন্ট",          route: "hisab" },
-          { icon: "i-calc",  label: "রাফ হিসাব",                  route: "raf" },
+          {
+            icon: "i-edit",
+            label: "সালাম ভাইয়ের সাথে লেনদেন",
+            route: "entry",
+          },
+          { icon: "i-users", label: "বিকাশ ম্যানেজমেন্ট", route: "hisab" },
+          { icon: "i-calc", label: "রাফ হিসাব", route: "raf" },
         ];
 
         const grid = $("#servicesGrid");
 
-        grid.innerHTML = SERVICES.map((s, i) => `
+        grid.innerHTML = SERVICES.map(
+          (s, i) => `
           <button class="service" data-idx="${i}" style="animation-delay:${0.05 + i * 0.05}s">
             <span class="service-ico">
               <svg class="icon"><use href="#${s.icon}"/></svg>
             </span>
             <b>${s.label}</b>
           </button>
-        `).join("");
+        `,
+        ).join("");
 
         const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
         const toBn = (n) => String(n).replace(/\d/g, (d) => bnDigits[+d]);
@@ -327,7 +497,7 @@
         const ROUTES = {
           entry: { msg: "এন্ট্রি ম্যানেজার খোলা হচ্ছে…", url: "/Entry" },
           hisab: { msg: "বিকাশ ম্যানেজমেন্ট খোলা হচ্ছে…", url: "/Bkash" },
-          raf:   { msg: "রাফ হিসাব খোলা হচ্ছে…",         url: "/Raf"   },
+          raf: { msg: "রাফ হিসাব খোলা হচ্ছে…", url: "/Raf" },
         };
 
         grid.addEventListener("click", (e) => {
@@ -337,7 +507,10 @@
           if (!s) return;
 
           const route = ROUTES[s.route];
-          if (!route) { toast(s.label); return; }
+          if (!route) {
+            toast(s.label);
+            return;
+          }
 
           busy = true;
           btn.setAttribute("aria-busy", "true");
@@ -353,9 +526,13 @@
         });
 
         const topbar = $("#topbar");
-        window.addEventListener("scroll", () => {
-          topbar.classList.toggle("scrolled", window.scrollY > 8);
-        }, { passive: true });
+        window.addEventListener(
+          "scroll",
+          () => {
+            topbar.classList.toggle("scrolled", window.scrollY > 8);
+          },
+          { passive: true },
+        );
 
         function toast(msg) {
           const el = $("#toast");
