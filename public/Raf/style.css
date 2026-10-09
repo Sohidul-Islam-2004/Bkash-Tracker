@@ -882,3 +882,78 @@ textarea {
     background: var(--green-soft) !important;
     color: var(--green) !important;
 }
+
+/* ---------- note (clean, no emoji) ---------- */
+.card-note {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.45;
+    word-break: break-word;
+    padding: 6px 10px;
+    background: var(--pink-tint);
+    border-left: 3px solid var(--pink);
+    border-radius: 7px;
+    display: inline-block;
+    max-width: 100%;
+}
+
+/* ---------- number list (shows ALL rows, no scroll) ---------- */
+.num-list {
+    padding: 4px 4px;
+    max-height: none;
+    overflow: visible;
+}
+
+.num-row {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 9px;
+    border-bottom: 1px solid var(--line-2);
+    transition: background 0.15s;
+}
+
+.num-row:last-child {
+    border-bottom: 0;
+}
+
+.num-row:hover {
+    background: var(--pink-tint);
+}
+
+.num-idx {
+    font-family: var(--font-num);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
+    background: #f5f1f4;
+    border-radius: 6px;
+    padding: 2px 0;
+    font-variant-numeric: tabular-nums;
+    min-width: 0;
+}
+
+.num-row .num {
+    font-family: var(--font-num);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.2px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.num-row .amt {
+    font-family: var(--font-num);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--pink);
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}

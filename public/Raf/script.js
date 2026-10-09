@@ -189,7 +189,7 @@ function render() {
 
 function renderCard(e) {
     const noteLine = e.note
-        ? `<div class="card-note">📝 ${escapeHtml(e.note)}</div>`
+        ? `<div class="card-note">${escapeHtml(e.note)}</div>`
         : '';
 
     return `
@@ -200,13 +200,15 @@ function renderCard(e) {
                     ${noteLine}
                 </div>
                 <div class="card-actions">
-                    <button class="card-copy" data-copy="${e.id}" aria-label="সব কপি করুন" title="সব কপি করুন">
+                    <button class="card-copy" data-copy="${e.id}" type="button"
+                        aria-label="হিসাব কপি" title="হিসাব কপি">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                     </button>
-                    <button class="card-del" data-del="${e.id}" aria-label="মুছুন">
+                    <button class="card-del" data-del="${e.id}" type="button"
+                        aria-label="মুছুন" title="মুছুন">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -217,8 +219,9 @@ function renderCard(e) {
             </div>
 
             <div class="num-list">
-                ${e.entries.map(en => `
+                ${e.entries.map((en, i) => `
                     <div class="num-row">
+                        <span class="num-idx">${i + 1}</span>
                         <span class="num">${fmtNum(en.number)}</span>
                         <span class="amt">৳ ${bn(en.amount)}</span>
                     </div>
