@@ -188,20 +188,32 @@ function render() {
 }
 
 function renderCard(e) {
+    const noteLine = e.note
+        ? `<div class="card-note">📝 ${escapeHtml(e.note)}</div>`
+        : '';
+
     return `
         <article class="card" data-id="${e.id}">
             <div class="card-head">
                 <div class="card-info">
                     <div class="card-date">${fmtDateTime(e.createdAt)}</div>
-                    ${e.note ? `<div class="card-note">📝 ${escapeHtml(e.note)}</div>` : ''}
+                    ${noteLine}
                 </div>
-                <button class="card-del" data-del="${e.id}" aria-label="মুছুন">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                    </svg>
-                </button>
+                <div class="card-actions">
+                    <button class="card-copy" data-copy="${e.id}" aria-label="সব কপি করুন" title="সব কপি করুন">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                    </button>
+                    <button class="card-del" data-del="${e.id}" aria-label="মুছুন">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <div class="num-list">
@@ -291,9 +303,79 @@ document.getElementById('saveBtn').onclick = () => {
 };
 
 /* ============================================================
-   DELETE (delegated)
+   COPY ENTRY  (note + numbers + total)
    ============================================================ */
-document.addEventListener('click', ev => {
+function buildCopyText(entry) {
+    const lines = [];
+
+    lines.push(`📅 ${fmtDateTime(entry.createdAt)}`);
+
+    if (entry.note) {
+        lines.push(`📝 ${entry.note}`);
+    }
+
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+
+    // newest-first order to match the UI
+    [...entry.entries].reverse().forEach(en => {
+        lines.push(`${fmtNum(en.number)} = ${en.amount}`);
+    });
+
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push(`মোট: ৳ ${bn(entry.total)}`);
+    lines.push(`নম্বর: ${entry.entries.length} টি`);
+
+    return lines.join('\n');
+}
+
+async function copyText(text) {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            // fallback for older browsers / non-https
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/* ============================================================
+   CLICK HANDLERS (copy + delete) — delegated
+   ============================================================ */
+document.addEventListener('click', async ev => {
+    /* ---------- copy ---------- */
+    const copyBtn = ev.target.closest('[data-copy]');
+    if (copyBtn) {
+        ev.stopPropagation();
+        const id = copyBtn.dataset.copy;
+        const entry = entries.find(e => e.id === id);
+        if (!entry) return;
+
+        const text = buildCopyText(entry);
+        const ok = await copyText(text);
+
+        if (ok) {
+            copyBtn.classList.add('copied');
+            setTimeout(() => copyBtn.classList.remove('copied'), 900);
+            toast('কপি হয়েছে', 'ok');
+        } else {
+            toast('কপি ব্যর্থ', 'err');
+        }
+        return;
+    }
+
+    /* ---------- delete ---------- */
     const del = ev.target.closest('[data-del]');
     if (!del) return;
 

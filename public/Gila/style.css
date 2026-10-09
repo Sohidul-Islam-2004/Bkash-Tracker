@@ -1,0 +1,1097 @@
+/* ============================================================
+   PERSON MODULE  —  TABS / LIST / MONTH / DAY / SHEETS
+   Matches existing bKash design language.
+   Paste at the BOTTOM of style.css.
+   ============================================================ */
+
+/* ============================================================
+   1. HOME TABS  (বিকাশ / ব্যক্তি)
+   ============================================================ */
+.tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 5px;
+    background: #ffffff;
+    border: 1px solid var(--line-2);
+    border-radius: 16px;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 18px;
+    position: relative;
+    animation: cardIn 0.35s var(--ease);
+}
+
+.tab {
+    position: relative;
+    padding: 11px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    background: transparent;
+    transition: color 0.2s var(--ease),
+        background 0.2s var(--ease),
+        box-shadow 0.2s var(--ease),
+        transform 0.15s var(--ease);
+    letter-spacing: -0.1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+.tab:hover {
+    color: var(--ink-2);
+    background: var(--pink-tint);
+}
+
+.tab:active {
+    transform: scale(0.97);
+}
+
+.tab.is-active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    box-shadow: 0 6px 16px rgba(209, 32, 83, 0.28);
+}
+
+.tab.is-active:hover {
+    color: #fff;
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+}
+
+/* subtle count bubble inside tab (optional) */
+.tab .tab-count {
+    font-family: var(--font-num);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.22);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.2px;
+}
+
+.tab:not(.is-active) .tab-count {
+    background: var(--pink-soft);
+    color: var(--pink);
+}
+
+.tab-panel {
+    animation: viewIn 0.3s var(--ease);
+}
+
+.tab-panel[hidden] {
+    display: none;
+}
+
+/* ============================================================
+   2. PERSON HERO  (top of person tab)
+   ============================================================ */
+.person-hero {
+    background: linear-gradient(135deg, #2563eb 0%, #1a4fbf 100%);
+    color: #fff;
+    border-radius: var(--r-lg);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 16px 40px rgba(37, 99, 235, 0.28);
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s var(--ease);
+}
+
+.person-hero::before {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.person-hero::after {
+    content: "";
+    position: absolute;
+    bottom: -70px;
+    left: -40px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}
+
+.person-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 10px;
+}
+
+.person-hero-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    opacity: 0.95;
+}
+
+.person-hero-ico {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: grid;
+    place-items: center;
+}
+
+.person-hero-ico svg {
+    width: 15px;
+    height: 15px;
+}
+
+.person-hero-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.person-hero-value {
+    display: block;
+    font-family: var(--font-num);
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    position: relative;
+    z-index: 1;
+}
+
+/* add a person — flat white card in list */
+.person-add-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 18px;
+    background: #fff;
+    border: 1.5px dashed #d9c9d2;
+    border-radius: var(--r-lg);
+    color: var(--pink);
+    font-size: 14.5px;
+    font-weight: 700;
+    text-align: left;
+    transition: background 0.2s var(--ease),
+        border-color 0.2s var(--ease),
+        transform 0.15s var(--ease);
+    margin-bottom: 12px;
+}
+
+.person-add-card:hover {
+    background: var(--pink-tint);
+    border-color: var(--pink-2);
+}
+
+.person-add-card:active {
+    transform: scale(0.99);
+}
+
+.person-add-ico {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 13px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+}
+
+.person-add-ico svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ============================================================
+   3. PERSON LIST  (#personList — cards in person tab)
+   ============================================================ */
+#personList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.person-card {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    animation: cardIn 0.4s var(--ease) backwards;
+    transition: transform 0.2s var(--ease),
+        box-shadow 0.25s var(--ease),
+        border-color 0.25s;
+}
+
+.person-card:nth-child(1) {
+    animation-delay: 0.03s;
+}
+
+.person-card:nth-child(2) {
+    animation-delay: 0.06s;
+}
+
+.person-card:nth-child(3) {
+    animation-delay: 0.09s;
+}
+
+.person-card:nth-child(4) {
+    animation-delay: 0.12s;
+}
+
+.person-card:nth-child(5) {
+    animation-delay: 0.15s;
+}
+
+.person-card:hover {
+    border-color: rgba(209, 32, 83, 0.18);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.person-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    text-align: left;
+    color: inherit;
+    transition: background 0.15s;
+    position: relative;
+}
+
+.person-btn:hover {
+    background: var(--pink-tint);
+}
+
+.person-btn:active {
+    background: var(--pink-soft);
+}
+
+/* avatar (initial letter / blank) */
+.person-avatar {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: linear-gradient(160deg, #e83a6c 0%, var(--pink) 45%, var(--pink-press) 100%);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-num);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    box-shadow:
+        0 8px 18px rgba(209, 32, 83, 0.26),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.14);
+}
+
+.person-avatar::after {
+    content: "";
+    position: absolute;
+    top: -22px;
+    right: -22px;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.person-avatar span {
+    position: relative;
+    z-index: 1;
+}
+
+.person-info {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.person-name {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.person-meta {
+    font-family: var(--font-num);
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.person-meta .meta-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--muted-2);
+    flex-shrink: 0;
+}
+
+.person-total {
+    text-align: right;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.person-total .amt {
+    font-family: var(--font-num);
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--pink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+}
+
+.person-total .cnt {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.person-arrow {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #f6f1f4;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.person-card:hover .person-arrow {
+    background: var(--pink);
+    color: #fff;
+    transform: translateX(2px);
+}
+
+.person-arrow svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ============================================================
+   4. PERSON HERO  —  inside person view (top of viewPerson)
+   ============================================================ */
+.person-view-hero {
+    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+    color: #fff;
+    border-radius: var(--r-lg);
+    padding: 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s var(--ease);
+}
+
+.person-view-hero::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.person-view-hero::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    left: -40px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}
+
+.pvh-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.pvh-avatar {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-num);
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.14);
+}
+
+.pvh-title {
+    min-width: 0;
+    flex: 1;
+}
+
+.pvh-title h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pvh-title p {
+    margin: 4px 0 0;
+    font-family: var(--font-num);
+    font-size: 13px;
+    opacity: 0.88;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 3-up stats inside the hero */
+.pvh-stats {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+    position: relative;
+    z-index: 1;
+}
+
+.pvh-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    min-width: 0;
+}
+
+.pvh-stat-lbl {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    opacity: 0.85;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pvh-stat-val {
+    font-family: var(--font-num);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================
+   5. PERSON MONTH LIST  (inside viewPerson)
+   ============================================================ */
+#personMonthList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* reuse .month-card, but tweak for person tone */
+.person-month-card .month-badge {
+    background: linear-gradient(160deg, #4f8bf5 0%, var(--blue) 45%, #1a4fbf 100%);
+    box-shadow:
+        0 8px 18px rgba(37, 99, 235, 0.26),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.person-month-card .month-total .amt {
+    color: var(--blue);
+}
+
+/* ============================================================
+   6. PERSON MONTH VIEW  (viewPersonMonth — days list)
+   ============================================================ */
+#viewPersonMonth .person-month-hero {
+    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+    color: #fff;
+    border-radius: var(--r-lg);
+    padding: 20px;
+    margin-bottom: 22px;
+    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s var(--ease);
+}
+
+#viewPersonMonth .person-month-hero::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+#viewPersonMonth .person-month-hero h2 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    position: relative;
+    z-index: 1;
+}
+
+#viewPersonMonth .person-month-hero .pmh-amount {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    position: relative;
+    z-index: 1;
+}
+
+#viewPersonMonth .person-month-hero .pmh-amount-lbl {
+    display: block;
+    font-size: 12.5px;
+    opacity: 0.85;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin-bottom: 4px;
+}
+
+#viewPersonMonth .person-month-hero .pmh-amount b {
+    font-family: var(--font-num);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* day list inside person month view */
+#personDayList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* person-day card (reuses .day-card look, adds a pieces badge) */
+.pday-card {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    animation: cardIn 0.35s var(--ease) backwards;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s var(--ease);
+}
+
+.pday-card:hover {
+    border-color: rgba(209, 32, 83, 0.15);
+}
+
+.pday-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    text-align: left;
+    color: inherit;
+    transition: background 0.15s;
+}
+
+.pday-head:hover {
+    background: var(--pink-tint);
+}
+
+.pday-chip {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 13px;
+    background: #ffffff;
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 1px solid var(--line);
+    box-shadow:
+        0 1px 2px rgba(20, 22, 34, 0.05),
+        inset 0 -2px 0 rgba(20, 22, 34, 0.03);
+    position: relative;
+    overflow: hidden;
+}
+
+.pday-chip::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue), #4f8bf5);
+    opacity: 0.9;
+}
+
+.pday-chip b {
+    font-family: var(--font-num);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+.pday-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.pday-info .d1 {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.2px;
+}
+
+.pday-info .d2 {
+    font-family: var(--font-num);
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 1px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.pday-amt {
+    font-family: var(--font-num);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--blue);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.pday-amt small {
+    display: block;
+    font-size: 10.5px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 2px;
+    letter-spacing: 0.2px;
+}
+
+.pday-arrow {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #f6f1f4;
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.pday-card:hover .pday-arrow {
+    background: var(--pink);
+    color: #fff;
+    transform: translateX(2px);
+}
+
+.pday-arrow svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* ============================================================
+   7. PERSON DAY SUMMARY  (advance / pieces / earned / due)
+   ============================================================ */
+.pday-summary {
+    background: linear-gradient(180deg, #fffbfd 0%, #fff6fa 100%);
+    border: 1.5px solid #f5d9e4;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 4px 14px rgba(209, 32, 83, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pday-summary .sum-item--pieces::before {
+    background: linear-gradient(180deg, #9aa0b4, var(--ink-2));
+}
+
+.pday-summary .sum-item--pieces .sum-value {
+    color: var(--ink);
+}
+
+.pday-summary .sum-item--earned::before {
+    background: linear-gradient(180deg, #2fc98c, var(--green));
+}
+
+.pday-summary .sum-item--earned .sum-value {
+    color: var(--green);
+}
+
+.pday-summary .sum-item--advance::before {
+    background: linear-gradient(180deg, #4f8bf5, var(--blue));
+}
+
+.pday-summary .sum-item--advance .sum-value {
+    color: var(--blue);
+}
+
+.pday-summary .sum-item--due::before {
+    background: linear-gradient(180deg, var(--pink-2), var(--pink));
+}
+
+.pday-summary .sum-item--due .sum-value {
+    color: var(--pink);
+}
+
+/* ============================================================
+   8. PERSON SHEET  —  advance + price field polish
+   ============================================================ */
+#pAdvance,
+#pPrice,
+#pdayPieces {
+    font-family: var(--font-num);
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.2px;
+}
+
+#pName {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* person delete button — same as day-delete, kept for safety */
+#personDelete {
+    width: 100%;
+    padding: 11px;
+    margin-top: 10px;
+    background: transparent;
+    color: var(--red);
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+#personDelete:hover {
+    background: var(--red-soft);
+}
+
+#personDelete[hidden] {
+    display: none;
+}
+
+#personDelete svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* pday delete / save row spacing */
+#pdaySheet .btn-row {
+    margin-top: 18px;
+}
+
+/* ============================================================
+   9. PERSON EMPTY STATE  (uses .empty, kept for consistency)
+   ============================================================ */
+#panelPerson .empty,
+#viewPerson .empty,
+#viewPersonMonth .empty {
+    text-align: center;
+    padding: 56px 24px;
+    color: var(--muted);
+    background: var(--card);
+    border: 1.5px dashed #e0d3db;
+    border-radius: var(--r-lg);
+    animation: cardIn 0.5s var(--ease);
+}
+
+#panelPerson .empty-icon,
+#viewPerson .empty-icon,
+#viewPersonMonth .empty-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink-tint), var(--pink-soft));
+    display: grid;
+    place-items: center;
+    color: var(--pink);
+    box-shadow: 0 10px 24px rgba(209, 32, 83, 0.1);
+}
+
+#panelPerson .empty-icon svg,
+#viewPerson .empty-icon svg,
+#viewPersonMonth .empty-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+#panelPerson .empty h3,
+#viewPerson .empty h3,
+#viewPersonMonth .empty h3 {
+    font-size: 16px;
+    color: var(--ink);
+    margin: 0 0 6px;
+    font-weight: 700;
+}
+
+#panelPerson .empty p,
+#viewPerson .empty p,
+#viewPersonMonth .empty p {
+    font-size: 13.5px;
+    margin: 0;
+}
+
+/* ============================================================
+   10. RESPONSIVE TWEAKS
+   ============================================================ */
+@media (min-width: 720px) {
+    .tab {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+
+    .person-btn {
+        padding: 18px 20px;
+    }
+
+    .person-name {
+        font-size: 18px;
+    }
+
+    .person-total .amt {
+        font-size: 19px;
+    }
+
+    .person-avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 17px;
+        font-size: 22px;
+    }
+
+    .pvh-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .pvh-title h2 {
+        font-size: 22px;
+    }
+
+    .pvh-stat-val {
+        font-size: 18px;
+    }
+
+    #viewPersonMonth .person-month-hero {
+        padding: 24px;
+    }
+
+    #viewPersonMonth .person-month-hero h2 {
+        font-size: 22px;
+    }
+
+    #viewPersonMonth .person-month-hero .pmh-amount b {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 380px) {
+    .tab {
+        padding: 10px 10px;
+        font-size: 13px;
+    }
+
+    .person-btn {
+        padding: 13px 14px;
+        gap: 11px;
+    }
+
+    .person-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        font-size: 17px;
+    }
+
+    .person-name {
+        font-size: 15px;
+    }
+
+    .person-total .amt {
+        font-size: 15px;
+    }
+
+    .person-total .cnt {
+        font-size: 10px;
+    }
+
+    .pvh-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        font-size: 19px;
+    }
+
+    .pvh-title h2 {
+        font-size: 17px;
+    }
+
+    .pvh-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+    }
+
+    .pvh-stat {
+        padding: 9px 10px;
+    }
+
+    .pvh-stat-val {
+        font-size: 14.5px;
+    }
+
+    .pvh-stat-lbl {
+        font-size: 10.5px;
+    }
+
+    .pday-head {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .pday-chip {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .pday-chip b {
+        font-size: 16px;
+    }
+
+    .pday-amt {
+        font-size: 13.5px;
+    }
+
+    .pday-info .d1 {
+        font-size: 13.5px;
+    }
+}
+
+/* ============================================================
+   11. SAFE-AREA / SCROLL PARITY
+   ============================================================ */
+#viewPerson,
+#viewPersonMonth {
+    animation: viewIn 0.35s var(--ease);
+}
+
+#viewPerson[hidden],
+#viewPersonMonth[hidden] {
+    display: none;
+}
+
+#panelPerson[hidden] {
+    display: none;
+}
