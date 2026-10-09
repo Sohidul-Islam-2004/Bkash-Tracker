@@ -605,8 +605,13 @@ function renderMonthView(ym) {
     const mh = document.getElementById('monthHero');
     const dayListEl = document.getElementById('dayList');
     const dayCountEl = document.getElementById('dayCount');
+    const copyMonthBtn = document.getElementById('copyMonthBtn');
 
     if (!m) {
+        if (copyMonthBtn) {
+            copyMonthBtn.hidden = true;
+            copyMonthBtn.dataset.month = '';
+        }
         mh.style.display = 'none';
         dayListEl.innerHTML = `<div class="empty">
             <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
@@ -615,6 +620,11 @@ function renderMonthView(ym) {
         </div>`;
         dayCountEl.textContent = '0 দিন';
         return;
+    }
+
+    if (copyMonthBtn) {
+        copyMonthBtn.hidden = false;
+        copyMonthBtn.dataset.month = ym;
     }
 
     mh.style.display = '';
@@ -651,18 +661,6 @@ function renderDayListItem(date, d) {
 
 /* ============================================================
    RENDER DAY VIEW  (own route — #/day/YYYY-MM-DD)
-   ------------------------------------------------------------
-   Sections:
-     1. Day hero (weekday, date, total)
-     2. Number list (newest first) + copy-all
-     3. Summary card: বিকাশ / ইজা / টোটাল / জমা + হাসান পাওনা
-     4. Delete button
-   ============================================================ */
-/* ============================================================
-   RENDER DAY VIEW  (own route — #/day/YYYY-MM-DD)
-   ------------------------------------------------------------
-   Builds the hero + body inline inside #viewDay.
-   Only requirement: <main id="viewDay" hidden></main>
    ============================================================ */
 function renderDayView(date) {
     const viewDay = document.getElementById('viewDay');
@@ -783,6 +781,46 @@ function renderDayView(date) {
    ============================================================ */
 document.addEventListener('click', async ev => {
 
+    /* --- copy all days of a month + grand total --- */
+    const cpMonth = ev.target.closest('#copyMonthBtn');
+    if (cpMonth) {
+        ev.stopPropagation();
+        const ym = cpMonth.dataset.month;
+        if (!ym) return;
+
+        const months = groupData();
+        const m = months[ym];
+        if (!m) return;
+
+        const all = computeAllDays();
+        const dates = Object.keys(m.days).sort(); // oldest → newest
+        let grand = 0;
+
+        const lines = dates.map(date => {
+            const val = all[date] ? all[date].bkash : m.days[date].total;
+            grand += val;
+            return `${fmtDate(date)}  -  ${val}`;
+        });
+
+        const text =
+            `${monthName(ym)} ${ym.slice(0, 4)}\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            lines.join('\n') + '\n' +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `মোট বিকাশ  :  ${grand}\n` +
+            `মোট দিন    :  ${dates.length}`;
+
+        cpMonth.classList.add('copied');
+        setTimeout(() => cpMonth.classList.remove('copied'), 900);
+
+        (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+            .then(
+                () => toast(dates.length + ' দিনের হিসাব কপি হয়েছে', 'ok'),
+                () => toast('কপি ব্যর্থ', 'err')
+            );
+        return;
+    }
+
     /* --- copy-all numbers + amounts for a day --- */
     const cpAll = ev.target.closest('[data-copy-all]');
     if (cpAll) {
@@ -820,13 +858,7 @@ document.addEventListener('click', async ev => {
 
         const { bkash, ejaa, deposit, total } = computeDay(date, d);
         const pawna = total - deposit;
-        // const text =
-        //     `${fmtDate(date)}\n\n` +
-        //     `বিকাশ: ${bkash}\n` +
-        //     `ইজা: ${ejaa}\n` +
-        //     `টোটাল: ${total}\n` +
-        //     `জমা: ${deposit}\n` +
-        //     `হাসান পাওনা: ${pawna}`; 
+
         const text =
             ` ${fmtDate(date)}\n` +
             `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -923,32 +955,6 @@ function todayStr(d = new Date()) {
     const off = d.getTimezoneOffset();
     return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
-
-
-
-
-
-
-/* ============================================================
-   BACK BUTTON
-   ------------------------------------------------------------
-   home  → /  (dashboard)
-   month → home
-   day   → back to that month
-   ============================================================ */
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* ============================================================
    BOOT

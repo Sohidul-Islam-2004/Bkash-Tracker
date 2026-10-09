@@ -3590,3 +3590,34 @@ body.in-month .brand-logo { display: none; }
         padding: calc(10px + var(--top)) 12px 10px;
     }
 }
+
+/* ============================================================
+   MONTH HEADER — "সব কপি" button beside the day count
+   ============================================================ */
+.section-head-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-head-right .entry-copy-all {
+    padding: 5px 9px;
+    font-size: 11px;
+    gap: 4px;
+}
+
+.section-head-right .entry-copy-all svg {
+    width: 11px;
+    height: 11px;
+}
+
+.entry-copy-all[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 380px) {
+    .section-head-right .entry-copy-all {
+        padding: 4px 7px;
+        font-size: 10.5px;
+    }
+}
