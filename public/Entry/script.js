@@ -807,8 +807,7 @@ document.addEventListener('click', async ev => {
             `━━━━━━━━━━━━━━━━━━━━\n` +
             lines.join('\n') + '\n' +
             `━━━━━━━━━━━━━━━━━━━━\n` +
-            `মোট বিকাশ  :  ${grand}\n` +
-            `মোট দিন    :  ${dates.length}`;
+            `মোট বিকাশ  :  ${grand}\n`;
 
         cpMonth.classList.add('copied');
         setTimeout(() => cpMonth.classList.remove('copied'), 900);
