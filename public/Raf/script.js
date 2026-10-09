@@ -313,7 +313,7 @@ function buildCopyText(entry) {
     if (entry.note) {
         lines.push(`📝 ${entry.note}`);
     }
-
+    lines.push(`নম্বর: ${entry.entries.length} টি`);
     lines.push('━━━━━━━━━━━━━━━━━━━━');
 
     // newest-first order to match the UI
@@ -322,8 +322,9 @@ function buildCopyText(entry) {
     });
 
     lines.push('━━━━━━━━━━━━━━━━━━━━');
-    lines.push(`মোট: ৳ ${bn(entry.total)}`);
-    lines.push(`নম্বর: ${entry.entries.length} টি`);
+
+    lines.push(`বিকাশ                = ${bn(entry.total)}`);
+
 
     return lines.join('\n');
 }
