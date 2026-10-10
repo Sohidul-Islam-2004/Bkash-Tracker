@@ -98,6 +98,9 @@ let editingPdayDate = null;
 
 let confirmCb = null;
 
+let loadError = null;                // set when the person list failed to load
+let editingPdayOriginal = null;      // date of the entry being edited (null = new entry)
+
 let routeToken = 0;                     // guards against out-of-order async renders
 
 /* ============================================================
@@ -130,6 +133,10 @@ function formatDateDMY(isoDate) {
     if (parts.length !== 3) return isoDate;
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
+
+/* escape user text before it goes into innerHTML (names are user-typed) */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function getPerson(id) { return persons.find(p => p.id === id); }
 
@@ -179,6 +186,7 @@ async function withBusy(btn, fn) {
    ============================================================ */
 async function refreshPersons() {
     const list = await api.listPersons();
+    loadError = null;
 
     persons = (list || []).map(p => ({
         id: String(readId(p) ?? ''),
@@ -197,7 +205,7 @@ async function ensureEntries(pid) {
         personEntries.push({
             id: readId(e),
             personId: e.personId || pid,
-            date: e.date,
+            date: String(e.date).slice(0, 10),
             pieces: Number(e.pieces) || 0,
         });
     });
@@ -230,11 +238,13 @@ function toast(msg, type = '') {
    CONFIRM
    ============================================================ */
 const confirmEl = document.getElementById('confirm');
-function askConfirm(title, msg, cb) {
+function askConfirm(title, msg, cb, yesLabel = 'হ্যাঁ, মুছুন') {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmYes').textContent = yesLabel;
     confirmCb = cb;
     confirmEl.classList.add('show');
+    document.getElementById('confirmNo').focus();
 }
 document.getElementById('confirmNo').onclick = () => {
     confirmEl.classList.remove('show');
@@ -260,8 +270,18 @@ const PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
    SHEET HELPERS
    ============================================================ */
 const sheetBg = document.getElementById('sheetBg');
-function showSheetBg() { sheetBg.classList.add('show'); document.body.style.overflow = 'hidden'; }
-function hideSheetBg() { sheetBg.classList.remove('show'); document.body.style.overflow = ''; }
+let lastFocus = null;
+function showSheetBg() {
+    lastFocus = document.activeElement;
+    sheetBg.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+function hideSheetBg() {
+    sheetBg.classList.remove('show');
+    document.body.style.overflow = '';
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    lastFocus = null;
+}
 sheetBg.onclick = () => { closePersonSheet(); closePdaySheet(); };
 
 /* ============================================================
@@ -283,6 +303,11 @@ async function handleRoute() {
     const viewPersonMonth = document.getElementById('viewPersonMonth');
     [viewHome, viewPerson, viewPersonMonth].forEach(v => { if (v) v.hidden = true; });
 
+    const addTop = document.getElementById('addTop');
+    addTop.setAttribute('aria-label', hash.startsWith('person/') ? 'গিলা যোগ করুন' : 'নতুন ব্যক্তি');
+
+    const loadingHTML = '<div class="skeleton skeleton-hero"></div><div class="skeleton skeleton-row"></div><div class="skeleton skeleton-row"></div>';
+
     const setTitle = (t, s) => {
         document.getElementById('topTitle').textContent = t;
         document.getElementById('topSub').textContent = s;
@@ -299,6 +324,7 @@ async function handleRoute() {
         document.body.classList.add('in-month');
         setTitle(monthName(ym) + ' ' + ym.slice(0, 4), p.name);
 
+        if (!entriesLoaded.has(pid)) viewPersonMonth.innerHTML = loadingHTML;
         try { await ensureEntries(pid); }
         catch (e) { toast(e?.message || 'ডেটা লোড হয়নি', 'err'); }
         if (token !== routeToken) return;
@@ -319,6 +345,7 @@ async function handleRoute() {
         document.body.classList.add('in-month');
         setTitle(p.name, 'মাসসমূহ');
 
+        if (!entriesLoaded.has(pid)) viewPerson.innerHTML = loadingHTML;
         try { await ensureEntries(pid); }
         catch (e) { toast(e?.message || 'ডেটা লোড হয়নি', 'err'); }
         if (token !== routeToken) return;
@@ -351,6 +378,19 @@ function renderPersonList() {
 
     countEl.textContent = persons.length + ' জন';
 
+    const searchEl = document.getElementById('personSearch');
+    if (searchEl) searchEl.parentElement.hidden = persons.length < 6;
+
+    if (loadError && !persons.length) {
+        el.innerHTML = `<div class="empty">
+            <div class="empty-icon">${PERSON_ICON}</div>
+            <h3>ডেটা লোড হয়নি</h3>
+            <p>${esc(loadError)}</p>
+            <button class="btn btn-primary empty-action" data-retry type="button">আবার চেষ্টা করুন</button>
+        </div>`;
+        return;
+    }
+
     if (!persons.length) {
         el.innerHTML = `<div class="empty">
             <div class="empty-icon">${PERSON_ICON}</div>
@@ -360,15 +400,26 @@ function renderPersonList() {
         return;
     }
 
-    const sorted = [...persons].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'bn'));
+    const q = (searchEl?.value || '').trim().toLowerCase();
+    const sorted = persons
+        .filter(p => !q || (p.name || '').toLowerCase().includes(q))
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'bn'));
 
+    if (!sorted.length) {
+        el.innerHTML = `<div class="empty">
+            <div class="empty-icon">${PERSON_ICON}</div>
+            <h3>কাউকে পাওয়া যায়নি</h3>
+            <p>অন্য নামে খুঁজে দেখুন</p>
+        </div>`;
+        return;
+    }
 
     el.innerHTML = sorted.map(p => {
         const pieces = personTotalPieces(p.id);
         return `
             <article class="person-card">
-                <button class="person-btn" data-open-person="${p.id}" type="button">
-                    <span class="person-name">${p.name || 'নাম নেই'}</span>
+                <button class="person-btn" data-open-person="${esc(p.id)}" type="button">
+                    <span class="person-name">${esc(p.name) || 'নাম নেই'}</span>
                     <span class="person-total">
                         <span class="amt">${bn(pieces)}</span>
                         <span class="cnt">গিলা</span>
@@ -392,15 +443,27 @@ function renderPersonView(pid) {
 
     /* টার্গেট = অগ্রিম ÷ গিলার দাম */
     const target = (p.price > 0) ? Math.ceil((p.advance || 0) / p.price) : 0;
+    const remaining = target - totalPieces;
+    const pct = target > 0 ? Math.min(100, Math.round((totalPieces / target) * 100)) : 0;
+    const progressHTML = target > 0 ? `
+            <div class="pvh-progress">
+                <div class="pvh-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+                    <span style="width:${pct}%"></span>
+                </div>
+                <p class="pvh-progress-txt">${remaining > 0
+            ? `অগ্রিম মেটাতে আরও ${bn(remaining)} গিলা বাকি`
+            : remaining === 0 ? 'অগ্রিম পুরোপুরি মিটেছে'
+                : `অগ্রিমের চেয়ে ${bn(-remaining)} গিলা বেশি হয়েছে`}</p>
+            </div>` : '';
 
     view.innerHTML = `
         <div class="person-view-hero">
             <div class="pvh-top">
                 <div class="pvh-title">
-                    <h2>${p.name || 'নাম নেই'}</h2>
+                    <h2>${esc(p.name) || 'নাম নেই'}</h2>
                  
                 </div>
-                <button class="icon-btn pvh-edit" data-edit-person="${pid}" type="button" aria-label="এডিট">
+                <button class="icon-btn pvh-edit" data-edit-person="${esc(pid)}" type="button" aria-label="এডিট">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 20h9"/>
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
@@ -425,7 +488,7 @@ function renderPersonView(pid) {
                     <span class="pvh-cell-lbl">টার্গেট</span>
                     <span class="pvh-cell-val">${bn(target)}</span>
                 </div>
-            </div>
+            </div>${progressHTML}
         </div>
 
         <div class="section-head">
@@ -435,7 +498,7 @@ function renderPersonView(pid) {
         <div id="personMonthList">
             ${keys.length ? keys.map(ym => `
                 <article class="month-card person-month-card">
-                    <button class="month-btn" data-open-pmonth="${pid}|${ym}" type="button">
+                    <button class="month-btn" data-open-pmonth="${esc(pid)}|${ym}" type="button">
                         <div class="month-info">
                             <div class="month-name">${monthName(ym)} ${ym.slice(0, 4)}</div>
                         </div>
@@ -453,18 +516,6 @@ function renderPersonView(pid) {
                 </div>`}
         </div>
     `;
-}
-/* ছোট মাসের নাম (চিপে দেখানোর জন্য) */
-const SHORT_MONTHS = ['জানু', 'ফেব', 'মার্চ', 'এপ্রি', 'মে', 'জুন',
-    'জুল', 'আগ', 'সেপ', 'অক্টো', 'নভে', 'ডিসে'];
-const shortMonthName = ym => SHORT_MONTHS[+ym.split('-')[1] - 1];
-
-/* ISO date (YYYY-MM-DD) -> DD/MM/YYYY */
-function formatDateDMY(isoDate) {
-    if (!isoDate) return '';
-    const parts = isoDate.split('-');
-    if (parts.length !== 3) return isoDate;
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 /* ============================================================
    PERSON MONTH VIEW  (days list)
@@ -507,7 +558,7 @@ function renderPersonMonthView(pid, ym) {
             ${dates.map(date => {
         const d = m.days[date];
         return `
-                    <div class="pday-simple" data-open-pday="${pid}|${date}" role="button" tabindex="0">
+                    <div class="pday-simple" data-open-pday="${esc(pid)}|${date}" role="button" tabindex="0">
                         <div class="pday-simple-day">${+date.slice(8)}</div>
                         <div class="pday-simple-weekday">${weekday(date)}</div>
                         <div class="pday-simple-amt">${bn(d.pieces)} <small>গিলা</small></div>
@@ -532,11 +583,13 @@ function openPersonSheet(id) {
     document.getElementById('personDelete').hidden = !p;
 
     personSheet.classList.add('show');
+    personSheet.setAttribute('aria-hidden', 'false');
     showSheetBg();
     setTimeout(() => document.getElementById('pName').focus(), 380);
 }
 function closePersonSheet() {
     personSheet.classList.remove('show');
+    personSheet.setAttribute('aria-hidden', 'true');
     hideSheetBg();
     editingPersonId = null;
 }
@@ -545,8 +598,8 @@ document.getElementById('personCancel').onclick = closePersonSheet;
 document.getElementById('personSave').onclick = function () {
     const btn = this;
     const name = document.getElementById('pName').value.trim();
-    const advance = parseNum(document.getElementById('pAdvance').value);
-    const price = parseNum(document.getElementById('pPrice').value);
+    const advance = Math.max(0, parseNum(document.getElementById('pAdvance').value));
+    const price = Math.max(0, parseNum(document.getElementById('pPrice').value));
 
     if (!name) { toast('নাম দিন', 'err'); return; }
 
@@ -563,7 +616,10 @@ document.getElementById('personSave').onclick = function () {
             });
             closePersonSheet();
             toast('আপডেট হয়েছে', 'ok');
-            if (currentRoute === `person/${id}`) renderPersonView(id);
+            if (currentRoute === `person/${id}`) {
+                document.getElementById('topTitle').textContent = getPerson(id)?.name || name;
+                renderPersonView(id);
+            }
             else renderPersonList();
         } else {
             const created = await api.createPerson({ name, advance, price });
@@ -622,9 +678,10 @@ async function openPdaySheet(pid, date) {
     const existing = personEntries.find(e => e.personId === pid && e.date === date);
 
     document.getElementById('pdayTitle').textContent = p.name;
+    editingPdayOriginal = existing ? date : null;
     document.getElementById('pdaySub').textContent = existing
         ? 'এই দিনের এন্ট্রি এডিট করুন'
-        : 'আজ কত গিলা হয়েছে?';
+        : (date === todayStr() ? 'আজ কত গিলা হয়েছে?' : 'এই দিনে কত গিলা হয়েছে?');
 
     /* date picker: native picker stores YYYY-MM-DD, display shows DD/MM/YYYY */
     const pickerInput = document.getElementById('pdayDatePicker');
@@ -641,14 +698,17 @@ async function openPdaySheet(pid, date) {
     hint.textContent = existing ? 'এই দিনের এন্ট্রি এডিট করছেন' : weekday(date);
 
     pdaySheet.classList.add('show');
+    pdaySheet.setAttribute('aria-hidden', 'false');
     showSheetBg();
     setTimeout(() => document.getElementById('pdayPieces').focus(), 380);
 }
 function closePdaySheet() {
     pdaySheet.classList.remove('show');
+    pdaySheet.setAttribute('aria-hidden', 'true');
     hideSheetBg();
     editingPdayPersonId = null;
     editingPdayDate = null;
+    editingPdayOriginal = null;
 }
 
 document.getElementById('pdayCancel').onclick = closePdaySheet;
@@ -660,6 +720,8 @@ document.getElementById('pdayDatePicker').onchange = (e) => {
         document.getElementById('pdayDateDisplay').value = formatDateDMY(val);
         document.getElementById('pdayHint').textContent = weekday(val);
         editingPdayDate = val;
+        if (!editingPdayOriginal) document.getElementById('pdaySub').textContent =
+            val === todayStr() ? 'আজ কত গিলা হয়েছে?' : 'এই দিনে কত গিলা হয়েছে?';
     }
 };
 
@@ -676,6 +738,17 @@ document.getElementById('pdayPlus').onclick = () => {
     inp.value = val + 1;
 };
 
+/* re-render whichever view is on screen after entries changed */
+function rerenderCurrent(pid) {
+    const mm = currentRoute.match(/^person\/([^\/]+)\/month\/(\d{4}-\d{2})$/);
+    if (mm) {
+        /* last entry of this month gone -> back to the months list */
+        if (!personMonths(pid)[mm[2]]) { navigateTo('person/' + pid); return; }
+        renderPersonMonthView(pid, mm[2]);
+    } else if (currentRoute === `person/${pid}`) renderPersonView(pid);
+    else if (currentRoute === '') renderPersonList();
+}
+
 document.getElementById('pdaySave').onclick = function () {
     const btn = this;
     const pid = editingPdayPersonId;
@@ -683,17 +756,24 @@ document.getElementById('pdaySave').onclick = function () {
 
     const date = document.getElementById('pdayDatePicker').value;
     const pieces = parseNum(document.getElementById('pdayPieces').value);
+    const original = editingPdayOriginal;          // date the entry had when the sheet opened
 
     if (!date) { toast('তারিখ নির্বাচন করুন', 'err'); return; }
     if (pieces <= 0) { toast('গিলা লিখুন', 'err'); return; }
 
-    withBusy(btn, async () => {
+    const doSave = () => withBusy(btn, async () => {
         const saved = await api.upsertEntry(pid, date, pieces);
+
+        /* date changed on an existing entry = move it, don't leave a copy behind */
+        if (original && original !== date) {
+            await api.deleteEntry(pid, original);
+            personEntries = personEntries.filter(e => !(e.personId === pid && e.date === original));
+        }
 
         const entry = {
             id: readId(saved),
             personId: pid,
-            date: saved?.date || date,
+            date: String(saved?.date || date).slice(0, 10),
             pieces: Number(saved?.pieces ?? pieces) || 0,
         };
         const i = personEntries.findIndex(e => e.personId === pid && e.date === entry.date);
@@ -703,18 +783,25 @@ document.getElementById('pdaySave').onclick = function () {
 
         closePdaySheet();
         toast('সেভ হয়েছে', 'ok');
-
-        const ym = entry.date.slice(0, 7);
-        if (currentRoute === `person/${pid}/month/${ym}`) renderPersonMonthView(pid, ym);
-        else if (currentRoute === `person/${pid}`) renderPersonView(pid);
-        else if (currentRoute === '') renderPersonList();
+        rerenderCurrent(pid);
     });
+
+    /* saving onto a day that already has a different entry would silently overwrite it */
+    const clash = date !== original &&
+        personEntries.some(e => e.personId === pid && e.date === date);
+    if (clash) {
+        askConfirm('এন্ট্রি বদলাবেন?',
+            `${formatDateDMY(date)} তারিখে আগে থেকেই গিলার এন্ট্রি আছে। নতুনটি দিয়ে বদলে দেওয়া হবে।`,
+            doSave, 'হ্যাঁ, বদলান');
+        return;
+    }
+    doSave();
 };
 
 document.getElementById('pdayDelete').onclick = function () {
     const btn = this;
     const pid = editingPdayPersonId;
-    const date = editingPdayDate;
+    const date = editingPdayOriginal;              // the stored entry, not whatever date is picked now
     if (!pid || !date) return;
 
     askConfirm('গিলা মুছবেন?', 'এই দিনের এন্ট্রি মুছে যাবে।', async () => {
@@ -723,10 +810,7 @@ document.getElementById('pdayDelete').onclick = function () {
             personEntries = personEntries.filter(e => !(e.personId === pid && e.date === date));
             closePdaySheet();
             toast('মুছে ফেলা হয়েছে', 'ok');
-
-            const ym = date.slice(0, 7);
-            if (currentRoute === `person/${pid}/month/${ym}`) renderPersonMonthView(pid, ym);
-            else if (currentRoute === `person/${pid}`) renderPersonView(pid);
+            rerenderCurrent(pid);
         });
     });
 };
@@ -755,8 +839,14 @@ document.addEventListener('click', ev => {
     const editP = ev.target.closest('[data-edit-person]');
     if (editP) { openPersonSheet(editP.dataset.editPerson); return; }
 
-    const addP = ev.target.closest('#personAddCard');
-    if (addP) { openPersonSheet(null); return; }
+    const retry = ev.target.closest('[data-retry]');
+    if (retry) {
+        withBusy(retry, async () => {
+            await refreshPersons();
+            handleRoute();
+        });
+        return;
+    }
 });
 
 /* ============================================================
@@ -798,9 +888,35 @@ async function boot() {
     try {
         await refreshPersons();
     } catch (e) {
-        toast(e?.message || 'ডেটা লোড করা যায়নি', 'err');
+        loadError = e?.message || 'ডেটা লোড করা যায়নি';
+        toast(loadError, 'err');
     }
     handleRoute();
 }
 
 boot();
+
+/* ============================================================
+   KEYBOARD, SEARCH
+   ============================================================ */
+/* Esc closes the top-most layer */
+document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') {
+        if (confirmEl.classList.contains('show')) document.getElementById('confirmNo').click();
+        else if (pdaySheet.classList.contains('show')) closePdaySheet();
+        else if (personSheet.classList.contains('show')) closePersonSheet();
+        return;
+    }
+
+    /* Enter / Space on the div-based day rows (they have role="button") */
+    const row = ev.target.closest?.('.pday-simple[data-open-pday]');
+    if (row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); row.click(); return; }
+
+    /* Enter inside a sheet field saves */
+    if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') {
+        if (personSheet.contains(ev.target)) document.getElementById('personSave').click();
+        else if (pdaySheet.contains(ev.target)) document.getElementById('pdaySave').click();
+    }
+});
+
+document.getElementById('personSearch')?.addEventListener('input', renderPersonList);
