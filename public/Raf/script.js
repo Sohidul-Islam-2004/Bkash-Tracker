@@ -163,7 +163,7 @@ document.getElementById('confirmYes').onclick = () => {
 function render() {
     const list = document.getElementById('entryList');
     const badge = document.getElementById('countBadge');
-    badge.textContent = entries.length;
+    badge.textContent = bn(entries.length);
 
     if (!entries.length) {
         list.innerHTML = `
@@ -184,31 +184,46 @@ function render() {
 
     // newest first
     const sorted = [...entries].sort((a, b) => b.createdAt - a.createdAt);
-    list.innerHTML = sorted.map(renderCard).join('');
+    list.innerHTML = sorted.map(e => renderCard(e, entries.indexOf(e) + 1)).join('');
 }
 
-function renderCard(e) {
-    const noteLine = e.note
-        ? `<div class="card-note">${escapeHtml(e.note)}</div>`
+function renderCard(e, no) {
+    const noteBlock = e.note
+        ? `<div class="card-note">
+             <span class="note-label">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                 <path d="M12 20h9" />
+                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+               </svg>
+               নোট
+             </span>
+             <span class="note-text">${escapeHtml(e.note)}</span>
+           </div>`
         : '';
 
     return `
         <article class="card" data-id="${e.id}">
             <div class="card-head">
-                <div class="card-info">
-                    <div class="card-date">${fmtDateTime(e.createdAt)}</div>
-                    ${noteLine}
+                <div class="card-meta">
+                <span class="card-no">#${no}</span>
+                <div class="card-date">
+                    <span class="date-ico">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9" />
+                            <polyline points="12 7 12 12 15 14" />
+                        </svg>
+                    </span>
+                    ${fmtDateTime(e.createdAt)}
+                </div>
                 </div>
                 <div class="card-actions">
-                    <button class="card-copy" data-copy="${e.id}" type="button"
-                        aria-label="হিসাব কপি" title="হিসাব কপি">
+                    <button class="card-copy" data-copy="${e.id}" type="button" aria-label="হিসাব কপি" title="হিসাব কপি">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                         </svg>
                     </button>
-                    <button class="card-del" data-del="${e.id}" type="button"
-                        aria-label="মুছুন" title="মুছুন">
+                    <button class="card-del" data-del="${e.id}" type="button" aria-label="মুছুন" title="মুছুন">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="3 6 5 6 21 6" />
                             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -217,6 +232,8 @@ function renderCard(e) {
                     </button>
                 </div>
             </div>
+
+            ${noteBlock}
 
             <div class="num-list">
                 ${e.entries.map((en, i) => `
@@ -229,7 +246,9 @@ function renderCard(e) {
             </div>
 
             <div class="card-foot">
-                <span class="foot-lbl">${e.entries.length} টি নম্বর</span>
+                <span class="foot-lbl">
+                    <b>${e.entries.length}</b> টি নম্বর
+                </span>
                 <span class="foot-total">
                     মোট <b>৳ ${bn(e.total)}</b>
                 </span>
@@ -319,15 +338,12 @@ function buildCopyText(entry) {
     lines.push(`নম্বর: ${entry.entries.length} টি`);
     lines.push('━━━━━━━━━━━━━━━━━━━━');
 
-    // newest-first order to match the UI
-    [...entry.entries].reverse().forEach(en => {
+    entry.entries.forEach(en => {
         lines.push(`${fmtNum(en.number)} = ${en.amount}`);
     });
 
     lines.push('━━━━━━━━━━━━━━━━━━━━');
-
-    lines.push(`বিকাশ                = ${bn(entry.total)}`);
-
+    lines.push(`মোট                = ${bn(entry.total)}`);
 
     return lines.join('\n');
 }

@@ -2,20 +2,28 @@
    TOKENS
    ============================================================ */
 :root {
-    --bg: #f5f3f6;
+    --bg: #ede8ee;
     --card: #ffffff;
 
     --ink: #17181f;
     --ink-2: #3a3d4a;
-    --muted: #6e7180;
-    --line: #ebe6ec;
-    --line-2: #f3eef4;
+    --muted: #7a7d8c;
+    --line: #ece6ee;
+    --line-2: #f4eff5;
+    --card-border: #e6d6e0;
+
+    --note-bg: #fff8d6;
+    --note-line: #f3d675;
+    --note-accent: #f2b705;
+    --note-chip: #fdeb9a;
+    --note-ink: #3f3000;
+    --note-ink-2: #7a5800;
 
     --pink: #d12053;
     --pink-2: #e8437a;
     --pink-press: #a8153f;
     --pink-soft: #fde8ef;
-    --pink-tint: #fff6fa;
+    --pink-tint: #fff7fa;
 
     --green: #12a06a;
     --green-soft: #dcf6ec;
@@ -25,15 +33,15 @@
     --top: env(safe-area-inset-top, 0px);
     --bottom: env(safe-area-inset-bottom, 0px);
 
-    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
-    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
-    --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
-    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+    --shadow-sm: 0 1px 2px rgba(20, 22, 34, .04), 0 4px 14px rgba(20, 22, 34, .05);
+    --shadow-md: 0 10px 30px rgba(20, 22, 34, .08);
+    --shadow-lg: 0 24px 48px rgba(20, 22, 34, .14);
+    --shadow-pink: 0 8px 22px rgba(209, 32, 83, .28);
 
     --r: 16px;
     --r-lg: 22px;
 
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease: cubic-bezier(.2, .8, .2, 1);
 
     --font-num: "Noto Sans Bengali", "Hind Siliguri", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -57,7 +65,8 @@ body {
     font-family: var(--font-body);
     background: var(--bg);
     background-image:
-        radial-gradient(1200px 600px at 50% -200px, rgba(209, 32, 83, 0.08), transparent 70%);
+        radial-gradient(900px 500px at 50% -180px, rgba(209, 32, 83, .09), transparent 65%),
+        radial-gradient(700px 400px at 100% 100%, rgba(232, 67, 122, .05), transparent 60%);
     color: var(--ink);
     font-size: 16px;
     line-height: 1.5;
@@ -86,11 +95,11 @@ textarea {
     position: sticky;
     top: 0;
     z-index: 40;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    background: rgba(255, 255, 255, .82);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
     border-bottom: 1px solid var(--line-2);
-    padding: calc(12px + var(--top)) 16px 12px;
+    padding: calc(14px + var(--top)) 16px 14px;
 }
 
 .topbar-inner {
@@ -110,16 +119,16 @@ textarea {
 }
 
 .brand-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, var(--pink-2), var(--pink) 55%, var(--pink-press));
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f06a97, var(--pink) 55%, var(--pink-press));
     color: #fff;
     display: grid;
     place-items: center;
     font-family: var(--font-num);
     font-weight: 800;
-    font-size: 20px;
+    font-size: 21px;
     box-shadow: var(--shadow-pink);
     flex-shrink: 0;
 }
@@ -133,7 +142,7 @@ textarea {
     margin: 0;
     font-size: 17px;
     font-weight: 700;
-    letter-spacing: -0.3px;
+    letter-spacing: -.3px;
 }
 
 .brand-text span {
@@ -143,23 +152,24 @@ textarea {
 }
 
 .add-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    background: var(--pink-soft);
-    color: var(--pink);
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    color: #fff;
     display: grid;
     place-items: center;
-    transition: background 0.15s, transform 0.12s;
+    box-shadow: 0 6px 16px rgba(209, 32, 83, .3);
+    transition: transform .12s, box-shadow .15s;
     flex-shrink: 0;
 }
 
 .add-btn:hover {
-    background: #fbd5e2;
+    box-shadow: 0 8px 22px rgba(209, 32, 83, .42);
 }
 
 .add-btn:active {
-    transform: scale(0.92);
+    transform: scale(.92);
 }
 
 .add-btn svg {
@@ -173,14 +183,14 @@ textarea {
 .container {
     max-width: 480px;
     margin: 0 auto;
-    padding: 18px 14px 40px;
+    padding: 20px 14px 40px;
 }
 
 .list-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 4px 2px 12px;
+    margin: 4px 4px 14px;
 }
 
 .list-head h2 {
@@ -191,15 +201,15 @@ textarea {
     align-items: center;
     gap: 8px;
     color: var(--ink);
-    letter-spacing: -0.2px;
+    letter-spacing: -.2px;
 }
 
 .list-head .dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--pink);
-    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12);
+    box-shadow: 0 0 0 3px rgba(209, 32, 83, .14);
 }
 
 .count-badge {
@@ -208,7 +218,7 @@ textarea {
     font-weight: 700;
     color: var(--pink);
     background: var(--pink-soft);
-    padding: 4px 10px;
+    padding: 5px 11px;
     border-radius: 20px;
     font-variant-numeric: tabular-nums;
 }
@@ -219,16 +229,28 @@ textarea {
 #entryList {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 22px;
 }
 
 .card {
     background: var(--card);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
+    border: 1.5px solid var(--card-border);
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(20, 22, 34, .05), 0 14px 30px rgba(90, 30, 60, .12);
     overflow: hidden;
-    animation: cardIn 0.35s var(--ease);
+    animation: cardIn .35s var(--ease);
+    position: relative;
+}
+
+/* solid accent spine on the left edge: marks where one entry starts/ends */
+.card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--pink-2), var(--pink-press));
 }
 
 @keyframes cardIn {
@@ -243,104 +265,193 @@ textarea {
     }
 }
 
-/* Head */
+/* ---------- HEAD ---------- */
 .card-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 14px 14px 10px;
-    background: linear-gradient(180deg, #fff, #fffbfd);
-    border-bottom: 1px dashed var(--line);
-}
-
-.card-info {
-    min-width: 0;
-    flex: 1;
-}
-
-.card-date {
-    font-family: var(--font-num);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 0.2px;
-    font-variant-numeric: tabular-nums;
-}
-
-.card-note {
-    margin-top: 5px;
-    font-size: 13px;
-    color: var(--ink-2);
-    line-height: 1.5;
-    word-break: break-word;
-    padding: 5px 9px;
-    background: var(--pink-tint);
-    border-left: 3px solid var(--pink);
-    border-radius: 7px;
-    display: inline-block;
-    max-width: 100%;
-}
-
-.card-del {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: var(--red-soft);
-    color: var(--red);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    transition: background 0.15s, transform 0.12s;
-}
-
-.card-del:hover {
-    background: #fbd5e2;
-    color: #b81d38;
-}
-
-.card-del:active {
-    transform: scale(0.9);
-}
-
-.card-del svg {
-    width: 14px;
-    height: 14px;
-}
-
-/* Number list */
-.num-list {
-    padding: 6px 6px;
-    max-height: 260px;
-    overflow-y: auto;
-}
-
-.num-list::-webkit-scrollbar {
-    width: 4px;
-}
-
-.num-list::-webkit-scrollbar-thumb {
-    background: #ecd7e0;
-    border-radius: 4px;
-}
-
-.num-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 9px 10px;
-    border-radius: 9px;
-    border-bottom: 1px solid var(--line-2);
-    transition: background 0.15s;
+    padding: 12px 14px 12px 19px;
+    background: #fbf3f7;
+    border-bottom: 1px solid var(--card-border);
 }
 
-.num-row:last-child {
-    border-bottom: 0;
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.card-no {
+    font-family: var(--font-num);
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.card-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-num);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+    background: #fff;
+    border: 1px solid var(--card-border);
+    padding: 4px 10px 4px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.card-date .date-ico {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    color: var(--pink);
+}
+
+.card-date .date-ico svg {
+    width: 100%;
+    height: 100%;
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.card-copy,
+.card-del {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: background .15s, color .15s, transform .12s;
+}
+
+.card-copy {
+    background: var(--pink-soft);
+    color: var(--pink);
+}
+
+.card-copy:hover {
+    background: #fbd5e2;
+    color: var(--pink-press);
+}
+
+.card-copy:active {
+    transform: scale(.9);
+}
+
+.card-copy.copied {
+    background: var(--green-soft) !important;
+    color: var(--green) !important;
+}
+
+.card-del {
+    background: #fff;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+}
+
+.card-del:hover {
+    background: var(--red-soft);
+    color: var(--red);
+}
+
+.card-del:active {
+    transform: scale(.9);
+}
+
+.card-copy svg,
+.card-del svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* ---------- NOTE (amber sticky-note, stands apart from the pink theme) ---------- */
+.card-note {
+    margin: 14px 14px 4px 19px;
+    padding: 10px 14px 12px;
+    background: var(--note-bg);
+    border: 1px solid var(--note-line);
+    border-left: 5px solid var(--note-accent);
+    border-radius: 6px 14px 14px 6px;
+    box-shadow: 0 3px 10px rgba(242, 183, 5, .18);
+    word-break: break-word;
+}
+
+.note-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--note-ink-2);
+    background: var(--note-chip);
+    padding: 2px 9px 2px 7px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+}
+
+.note-label svg {
+    width: 12px;
+    height: 12px;
+}
+
+.card-note .note-text {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--note-ink);
+}
+
+/* ---------- NUM LIST ---------- */
+.num-list {
+    padding: 8px 14px 8px 19px;
+}
+
+.num-row {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 10px;
+    border-radius: 10px;
+    transition: background .15s;
+}
+
+.num-row:nth-child(even) {
+    background: #fcf8fb;
 }
 
 .num-row:hover {
     background: var(--pink-tint);
+}
+
+.num-idx {
+    font-family: var(--font-num);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pink);
+    text-align: center;
+    background: var(--pink-soft);
+    border-radius: 7px;
+    padding: 3px 0;
+    font-variant-numeric: tabular-nums;
 }
 
 .num-row .num {
@@ -348,7 +459,7 @@ textarea {
     font-size: 14px;
     font-weight: 600;
     color: var(--ink);
-    letter-spacing: 0.2px;
+    letter-spacing: .3px;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     overflow: hidden;
@@ -357,31 +468,40 @@ textarea {
 
 .num-row .amt {
     font-family: var(--font-num);
-    font-size: 14px;
+    font-size: 14.5px;
     font-weight: 800;
-    color: var(--pink);
+    color: var(--ink);
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
+    letter-spacing: -.2px;
 }
 
-/* Footer */
+/* ---------- FOOT ---------- */
 .card-foot {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 12px 14px;
-    background: linear-gradient(135deg, #fff5f8, #fde8ef);
-    border-top: 1.5px solid #f7d3e0;
+    padding: 14px 16px 14px 21px;
+    background: linear-gradient(135deg, #fff1f6, #fbdbe7);
+    border-top: 1.5px solid #f3c3d4;
 }
 
 .foot-lbl {
     font-family: var(--font-num);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--pink-press);
-    letter-spacing: 0.2px;
     font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.foot-lbl b {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--pink);
 }
 
 .foot-total {
@@ -389,15 +509,19 @@ textarea {
     font-size: 12.5px;
     font-weight: 600;
     color: var(--pink-press);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
 }
 
 .foot-total b {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 800;
-    letter-spacing: -0.4px;
-    margin-left: 4px;
+    letter-spacing: -.5px;
+    color: var(--pink-press);
     font-variant-numeric: tabular-nums;
 }
+
 
 /* ============================================================
    EMPTY
@@ -408,7 +532,7 @@ textarea {
     color: var(--muted);
     background: var(--card);
     border: 1.5px dashed #e0d3db;
-    border-radius: var(--r-lg);
+    border-radius: 22px;
 }
 
 .empty-icon {
@@ -420,7 +544,7 @@ textarea {
     display: grid;
     place-items: center;
     color: var(--pink);
-    box-shadow: 0 10px 24px rgba(209, 32, 83, 0.10);
+    box-shadow: 0 10px 24px rgba(209, 32, 83, .1);
 }
 
 .empty-icon svg {
@@ -446,13 +570,13 @@ textarea {
 .sheet-bg {
     position: fixed;
     inset: 0;
-    background: rgba(23, 24, 31, 0.45);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(23, 24, 31, .5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 90;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.28s var(--ease);
+    transition: opacity .28s var(--ease);
 }
 
 .sheet-bg.show {
@@ -470,12 +594,12 @@ textarea {
     padding: 8px 20px calc(24px + var(--bottom));
     z-index: 91;
     transform: translateY(100%);
-    transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+    transition: transform .38s cubic-bezier(.32, .72, 0, 1);
     max-height: 92vh;
     overflow-y: auto;
     max-width: 480px;
     margin: 0 auto;
-    box-shadow: 0 -20px 60px rgba(20, 22, 34, 0.15);
+    box-shadow: 0 -20px 60px rgba(20, 22, 34, .18);
 }
 
 .sheet.show {
@@ -487,7 +611,7 @@ textarea {
     height: 4px;
     border-radius: 4px;
     background: var(--line);
-    margin: 8px auto 16px;
+    margin: 8px auto 18px;
 }
 
 .sheet-head {
@@ -495,15 +619,14 @@ textarea {
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
 .sheet-head h2 {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 0 0 2px;
-    letter-spacing: -0.2px;
-    line-height: 1.3;
+    margin: 0 0 3px;
+    letter-spacing: -.2px;
 }
 
 .sheet-head p {
@@ -522,7 +645,7 @@ textarea {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    transition: background 0.15s, transform 0.12s;
+    transition: background .15s, transform .12s;
 }
 
 .close-btn:hover {
@@ -530,7 +653,7 @@ textarea {
 }
 
 .close-btn:active {
-    transform: scale(0.92);
+    transform: scale(.92);
 }
 
 .close-btn svg {
@@ -542,65 +665,87 @@ textarea {
    FORM
    ============================================================ */
 .field {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
-.field label {
+.field label,
+.note-head {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     font-size: 13px;
     font-weight: 700;
     color: var(--ink-2);
-    margin-bottom: 7px;
+    margin-bottom: 8px;
 }
 
-.field label .ico {
+.field label .ico,
+.note-head .ico {
     display: inline-flex;
-    width: 15px;
-    height: 15px;
+    width: 16px;
+    height: 16px;
     color: var(--pink);
 }
 
-.field label .ico svg {
+.field label .ico svg,
+.note-head .ico svg {
     width: 100%;
     height: 100%;
 }
 
-.field label .opt {
-    margin-left: 6px;
+.field label .opt,
+.note-head .opt {
+    margin-left: auto;
     font-size: 10.5px;
     font-weight: 700;
-    letter-spacing: 0.3px;
+    letter-spacing: .3px;
     color: var(--muted);
     background: var(--line-2);
     border-radius: 20px;
-    padding: 2px 8px;
+    padding: 2px 9px;
+}
+
+/* Note field special styling */
+.note-field textarea {
+    background: var(--note-bg);
+    border-color: var(--note-line);
+    border-left: 5px solid var(--note-accent);
+    color: var(--note-ink);
+}
+
+.note-field textarea:focus {
+    border-color: var(--note-accent);
+    background: #fffdf0;
+    box-shadow: 0 0 0 4px rgba(242, 183, 5, .2);
+}
+
+.note-field .note-head .ico {
+    color: #c99200;
 }
 
 .field textarea {
     width: 100%;
-    padding: 13px 15px;
+    padding: 14px 16px;
     border: 1.5px solid var(--line);
     border-radius: 14px;
     font-size: 14px;
     color: var(--ink);
     background: #fdfbfc;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    transition: border-color .15s, box-shadow .15s, background .15s;
     resize: vertical;
     -webkit-appearance: none;
     appearance: none;
     line-height: 1.7;
     font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.2px;
+    letter-spacing: .2px;
 }
 
 .field textarea:focus {
     outline: none;
     border-color: var(--pink);
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+    box-shadow: 0 0 0 4px rgba(209, 32, 83, .1);
 }
 
 .field textarea::placeholder {
@@ -637,7 +782,7 @@ textarea {
     color: var(--ink-2);
     font-size: 12px;
     font-weight: 700;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    transition: background .15s, color .15s, border-color .15s;
 }
 
 .paste-btn:hover {
@@ -654,7 +799,7 @@ textarea {
 .hint {
     font-size: 11.5px;
     color: var(--muted);
-    margin-top: 6px;
+    margin-top: 7px;
     line-height: 1.5;
 }
 
@@ -664,7 +809,7 @@ textarea {
 .save-btn {
     width: 100%;
     min-height: 54px;
-    margin-top: 8px;
+    margin-top: 10px;
     border-radius: 15px;
     background: linear-gradient(135deg, var(--pink), var(--pink-press));
     color: #fff;
@@ -674,16 +819,16 @@ textarea {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 6px 16px rgba(209, 32, 83, 0.3);
-    transition: box-shadow 0.2s, transform 0.12s;
+    box-shadow: 0 8px 20px rgba(209, 32, 83, .34);
+    transition: box-shadow .2s, transform .12s;
 }
 
 .save-btn:hover {
-    box-shadow: 0 8px 22px rgba(209, 32, 83, 0.42);
+    box-shadow: 0 10px 26px rgba(209, 32, 83, .46);
 }
 
 .save-btn:active {
-    transform: scale(0.98);
+    transform: scale(.98);
 }
 
 .save-btn svg {
@@ -697,16 +842,16 @@ textarea {
 .confirm {
     position: fixed;
     inset: 0;
-    background: rgba(23, 24, 31, 0.5);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    background: rgba(23, 24, 31, .55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 200;
     display: grid;
     place-items: center;
     padding: 20px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.22s;
+    transition: opacity .22s;
 }
 
 .confirm.show {
@@ -717,12 +862,12 @@ textarea {
 .confirm-box {
     background: #fff;
     border-radius: 22px;
-    padding: 24px;
-    max-width: 360px;
+    padding: 26px 24px 22px;
+    max-width: 340px;
     width: 100%;
     box-shadow: var(--shadow-lg);
-    transform: scale(0.94);
-    transition: transform 0.24s var(--ease);
+    transform: scale(.94);
+    transition: transform .24s var(--ease);
     text-align: center;
 }
 
@@ -738,7 +883,7 @@ textarea {
 }
 
 .confirm-box p {
-    margin: 0 0 20px;
+    margin: 0 0 22px;
     font-size: 13.5px;
     color: var(--muted);
     line-height: 1.6;
@@ -755,11 +900,11 @@ textarea {
     border-radius: 14px;
     font-size: 14.5px;
     font-weight: 700;
-    transition: background 0.15s, transform 0.12s;
+    transition: background .15s, transform .12s;
 }
 
 .confirm-actions button:active {
-    transform: scale(0.97);
+    transform: scale(.97);
 }
 
 .btn-cancel {
@@ -774,12 +919,12 @@ textarea {
 .btn-danger {
     background: var(--red);
     color: #fff;
-    box-shadow: 0 6px 16px rgba(220, 38, 72, 0.3);
+    box-shadow: 0 6px 16px rgba(220, 38, 72, .3);
 }
 
 .btn-danger:hover {
     background: #b81d38;
-    box-shadow: 0 8px 22px rgba(220, 38, 72, 0.42);
+    box-shadow: 0 8px 22px rgba(220, 38, 72, .42);
 }
 
 /* ============================================================
@@ -796,10 +941,10 @@ textarea {
     border-radius: 14px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+    box-shadow: 0 16px 40px rgba(20, 22, 34, .3);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.28s var(--ease), transform 0.32s var(--ease);
+    transition: opacity .28s var(--ease), transform .32s var(--ease);
     z-index: 300;
     max-width: 90vw;
     text-align: center;
@@ -841,119 +986,3 @@ textarea {
     }
 }
 
-/* ============================================================
-   CARD ACTIONS  (copy + delete in header)
-   ============================================================ */
-.card-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.card-copy {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    transition: background 0.15s, color 0.15s, transform 0.12s;
-}
-
-.card-copy:hover {
-    background: #fbd5e2;
-    color: var(--pink-press);
-}
-
-.card-copy:active {
-    transform: scale(0.9);
-}
-
-.card-copy svg {
-    width: 14px;
-    height: 14px;
-}
-
-/* flash green after a successful copy */
-.card-copy.copied {
-    background: var(--green-soft) !important;
-    color: var(--green) !important;
-}
-
-/* ---------- note (clean, no emoji) ---------- */
-.card-note {
-    margin-top: 6px;
-    font-size: 13px;
-    color: var(--ink-2);
-    line-height: 1.45;
-    word-break: break-word;
-    padding: 6px 10px;
-    background: var(--pink-tint);
-    border-left: 3px solid var(--pink);
-    border-radius: 7px;
-    display: inline-block;
-    max-width: 100%;
-}
-
-/* ---------- number list (shows ALL rows, no scroll) ---------- */
-.num-list {
-    padding: 4px 4px;
-    max-height: none;
-    overflow: visible;
-}
-
-.num-row {
-    display: grid;
-    grid-template-columns: 26px 1fr auto;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 10px;
-    border-radius: 9px;
-    border-bottom: 1px solid var(--line-2);
-    transition: background 0.15s;
-}
-
-.num-row:last-child {
-    border-bottom: 0;
-}
-
-.num-row:hover {
-    background: var(--pink-tint);
-}
-
-.num-idx {
-    font-family: var(--font-num);
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    text-align: center;
-    background: #f5f1f4;
-    border-radius: 6px;
-    padding: 2px 0;
-    font-variant-numeric: tabular-nums;
-    min-width: 0;
-}
-
-.num-row .num {
-    font-family: var(--font-num);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink);
-    letter-spacing: 0.2px;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.num-row .amt {
-    font-family: var(--font-num);
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--pink);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-}
