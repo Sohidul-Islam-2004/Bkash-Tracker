@@ -472,11 +472,7 @@ function renderPersonView(pid) {
             </div>
 
             <div class="pvh-grid">
-                <div class="pvh-cell">
-                    <span class="pvh-cell-lbl">গিলার দাম</span>
-                    <span class="pvh-cell-val">৳ ${bn(p.price || 0)}</span>
-                </div>
-                <div class="pvh-cell">
+                            <div class="pvh-cell">
                     <span class="pvh-cell-lbl">অগ্রিম</span>
                     <span class="pvh-cell-val">৳ ${bn(p.advance || 0)}</span>
                 </div>
@@ -484,6 +480,12 @@ function renderPersonView(pid) {
                     <span class="pvh-cell-lbl">মোট গিলা</span>
                     <span class="pvh-cell-val">${bn(totalPieces)}</span>
                 </div>
+                <div class="pvh-cell">
+                    <span class="pvh-cell-lbl">গিলার দাম</span>
+                    <span class="pvh-cell-val">৳ ${bn(p.price || 0)}</span>
+                </div>
+
+                
                 <div class="pvh-cell">
                     <span class="pvh-cell-lbl">টার্গেট</span>
                     <span class="pvh-cell-val">${bn(target)}</span>
