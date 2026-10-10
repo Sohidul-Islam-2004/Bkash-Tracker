@@ -49,7 +49,8 @@
           </div>
 
           <div class="brand-text">
-            <h1 id="topTitle">ব্যক্তি হিসাব</h1>
+            <h1 id="topTitle">ইজিলেনদেন</h1>
+          
             <span class="brand-sub" id="topSub">গিলার হিসাব</span>
           </div>
         </div>
@@ -72,16 +73,6 @@
       </div>
       <div id="personList"></div>
 
-      <button class="add-person-card" id="personAddCard" type="button">
-        <span class="add-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
-               stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </span>
-        <span>নতুন ব্যক্তি যোগ করুন</span>
-      </button>
     </main>
 
     <!-- ============ PERSON VIEW ============ -->
@@ -136,7 +127,7 @@
               <circle cx="12" cy="15" r="2" />
             </svg>
           </span>
-          অগ্রিম (৳)
+          অগ্রিম 
         </label>
         <input type="tel" id="pAdvance" inputmode="numeric" autocomplete="off" placeholder="০" />
       </div>
@@ -150,7 +141,7 @@
               <path d="M12 7v10M9 10h6M9 14h6" />
             </svg>
           </span>
-          গিলার দাম (৳/গিলা)
+          গিলার দাম 
         </label>
         <input type="tel" id="pPrice" inputmode="numeric" autocomplete="off" placeholder="০" />
       </div>
@@ -199,7 +190,7 @@
       </div>
 
       <div class="field">
-        <label for="pdayDate">
+        <label for="pdayDateDisplay">
           <span class="label-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                  stroke-linecap="round" stroke-linejoin="round">
@@ -211,7 +202,19 @@
           </span>
           তারিখ
         </label>
-        <input type="date" id="pdayDate" />
+        <!-- Overlay Date Picker -->
+        <div class="date-picker-wrapper">
+          <input type="text" id="pdayDateDisplay" placeholder="DD/MM/YYYY" readonly />
+          <input type="date" id="pdayDatePicker" />
+          <span class="date-picker-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </span>
+        </div>
       </div>
 
       <div class="field">
@@ -227,7 +230,12 @@
           </span>
           গিলা সংখ্যা
         </label>
-        <input type="tel" id="pdayPieces" inputmode="numeric" autocomplete="off" placeholder="০" />
+        <!-- Stepper for Pieces -->
+        <div class="pieces-stepper">
+          <button type="button" class="stepper-btn" id="pdayMinus">−</button>
+          <input type="tel" id="pdayPieces" inputmode="numeric" autocomplete="off" placeholder="০" />
+          <button type="button" class="stepper-btn" id="pdayPlus">+</button>
+        </div>
         <div class="input-hint" id="pdayHint"></div>
       </div>
 
