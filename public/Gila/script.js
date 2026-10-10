@@ -1,11 +1,95 @@
 /* ============================================================
+   API LAYER  —  backend contract
+   ============================================================
+   GET    /Gila/persons                     -> Person[]
+   POST   /Gila/persons                     -> Person
+   PUT    /Gila/persons/:id                 -> Person
+   DELETE /Gila/persons/:id                 -> 204
+
+   GET    /Gila/persons/:id/entries         -> Entry[]
+   PUT    /Gila/persons/:id/entries/:date   -> Entry     (upsert)
+   DELETE /Gila/persons/:id/entries/:date   -> 204
+
+   Person = { id|_id, name, advance, price, totalPieces? }
+   Entry  = { id|_id?, personId?, date: 'YYYY-MM-DD', pieces }
+
+   Responses may be raw or wrapped in { data: ... }  — both work.
+   ============================================================ */
+
+const API_BASE = '/Gila';
+
+class ApiError extends Error {
+    constructor(message, status) { super(message); this.name = 'ApiError'; this.status = status; }
+}
+
+/* unwrap { data: ... } envelopes transparently */
+const unwrap = j => (j && typeof j === 'object' && 'data' in j ? j.data : j);
+
+/* accept both `id` and `_id` from the server */
+const readId = obj => (obj && (obj.id ?? obj._id)) || null;
+
+async function request(path, { method = 'GET', body } = {}) {
+    let res;
+    try {
+        res = await fetch(API_BASE + path, {
+            method,
+            headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+        });
+    } catch {
+        throw new ApiError('সার্ভারে সংযোগ করা যায়নি', 0);
+    }
+
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.message || j.error || msg; } catch { /* ignore */ }
+        throw new ApiError(msg, res.status);
+    }
+    if (res.status === 204) return null;
+
+    const text = await res.text();
+    if (!text) return null;
+    try { return unwrap(JSON.parse(text)); }
+    catch { throw new ApiError('সার্ভার ভুল ফরম্যাটে ডেটা পাঠিয়েছে', res.status); }
+}
+
+/* ============================================================
+   API CLIENT
+   ============================================================ */
+const api = {
+    listPersons: () =>
+        request('/persons'),
+
+    createPerson: body =>
+        request('/persons', { method: 'POST', body }),
+
+    updatePerson: (id, body) =>
+        request(`/persons/${encodeURIComponent(id)}`, { method: 'PUT', body }),
+
+    deletePerson: id =>
+        request(`/persons/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+    listEntries: pid =>
+        request(`/persons/${encodeURIComponent(pid)}/entries`),
+
+    upsertEntry: (pid, date, pieces) =>
+        request(`/persons/${encodeURIComponent(pid)}/entries/${encodeURIComponent(date)}`, {
+            method: 'PUT',
+            body: { pieces },
+        }),
+
+    deleteEntry: (pid, date) =>
+        request(`/persons/${encodeURIComponent(pid)}/entries/${encodeURIComponent(date)}`, {
+            method: 'DELETE',
+        }),
+};
+
+/* ============================================================
    STATE
    ============================================================ */
-const LS_PERSONS = 'elm_persons_v2';
-const LS_PENTRIES = 'elm_person_entries_v2';
-
 let persons = [];
-let personEntries = [];
+let personEntries = [];                 // cache of entries for *loaded* persons
+const entriesLoaded = new Set();        // which person ids have their entries cached
 let currentRoute = '';
 
 let editingPersonId = null;
@@ -13,6 +97,8 @@ let editingPdayPersonId = null;
 let editingPdayDate = null;
 
 let confirmCb = null;
+
+let routeToken = 0;                     // guards against out-of-order async renders
 
 /* ============================================================
    HELPERS
@@ -36,18 +122,19 @@ const weekday = d => {
     const [y, m, dd] = d.split('-').map(Number);
     return WEEKDAYS[new Date(y, m - 1, dd).getDay()];
 };
-const fmtDate = iso => {
-    if (!iso) return '';
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-};
 
-function uid(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function getPerson(id) { return persons.find(p => p.id === id); }
+
 function personEntriesFor(pid) { return personEntries.filter(e => e.personId === pid); }
+
 function personTotalPieces(pid) {
-    return personEntriesFor(pid).reduce((s, e) => s + (Number(e.pieces) || 0), 0);
+    if (entriesLoaded.has(pid)) {
+        return personEntriesFor(pid).reduce((s, e) => s + (Number(e.pieces) || 0), 0);
+    }
+    // fall back to server-provided aggregate
+    return Number(getPerson(pid)?.totalPieces) || 0;
 }
+
 function personMonths(pid) {
     const months = {};
     personEntriesFor(pid).forEach(e => {
@@ -65,21 +152,55 @@ function personMonthPieces(pid, ym) {
         .reduce((s, e) => s + (Number(e.pieces) || 0), 0);
 }
 
-/* ============================================================
-   STORAGE
-   ============================================================ */
-function loadData() {
-    try {
-        persons = JSON.parse(localStorage.getItem(LS_PERSONS) || '[]') || [];
-        personEntries = JSON.parse(localStorage.getItem(LS_PENTRIES) || '[]') || [];
-        persons.forEach(p => {
-            if (p.advance === undefined) p.advance = 0;
-            if (p.price === undefined) p.price = 0;
-        });
-    } catch { persons = []; personEntries = []; }
+function todayStr(d = new Date()) {
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
-function persistPersons() { localStorage.setItem(LS_PERSONS, JSON.stringify(persons)); }
-function persistPersonEntries() { localStorage.setItem(LS_PENTRIES, JSON.stringify(personEntries)); }
+
+/* disable a button while an async action runs */
+async function withBusy(btn, fn) {
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    btn.classList.add('is-busy');
+    try { await fn(); }
+    catch (e) { toast(e?.message || 'কিছু ভুল হয়েছে', 'err'); }
+    finally { btn.disabled = false; btn.classList.remove('is-busy'); }
+}
+
+/* ============================================================
+   DATA ACCESS
+   ============================================================ */
+async function refreshPersons() {
+    const list = await api.listPersons();
+
+    persons = (list || []).map(p => ({
+        id: String(readId(p) ?? ''),
+        name: p.name ?? '',
+        advance: Number(p.advance) || 0,
+        price: Number(p.price) || 0,
+        totalPieces: Number(p.totalPieces) || 0,
+    }));
+}
+
+async function ensureEntries(pid) {
+    if (entriesLoaded.has(pid)) return;
+    const list = await api.listEntries(pid);
+    personEntries = personEntries.filter(e => e.personId !== pid);
+    (list || []).forEach(e => {
+        personEntries.push({
+            id: readId(e),
+            personId: e.personId || pid,
+            date: e.date,
+            pieces: Number(e.pieces) || 0,
+        });
+    });
+    entriesLoaded.add(pid);
+}
+
+function dropEntriesCache(pid) {
+    entriesLoaded.delete(pid);
+    personEntries = personEntries.filter(e => e.personId !== pid);
+}
 
 /* ============================================================
    TOAST
@@ -114,8 +235,12 @@ document.getElementById('confirmNo').onclick = () => {
 };
 document.getElementById('confirmYes').onclick = async () => {
     confirmEl.classList.remove('show');
-    if (confirmCb) await confirmCb();
+    const cb = confirmCb;
     confirmCb = null;
+    if (cb) {
+        try { await cb(); }
+        catch (e) { toast(e?.message || 'কিছু ভুল হয়েছে', 'err'); }
+    }
 };
 
 /* ============================================================
@@ -123,7 +248,6 @@ document.getElementById('confirmYes').onclick = async () => {
    ============================================================ */
 const ARROW_RIGHT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 const PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
 
 /* ============================================================
    SHEET HELPERS
@@ -142,7 +266,8 @@ function navigateTo(route) {
     location.hash = hash;
 }
 
-function handleRoute() {
+async function handleRoute() {
+    const token = ++routeToken;
     const hash = location.hash.replace(/^#\/?/, '');
     currentRoute = hash;
 
@@ -162,9 +287,15 @@ function handleRoute() {
         const pid = pm[1], ym = pm[2];
         const p = getPerson(pid);
         if (!p) { navigateTo(''); return; }
+
         viewPersonMonth.hidden = false;
         document.body.classList.add('in-month');
         setTitle(monthName(ym) + ' ' + ym.slice(0, 4), p.name);
+
+        try { await ensureEntries(pid); }
+        catch (e) { toast(e?.message || 'ডেটা লোড হয়নি', 'err'); }
+        if (token !== routeToken) return;          // user navigated away
+
         renderPersonMonthView(pid, ym);
         window.scrollTo({ top: 0, behavior: 'instant' });
         return;
@@ -176,9 +307,15 @@ function handleRoute() {
         const pid = pp[1];
         const p = getPerson(pid);
         if (!p) { navigateTo(''); return; }
+
         viewPerson.hidden = false;
         document.body.classList.add('in-month');
         setTitle(p.name, 'মাসসমূহ');
+
+        try { await ensureEntries(pid); }
+        catch (e) { toast(e?.message || 'ডেটা লোড হয়নি', 'err'); }
+        if (token !== routeToken) return;
+
         renderPersonView(pid);
         window.scrollTo({ top: 0, behavior: 'instant' });
         return;
@@ -191,7 +328,7 @@ function handleRoute() {
     renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
-window.addEventListener('hashchange', handleRoute);
+window.addEventListener('hashchange', () => { handleRoute(); });
 
 /* ============================================================
    HOME VIEW
@@ -201,6 +338,8 @@ function renderHome() {
 }
 
 function renderPersonList() {
+    console.log(persons);
+    console.log(personEntries);
     const el = document.getElementById('personList');
     const countEl = document.getElementById('personCount');
     if (!el) return;
@@ -248,6 +387,7 @@ function renderPersonList() {
    ============================================================ */
 function renderPersonView(pid) {
     const view = document.getElementById('viewPerson');
+
     const p = getPerson(pid);
     if (!view || !p) return;
 
@@ -391,52 +531,65 @@ function closePersonSheet() {
 }
 document.getElementById('personCancel').onclick = closePersonSheet;
 
-document.getElementById('personSave').onclick = () => {
+document.getElementById('personSave').onclick = function () {
+    const btn = this;
     const name = document.getElementById('pName').value.trim();
     const advance = parseNum(document.getElementById('pAdvance').value);
     const price = parseNum(document.getElementById('pPrice').value);
 
-    if (!name) return toast('নাম লিখুন', 'err');
+    if (!name) { toast('নাম দিন', 'err'); return; }
 
-    if (editingPersonId) {
-        const p = getPerson(editingPersonId);
-        if (!p) return;
-        p.name = name;
-        p.advance = advance;
-        p.price = price;
-        persistPersons();
-        toast('আপডেট হয়েছে', 'ok');
-        closePersonSheet();
-        if (currentRoute === `person/${p.id}`) renderPersonView(p.id);
-        else renderPersonList();
-    } else {
-        const newP = {
-            id: uid('p_'),
-            name,
-            advance,
-            price,
-            createdAt: new Date().toISOString()
-        };
-        persons.push(newP);
-        persistPersons();
-        toast('যোগ হয়েছে', 'ok');
-        closePersonSheet();
-        renderPersonList();
-    }
+    const id = editingPersonId;
+
+    withBusy(btn, async () => {
+        if (id) {
+            const updated = await api.updatePerson(id, { name, advance, price });
+            const p = getPerson(id);
+            if (p) Object.assign(p, {
+                name: updated?.name ?? name,
+                advance: Number(updated?.advance ?? advance) || 0,
+                price: Number(updated?.price ?? price) || 0,
+            });
+            closePersonSheet();
+            toast('আপডেট হয়েছে', 'ok');
+            if (currentRoute === `person/${id}`) renderPersonView(id);
+            else renderPersonList();
+        } else {
+            const created = await api.createPerson({ name, advance, price });
+
+            const newId = readId(created);
+            if (!newId) throw new ApiError('সার্ভার আইডি ফেরত দেয়নি', 500);
+
+            persons.push({
+                id: String(newId),
+                name: created?.name ?? name,
+                advance: Number(created?.advance ?? advance) || 0,
+                price: Number(created?.price ?? price) || 0,
+                totalPieces: 0,
+            });
+
+            closePersonSheet();
+            toast('যোগ হয়েছে', 'ok');
+            renderPersonList();
+        }
+    });
 };
 
-document.getElementById('personDelete').onclick = () => {
+document.getElementById('personDelete').onclick = function () {
+    const btn = this;
     if (!editingPersonId) return;
     const pid = editingPersonId;
-    askConfirm('ব্যক্তি মুছবেন?', 'এই ব্যক্তির সব গিলার এন্ট্রিও মুছে যাবে।', () => {
-        persons = persons.filter(p => p.id !== pid);
-        personEntries = personEntries.filter(e => e.personId !== pid);
-        persistPersons();
-        persistPersonEntries();
-        closePersonSheet();
-        toast('মুছে ফেলা হয়েছে', 'ok');
-        if (currentRoute.startsWith('person/')) navigateTo('');
-        else renderPersonList();
+
+    askConfirm('ব্যক্তি মুছবেন?', 'এই ব্যক্তির সব গিলার এন্ট্রিও মুছে যাবে।', async () => {
+        await withBusy(btn, async () => {
+            await api.deletePerson(pid);
+            persons = persons.filter(p => p.id !== pid);
+            dropEntriesCache(pid);
+            closePersonSheet();
+            toast('মুছে ফেলা হয়েছে', 'ok');
+            if (currentRoute.startsWith('person/')) navigateTo('');
+            else renderPersonList();
+        });
     });
 };
 
@@ -445,9 +598,13 @@ document.getElementById('personDelete').onclick = () => {
    ============================================================ */
 const pdaySheet = document.getElementById('pdaySheet');
 
-function openPdaySheet(pid, date) {
+async function openPdaySheet(pid, date) {
     const p = getPerson(pid);
     if (!p) return;
+
+    try { await ensureEntries(pid); }
+    catch (e) { toast(e?.message || 'ডেটা লোড হয়নি', 'err'); return; }
+
     editingPdayPersonId = pid;
     editingPdayDate = date;
 
@@ -473,45 +630,60 @@ function closePdaySheet() {
     editingPdayDate = null;
 }
 
-/* cancel button for pday sheet */
 document.getElementById('pdayCancel').onclick = closePdaySheet;
 
-document.getElementById('pdaySave').onclick = () => {
+document.getElementById('pdaySave').onclick = function () {
+    const btn = this;
     const pid = editingPdayPersonId;
     if (!pid) return;
+
     const date = document.getElementById('pdayDate').value;
     const pieces = parseNum(document.getElementById('pdayPieces').value);
 
-    if (!date) return toast('তারিখ নির্বাচন করুন', 'err');
-    if (pieces <= 0) return toast('গিলা লিখুন', 'err');
+    if (!date) { toast('তারিখ নির্বাচন করুন', 'err'); return; }
+    if (pieces <= 0) { toast('গিলা লিখুন', 'err'); return; }
 
-    const existing = personEntries.find(e => e.personId === pid && e.date === date);
-    if (existing) existing.pieces = pieces;
-    else personEntries.push({ id: uid('pe_'), personId: pid, date, pieces, createdAt: new Date().toISOString() });
+    withBusy(btn, async () => {
+        const saved = await api.upsertEntry(pid, date, pieces);
 
-    persistPersonEntries();
-    toast('সেভ হয়েছে', 'ok');
-    const savedDate = date;
-    closePdaySheet();
+        const entry = {
+            id: readId(saved),
+            personId: pid,
+            date: saved?.date || date,
+            pieces: Number(saved?.pieces ?? pieces) || 0,
+        };
+        const i = personEntries.findIndex(e => e.personId === pid && e.date === entry.date);
+        if (i >= 0) personEntries[i] = entry;
+        else personEntries.push(entry);
+        entriesLoaded.add(pid);
 
-    const ym = savedDate.slice(0, 7);
-    if (currentRoute === `person/${pid}/month/${ym}`) renderPersonMonthView(pid, ym);
-    else if (currentRoute === `person/${pid}`) renderPersonView(pid);
-    else if (currentRoute === '') renderPersonList();
+        closePdaySheet();
+        toast('সেভ হয়েছে', 'ok');
+
+        const ym = entry.date.slice(0, 7);
+        if (currentRoute === `person/${pid}/month/${ym}`) renderPersonMonthView(pid, ym);
+        else if (currentRoute === `person/${pid}`) renderPersonView(pid);
+        else if (currentRoute === '') renderPersonList();
+    });
 };
 
-document.getElementById('pdayDelete').onclick = () => {
+document.getElementById('pdayDelete').onclick = function () {
+    const btn = this;
     const pid = editingPdayPersonId;
     const date = editingPdayDate;
     if (!pid || !date) return;
-    askConfirm('গিলা মুছবেন?', 'এই দিনের এন্ট্রি মুছে যাবে।', () => {
-        personEntries = personEntries.filter(e => !(e.personId === pid && e.date === date));
-        persistPersonEntries();
-        closePdaySheet();
-        toast('মুছে ফেলা হয়েছে', 'ok');
-        const ym = date.slice(0, 7);
-        if (currentRoute === `person/${pid}/month/${ym}`) renderPersonMonthView(pid, ym);
-        else if (currentRoute === `person/${pid}`) renderPersonView(pid);
+
+    askConfirm('গিলা মুছবেন?', 'এই দিনের এন্ট্রি মুছে যাবে।', async () => {
+        await withBusy(btn, async () => {
+            await api.deleteEntry(pid, date);
+            personEntries = personEntries.filter(e => !(e.personId === pid && e.date === date));
+            closePdaySheet();
+            toast('মুছে ফেলা হয়েছে', 'ok');
+
+            const ym = date.slice(0, 7);
+            if (currentRoute === `person/${pid}/month/${ym}`) renderPersonMonthView(pid, ym);
+            else if (currentRoute === `person/${pid}`) renderPersonView(pid);
+        });
     });
 };
 
@@ -576,15 +748,15 @@ const topbar = document.getElementById('topbar');
 window.addEventListener('scroll', () => topbar.classList.toggle('scrolled', window.scrollY > 8), { passive: true });
 
 /* ============================================================
-   DATE
-   ============================================================ */
-function todayStr(d = new Date()) {
-    const off = d.getTimezoneOffset();
-    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
-}
-
-/* ============================================================
    BOOT
    ============================================================ */
-loadData();
-handleRoute();
+async function boot() {
+    try {
+        await refreshPersons();
+    } catch (e) {
+        toast(e?.message || 'ডেটা লোড করা যায়নি', 'err');
+    }
+    handleRoute();
+}
+
+boot();
