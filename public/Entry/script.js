@@ -830,9 +830,16 @@ document.addEventListener('click', async ev => {
         const d = m && m.days[date];
         if (!d || !d.entries.length) return;
 
-        const text = [...d.entries].reverse()
-            .map(e => `${e.number} = ${e.amount}`)
-            .join('\n');
+        const arr = [...d.entries].reverse();
+        const text = [
+            fmtDate(date),
+            '--------------------------------------',
+            '',
+            ...arr.map(e => `${e.number} = ${e.amount}`),
+            '--------------------------------------',
+            '',
+            `${arr.length} টি নম্বর`
+        ].join('\n');
 
         cpAll.classList.add('copied');
         setTimeout(() => cpAll.classList.remove('copied'), 900);
