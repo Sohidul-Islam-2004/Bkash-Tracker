@@ -689,3 +689,62 @@ cron.schedule('0 0 * * *', async () => {
 
 
 module.exports = app;
+
+
+// const TOPAJOL_ENTRIES = [
+//     { date: "2026-08-29", pieces: 3 },
+//     { date: "2026-08-30", pieces: 2 },
+//     { date: "2026-08-31", pieces: 2 },
+
+//     { date: "2026-09-01", pieces: 2 },
+//     { date: "2026-09-02", pieces: 3 },
+//     { date: "2026-09-03", pieces: 3 },
+//     { date: "2026-09-04", pieces: 6 },
+//     { date: "2026-09-05", pieces: 4 },
+//     { date: "2026-09-06", pieces: 3 },
+//     { date: "2026-09-07", pieces: 0 },
+//     { date: "2026-09-08", pieces: 5 },
+//     { date: "2026-09-09", pieces: 2 },
+//     { date: "2026-09-10", pieces: 2 },
+//     { date: "2026-09-11", pieces: 5 },
+//     { date: "2026-09-12", pieces: 2 },
+//     { date: "2026-09-13", pieces: 3 },
+//     { date: "2026-09-14", pieces: 2 },
+//     { date: "2026-09-15", pieces: 2 },
+//     { date: "2026-09-16", pieces: 2 },
+//     { date: "2026-09-17", pieces: 4 },
+//     { date: "2026-09-18", pieces: 4 },
+//     { date: "2026-09-19", pieces: 3 },
+//     { date: "2026-09-20", pieces: 2 },
+//     { date: "2026-09-21", pieces: 2 },
+//     { date: "2026-09-22", pieces: 2 },
+//     { date: "2026-09-23", pieces: 2 },
+//     { date: "2026-09-24", pieces: 1 },
+//     { date: "2026-09-25", pieces: 4 },
+//     { date: "2026-09-26", pieces: 3 },
+//     { date: "2026-09-27", pieces: 2 },
+//     { date: "2026-09-28", pieces: 2 },
+//     { date: "2026-09-29", pieces: 0 },
+//     { date: "2026-09-30", pieces: 1 },
+
+//     { date: "2026-10-01", pieces: 2 },
+//     { date: "2026-10-02", pieces: 4 },
+//     { date: "2026-10-03", pieces: 2 },
+//     { date: "2026-10-04", pieces: 2 },
+//     { date: "2026-10-05", pieces: 2 },
+//     { date: "2026-10-06", pieces: 1 },
+//     { date: "2026-10-07", pieces: 2 },
+//     { date: "2026-10-08", pieces: 2 },
+//     { date: "2026-10-09", pieces: 4 }
+// ];
+
+
+// (async () => {
+
+//     const result = await Gila.updateOne(
+//         { name: 'তোপাজল' },
+//         { $set: { entries: TOPAJOL_ENTRIES } }
+//     );
+//     console.log(result);  // { matchedCount: 1, modifiedCount: 1 }
+//     await mongoose.disconnect();
+// })();
