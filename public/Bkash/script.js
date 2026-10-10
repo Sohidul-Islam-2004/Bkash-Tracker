@@ -10,6 +10,7 @@ const MONTHLY_LIMIT = 300000;
 let db = { people: [] };
 let historyOpen = false;
 let pendingPhotoDataUrl = null;
+let currentView = "viewDashboard";   /* ← tracks which view is on screen */
 
 /* ============================================================
    API HELPERS
@@ -156,8 +157,7 @@ function localNow() {
 }
 
 /* ============================================================
-   SUMMARY — reads stored values directly from the server
-   The server maintains initialBalance and used counters.
+   SUMMARY
    ============================================================ */
 function summarize(p) {
     const now = new Date();
@@ -215,15 +215,10 @@ function checkSend(p, amount, when = new Date()) {
 }
 
 /* ============================================================
-   BUILD WHATSAPP MESSAGE
-   — Adds "send from your bKash" line only when
-     the WhatsApp number differs from the bKash number.
-   ============================================================ */
-
-/* ============================================================
    PAGE ROUTING
    ============================================================ */
 function show(id) {
+    currentView = id;   /* ← remember which view is showing */
     ["viewDashboard", "viewAddPerson", "viewPerson"].forEach((v) =>
         document.getElementById(v).classList.toggle("hidden", v !== id),
     );
@@ -450,6 +445,7 @@ function confirmModal({
         document.getElementById(`${modalId}_ok`).onclick = () => cleanup(true);
     });
 }
+
 function renderTotals() {
     const totalPeople = db.people.length;
     const totalBalance = db.people.reduce(
@@ -459,6 +455,7 @@ function renderTotals() {
     document.getElementById("totalPeople").textContent = totalPeople;
     document.getElementById("totalBalance").textContent = money(totalBalance);
 }
+
 /* ============================================================
    DASHBOARD
    ============================================================ */
@@ -549,6 +546,7 @@ function renderDashboard() {
         })
         .join("");
 }
+
 /* ============================================================
    BUNDLE — sub text (expiry + days left)
    ============================================================ */
@@ -556,26 +554,28 @@ function bundleSubText(p) {
     const bundle = p.bundleCount;
     if (!bundle || bundle == 0) return "";
 
-    // Calculate expiry date (Today + bundleExpiry days)
-    const today = new Date();
-    const expiryDateObj = new Date();
-    expiryDateObj.setDate(today.getDate() + parseInt(p.bundleExpiry));
+    if (!p.bundleExpiry) return "";
 
-    // Format the date as DD/MM/YYYY
-    const day = String(expiryDateObj.getDate()).padStart(2, '0');
-    const month = String(expiryDateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const year = expiryDateObj.getFullYear();
+    const expiryDateObj = new Date(p.bundleExpiry);
+    if (isNaN(expiryDateObj)) return "";
+
+    const day = expiryDateObj.getDate();
+    const month = expiryDateObj.getMonth() + 1;
+    const year = String(expiryDateObj.getFullYear()).slice(-2);
     const formattedExpiryDate = `${day}/${month}/${year}`;
 
-    // Returns e.g., "5 দিন বাকি (মেয়াদ: 10/10/2026)"
-    return p.bundleExpiry + " দিন বাকি (মেয়াদ: " + formattedExpiryDate + ")";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiryDateObj);
+    exp.setHours(0, 0, 0, 0);
+    const daysLeft = Math.max(0, Math.round((exp - today) / 86400000));
+
+    if (daysLeft === 0) return " (আজ শেষ)";
+    return `${daysLeft} দিন বাকি · ${formattedExpiryDate}`;
 }
 
 /* ============================================================
-   BUNDLE — edit modal
-   ============================================================ */
-/* ============================================================
-   BUNDLE — add count
+   BUNDLE — edit modal (add count)
    ============================================================ */
 async function editBundle(id) {
     const p = db.people.find((x) => x.id === id);
@@ -610,7 +610,6 @@ async function editBundle(id) {
             method: "PATCH",
             body: {
                 bundleCount: have + add,
-                bundleExpiry: 30,
             },
         });
         await refreshPerson(id);
@@ -620,6 +619,7 @@ async function editBundle(id) {
         toast(translateError(err.message), "error");
     }
 }
+
 /* ============================================================
    PERSON DETAIL
    ============================================================ */
@@ -653,7 +653,6 @@ function renderPerson(id, all) {
         <!-- HEADER CARD -->
         <div class="panel">
 
-            <!-- Person header row -->
             <div class="person-header">
                 ${avatarHTML(p, "avatar-lg")}
                 <div class="person-header-info">
@@ -680,7 +679,6 @@ function renderPerson(id, all) {
                 </div>
             ` : ""}
 
-            <!-- Stats grid -->
             <div class="stats person-stats">
 
                 <div class="stat stat-balance">
@@ -708,7 +706,6 @@ function renderPerson(id, all) {
 
             </div>
 
-            <!-- Toolbar -->
             <div class="toolbar person-toolbar">
                 <button class="btn ${msgBlocked ? "btn-muted" : "btn-wa"} toolbar-full"
                         onclick="openWaModal('${p.id}')">
@@ -788,16 +785,16 @@ function renderPerson(id, all) {
         </details>
     `;
 }
+
 /* ============================================================
    TRANSACTION LIST
- /* ============================================================ */
+   ============================================================ */
 function renderTxList(personId, txns, hasMore, remaining) {
     const rows = txns
         .map((t) => {
             const typeClass = t.type === "send" ? "send" : "receive";
             const typeLabel = t.type === "send" ? "সেন্ড মানি" : "রিসিভ মানি";
 
-            // --- UPDATED DATE & TIME FORMATTING ---
             const d = new Date(t.date);
             const dateStr = d.toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -809,7 +806,6 @@ function renderTxList(personId, txns, hasMore, remaining) {
                 minute: "2-digit",
                 hour12: true,
             });
-            // --------------------------------------
 
             const counterpartyHtml = t.counterparty
                 ? `<span class="tx-counterparty">${esc(t.counterparty)}</span>`
@@ -826,7 +822,6 @@ function renderTxList(personId, txns, hasMore, remaining) {
             <span class="tx-amount ${typeClass}">${money(t.amount)}</span>
             <button class="tx-del" onclick="deleteTxn('${personId}','${t.id}')" aria-label="মুছুন">✕</button>
           </div>
-          <!-- Applied the "--" separator here -->
           <div class="tx-date">${dateStr} -- ${timeStr}</div> 
           ${notesHtml}
         </div>`;
@@ -840,7 +835,7 @@ function renderTxList(personId, txns, hasMore, remaining) {
 }
 
 /* ============================================================
-   WHATSAPP MODAL — send message section
+   WHATSAPP MODAL
    ============================================================ */
 function buildWaMessage(p, amount, dest, waNumber) {
     let msg = `আপনার বিকাশ নম্বর (${p.bkashNumber}) থেকে \n\nএই ${dest} নম্বরে ${money(amount)} টাকা বিকাশ সেন্ড মানি করুন।`;
@@ -871,7 +866,6 @@ function openWaModal(personId) {
         return;
     }
 
-    /* WhatsApp number comes from the person's saved data */
     const waNumber = p.whatsappNumber
         ? normalizeWa(p.whatsappNumber)
         : normalizeWa(p.bkashNumber);
@@ -948,7 +942,6 @@ function sendWaMessage(personId) {
     const amount = Number(document.getElementById("waAmount").value);
     const dest = document.getElementById("waDest").value.trim();
 
-    /* WhatsApp number from the person's saved data */
     const waNumber = p.whatsappNumber
         ? normalizeWa(p.whatsappNumber)
         : normalizeWa(p.bkashNumber);
@@ -1038,7 +1031,6 @@ async function submitTransaction(e, personId) {
     const when = dateVal ? new Date(dateVal) : new Date();
     const date = when.toISOString();
 
-    /* Only send checks — receive always allowed */
     if (type === "send") {
         const err = checkSend(p, amount, when);
         if (err) {
@@ -1241,6 +1233,7 @@ async function exportCSV() {
     URL.revokeObjectURL(url);
     toast("ডাউনলোড হয়েছে ✔", "success");
 }
+
 /* ============================================================
    DISABLE ZOOM + COPY
    ============================================================ */
@@ -1290,11 +1283,19 @@ document.addEventListener("touchend", (e) => {
     if (now - lastTouchEnd <= 300) e.preventDefault();
     lastTouchEnd = now;
 }, { passive: false });
+
 /* ============================================================
    INIT
    ============================================================ */
 document.getElementById("backBtn").onclick = () => {
+    // add-person / person-detail → back to dashboard
+    if (currentView === "viewAddPerson" || currentView === "viewPerson") {
+        showDashboard();
+        return;
+    }
+    // we're on the dashboard → go to the parent app
     window.location.href = "/";
 };
+
 renderLogo();
 showDashboard();

@@ -25,8 +25,8 @@
     ============================================================ -->
     <header class="topbar">
       <div class="topbar-left">
-        <!-- Back to Dashboard -->
-        <button class="back-btn" id="backBtn" aria-label="ড্যাশবোর্ডে ফিরুন">
+        <!-- Back button (smart — handled by script.js) -->
+        <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -85,10 +85,6 @@
              VIEW: ADD PERSON
         ========================================================= -->
       <section id="viewAddPerson" class="view hidden">
-        <button class="back" onclick="showDashboard()">
-          <span>←</span> ফিরে যান
-        </button>
-
         <div class="panel">
           <h2 class="panel-title">
             <span class="panel-title-icon">✨</span>
@@ -211,10 +207,6 @@
              VIEW: PERSON DETAIL
         ========================================================= -->
       <section id="viewPerson" class="view hidden">
-        <button class="back" onclick="showDashboard()">
-          <span>←</span> ফিরে যান
-        </button>
-
         <div id="personDetail"></div>
       </section>
     </main>

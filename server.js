@@ -453,7 +453,9 @@ app.use((err, req, res, next) => {
     res.status(status).json({
         error: status === 500 ? "Internal server error" : err.message
     });
-}); app.patch(
+});
+
+app.patch(
     "/api/people/bandle/:id",
     wrap(async (req, res) => {
         if (!isId(req.params.id)) throw new HttpError(400, "Invalid id");
@@ -461,8 +463,18 @@ app.use((err, req, res, next) => {
         const { bundleCount, bundleExpiry } = req.body;
 
         const update = {};
-        if (bundleCount !== undefined) update.bundleCount = toNumber(bundleCount);
-        if (bundleExpiry !== undefined) update.bundleExpiry = bundleExpiry;
+
+        if (bundleCount !== undefined) {
+            update.bundleCount = toNumber(bundleCount);
+
+            // whenever bundleCount is edited, push expiry to today + 30 days
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + 30);
+            update.bundleExpiry = expiry;
+        } else if (bundleExpiry !== undefined) {
+            // allow a manual expiry override when bundleCount isn't touched
+            update.bundleExpiry = bundleExpiry ? new Date(bundleExpiry) : null;
+        }
 
         const person = await Person.findByIdAndUpdate(
             req.params.id,
