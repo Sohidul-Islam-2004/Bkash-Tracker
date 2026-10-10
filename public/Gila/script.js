@@ -123,6 +123,14 @@ const weekday = d => {
     return WEEKDAYS[new Date(y, m - 1, dd).getDay()];
 };
 
+/* NEW: ISO date (YYYY-MM-DD) -> DD/MM/YYYY */
+function formatDateDMY(isoDate) {
+    if (!isoDate) return '';
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 function getPerson(id) { return persons.find(p => p.id === id); }
 
 function personEntriesFor(pid) { return personEntries.filter(e => e.personId === pid); }
@@ -131,7 +139,6 @@ function personTotalPieces(pid) {
     if (entriesLoaded.has(pid)) {
         return personEntriesFor(pid).reduce((s, e) => s + (Number(e.pieces) || 0), 0);
     }
-    // fall back to server-provided aggregate
     return Number(getPerson(pid)?.totalPieces) || 0;
 }
 
@@ -294,7 +301,7 @@ async function handleRoute() {
 
         try { await ensureEntries(pid); }
         catch (e) { toast(e?.message || 'ডেটা লোড হয়নি', 'err'); }
-        if (token !== routeToken) return;          // user navigated away
+        if (token !== routeToken) return;
 
         renderPersonMonthView(pid, ym);
         window.scrollTo({ top: 0, behavior: 'instant' });
@@ -324,7 +331,7 @@ async function handleRoute() {
     /* home */
     viewHome.hidden = false;
     document.body.classList.remove('in-month');
-    setTitle('ব্যক্তি হিসাব', 'গিলার হিসাব');
+    setTitle('ইজিলেনদেন', 'গিলার হিসাব');
     renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
@@ -338,8 +345,6 @@ function renderHome() {
 }
 
 function renderPersonList() {
-    console.log(persons);
-    console.log(personEntries);
     const el = document.getElementById('personList');
     const countEl = document.getElementById('personCount');
     if (!el) return;
@@ -357,26 +362,17 @@ function renderPersonList() {
 
     const sorted = [...persons].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'bn'));
 
+
     el.innerHTML = sorted.map(p => {
         const pieces = personTotalPieces(p.id);
-        const initial = (p.name || '?').trim().charAt(0);
         return `
             <article class="person-card">
                 <button class="person-btn" data-open-person="${p.id}" type="button">
-                    <span class="person-avatar"><span>${initial}</span></span>
-                    <span class="person-info">
-                        <span class="person-name">${p.name || 'নাম নেই'}</span>
-                        <span class="person-meta">
-                            <span>অগ্রিম ৳ ${bn(p.advance || 0)}</span>
-                            <span class="meta-dot"></span>
-                            <span>৳ ${bn(p.price || 0)}/গিলা</span>
-                        </span>
-                    </span>
+                    <span class="person-name">${p.name || 'নাম নেই'}</span>
                     <span class="person-total">
-                        <div class="amt">${bn(pieces)}</div>
-                        <div class="cnt">গিলা</div>
+                        <span class="amt">${bn(pieces)}</span>
+                        <span class="cnt">গিলা</span>
                     </span>
-                    <span class="person-arrow">${ARROW_RIGHT}</span>
                 </button>
             </article>`;
     }).join('');
@@ -387,25 +383,24 @@ function renderPersonList() {
    ============================================================ */
 function renderPersonView(pid) {
     const view = document.getElementById('viewPerson');
-
     const p = getPerson(pid);
     if (!view || !p) return;
 
     const months = personMonths(pid);
     const keys = Object.keys(months).sort().reverse();
     const totalPieces = personTotalPieces(pid);
-    const initial = (p.name || '?').trim().charAt(0);
+
+    /* টার্গেট = অগ্রিম ÷ গিলার দাম */
+    const target = (p.price > 0) ? Math.ceil((p.advance || 0) / p.price) : 0;
 
     view.innerHTML = `
         <div class="person-view-hero">
             <div class="pvh-top">
-                <div class="pvh-avatar">${initial}</div>
                 <div class="pvh-title">
                     <h2>${p.name || 'নাম নেই'}</h2>
-                    <p>অগ্রিম ৳ ${bn(p.advance || 0)} • ৳ ${bn(p.price || 0)}/গিলা</p>
+                 
                 </div>
-                <button class="icon-btn" data-edit-person="${pid}" type="button" aria-label="এডিট"
-                    style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.28)">
+                <button class="icon-btn pvh-edit" data-edit-person="${pid}" type="button" aria-label="এডিট">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 20h9"/>
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
@@ -413,10 +408,22 @@ function renderPersonView(pid) {
                 </button>
             </div>
 
-            <div class="pvh-stats" style="grid-template-columns: 1fr;">
-                <div class="pvh-stat">
-                    <span class="pvh-stat-lbl">মোট গিলা</span>
-                    <span class="pvh-stat-val">${bn(totalPieces)}</span>
+            <div class="pvh-grid">
+                <div class="pvh-cell">
+                    <span class="pvh-cell-lbl">গিলার দাম</span>
+                    <span class="pvh-cell-val">৳ ${bn(p.price || 0)}</span>
+                </div>
+                <div class="pvh-cell">
+                    <span class="pvh-cell-lbl">অগ্রিম</span>
+                    <span class="pvh-cell-val">৳ ${bn(p.advance || 0)}</span>
+                </div>
+                <div class="pvh-cell">
+                    <span class="pvh-cell-lbl">মোট গিলা</span>
+                    <span class="pvh-cell-val">${bn(totalPieces)}</span>
+                </div>
+                <div class="pvh-cell">
+                    <span class="pvh-cell-lbl">টার্গেট</span>
+                    <span class="pvh-cell-val">${bn(target)}</span>
                 </div>
             </div>
         </div>
@@ -447,7 +454,18 @@ function renderPersonView(pid) {
         </div>
     `;
 }
+/* ছোট মাসের নাম (চিপে দেখানোর জন্য) */
+const SHORT_MONTHS = ['জানু', 'ফেব', 'মার্চ', 'এপ্রি', 'মে', 'জুন',
+    'জুল', 'আগ', 'সেপ', 'অক্টো', 'নভে', 'ডিসে'];
+const shortMonthName = ym => SHORT_MONTHS[+ym.split('-')[1] - 1];
 
+/* ISO date (YYYY-MM-DD) -> DD/MM/YYYY */
+function formatDateDMY(isoDate) {
+    if (!isoDate) return '';
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
 /* ============================================================
    PERSON MONTH VIEW  (days list)
    ============================================================ */
@@ -484,27 +502,20 @@ function renderPersonMonthView(pid, ym) {
             <h2 class="section-title"><span class="title-dot"></span>দৈনিক গিলা</h2>
             <span class="section-count">${dates.length} দিন</span>
         </div>
-        <div id="personDayList">
+
+                <div id="personDayList">
             ${dates.map(date => {
         const d = m.days[date];
         return `
-                    <div class="pday-card">
-                        <button class="pday-head" data-open-pday="${pid}|${date}" type="button">
-                            <div class="pday-chip"><b>${+date.slice(8)}</b></div>
-                            <div class="pday-info">
-                                <div class="d1">${weekday(date)}</div>
-                            </div>
-                            <div class="pday-amt">
-                                ${bn(d.pieces)} <small>গিলা</small>
-                            </div>
-                            <span class="pday-arrow">${ARROW_RIGHT}</span>
-                        </button>
+                    <div class="pday-simple" data-open-pday="${pid}|${date}" role="button" tabindex="0">
+                        <div class="pday-simple-day">${+date.slice(8)}</div>
+                        <div class="pday-simple-weekday">${weekday(date)}</div>
+                        <div class="pday-simple-amt">${bn(d.pieces)} <small>গিলা</small></div>
                     </div>`;
     }).join('')}
         </div>
     `;
 }
-
 /* ============================================================
    PERSON SHEET  (add / edit person)
    ============================================================ */
@@ -611,13 +622,23 @@ async function openPdaySheet(pid, date) {
     const existing = personEntries.find(e => e.personId === pid && e.date === date);
 
     document.getElementById('pdayTitle').textContent = p.name;
-    document.getElementById('pdaySub').textContent = 'আজ কত গিলা হয়েছে?';
-    document.getElementById('pdayDate').value = date;
-    document.getElementById('pdayPieces').value = existing ? existing.pieces : '';
+    document.getElementById('pdaySub').textContent = existing
+        ? 'এই দিনের এন্ট্রি এডিট করুন'
+        : 'আজ কত গিলা হয়েছে?';
+
+    /* date picker: native picker stores YYYY-MM-DD, display shows DD/MM/YYYY */
+    const pickerInput = document.getElementById('pdayDatePicker');
+    const displayInput = document.getElementById('pdayDateDisplay');
+    pickerInput.value = date;
+    displayInput.value = formatDateDMY(date);
+
+    /* pieces stepper default value */
+    document.getElementById('pdayPieces').value = existing ? existing.pieces : 1;
+
     document.getElementById('pdayDelete').hidden = !existing;
 
     const hint = document.getElementById('pdayHint');
-    hint.textContent = existing ? 'এই দিনের এন্ট্রি এডিট করছেন' : '';
+    hint.textContent = existing ? 'এই দিনের এন্ট্রি এডিট করছেন' : weekday(date);
 
     pdaySheet.classList.add('show');
     showSheetBg();
@@ -632,12 +653,35 @@ function closePdaySheet() {
 
 document.getElementById('pdayCancel').onclick = closePdaySheet;
 
+/* date picker change → update display + hint */
+document.getElementById('pdayDatePicker').onchange = (e) => {
+    const val = e.target.value;
+    if (val) {
+        document.getElementById('pdayDateDisplay').value = formatDateDMY(val);
+        document.getElementById('pdayHint').textContent = weekday(val);
+        editingPdayDate = val;
+    }
+};
+
+/* stepper buttons */
+document.getElementById('pdayMinus').onclick = () => {
+    const inp = document.getElementById('pdayPieces');
+    const val = parseNum(inp.value);
+    if (val > 1) inp.value = val - 1;
+    else inp.value = 1;
+};
+document.getElementById('pdayPlus').onclick = () => {
+    const inp = document.getElementById('pdayPieces');
+    const val = parseNum(inp.value);
+    inp.value = val + 1;
+};
+
 document.getElementById('pdaySave').onclick = function () {
     const btn = this;
     const pid = editingPdayPersonId;
     if (!pid) return;
 
-    const date = document.getElementById('pdayDate').value;
+    const date = document.getElementById('pdayDatePicker').value;
     const pieces = parseNum(document.getElementById('pdayPieces').value);
 
     if (!date) { toast('তারিখ নির্বাচন করুন', 'err'); return; }
