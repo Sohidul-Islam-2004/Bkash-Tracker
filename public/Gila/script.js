@@ -127,11 +127,19 @@ const weekday = d => {
 };
 
 /* NEW: ISO date (YYYY-MM-DD) -> DD/MM/YYYY */
+/* ISO date (YYYY-MM-DD) -> D/M/YY  (no leading zeros, 2-digit year) */
 function formatDateDMY(isoDate) {
     if (!isoDate) return '';
-    const parts = isoDate.split('-');
-    if (parts.length !== 3) return isoDate;
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    const [y, m, d] = isoDate.split('-');
+    if (!d) return isoDate;
+    return `${+d}/${+m}/${y.slice(-2)}`;
+}
+
+/* YYYY-MM -> M/YY  (no leading zero, 2-digit year) */
+function formatMonthMY(ym) {
+    if (!ym) return '';
+    const [y, m] = ym.split('-');
+    return `${+m}/${y.slice(-2)}`;
 }
 
 /* escape user text before it goes into innerHTML (names are user-typed) */
@@ -501,9 +509,10 @@ function renderPersonView(pid) {
             ${keys.length ? keys.map(ym => `
                 <article class="month-card person-month-card">
                     <button class="month-btn" data-open-pmonth="${esc(pid)}|${ym}" type="button">
-                        <div class="month-info">
-                            <div class="month-name">${monthName(ym)} ${ym.slice(0, 4)}</div>
-                        </div>
+       <div class="month-info">
+    <div class="month-name">${formatMonthMY(ym)}</div>
+    <div class="month-year">${monthName(ym)}</div>
+</div>
                         <div class="month-total">
                             <div class="amt">${bn(personMonthPieces(pid, ym))}</div>
                             <div class="cnt">গিলা</div>
@@ -560,11 +569,13 @@ function renderPersonMonthView(pid, ym) {
             ${dates.map(date => {
         const d = m.days[date];
         return `
-                    <div class="pday-simple" data-open-pday="${esc(pid)}|${date}" role="button" tabindex="0">
-                        <div class="pday-simple-day">${+date.slice(8)}</div>
-                        <div class="pday-simple-weekday">${weekday(date)}</div>
-                        <div class="pday-simple-amt">${bn(d.pieces)} <small>গিলা</small></div>
-                    </div>`;
+                  <div class="pday-simple" data-open-pday="${esc(pid)}|${date}" role="button" tabindex="0">
+    <div class="pday-simple-left">
+        <div class="pday-simple-day">${formatDateDMY(date)}</div>
+        <div class="pday-simple-weekday">${weekday(date)}</div>
+    </div>
+    <div class="pday-simple-amt">${bn(d.pieces)} <small>গিলা</small></div>
+</div>`;
     }).join('')}
         </div>
     `;
