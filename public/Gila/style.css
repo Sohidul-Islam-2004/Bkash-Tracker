@@ -2596,3 +2596,114 @@ select {
         max-height: 88vh;
     }
 }
+
+/* ============================================================
+   ADDITIONS  (search, progress, loading, error action)
+   ============================================================ */
+[hidden] {
+    display: none !important;
+}
+
+body {
+    min-height: 100dvh;
+}
+
+/* search */
+.search-wrap {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translateY(-50%);
+    color: var(--muted-2);
+    pointer-events: none;
+}
+
+.search-wrap input {
+    width: 100%;
+    padding: 13px 15px 13px 42px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--card);
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-wrap input:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* advance progress inside the blue hero */
+.pvh-progress {
+    margin-top: 16px;
+}
+
+.pvh-progress-bar {
+    height: 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.22);
+    overflow: hidden;
+}
+
+.pvh-progress-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #fff;
+    transition: width 0.5s var(--ease);
+}
+
+.pvh-progress-txt {
+    margin: 8px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+/* loading placeholders */
+.skeleton {
+    border-radius: var(--r-lg);
+    background: linear-gradient(90deg, #e9eef6 25%, #f4f7fb 50%, #e9eef6 75%);
+    background-size: 200% 100%;
+    animation: skel 1.2s linear infinite;
+}
+
+.skeleton-hero {
+    height: 190px;
+    margin-bottom: 22px;
+}
+
+.skeleton-row {
+    height: 68px;
+    margin-bottom: 12px;
+    border-radius: var(--r);
+}
+
+@keyframes skel {
+    to {
+        background-position: -200% 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton {
+        animation: none;
+    }
+}
+
+/* retry button inside the empty/error state */
+.empty-action {
+    margin: 16px auto 0;
+}
