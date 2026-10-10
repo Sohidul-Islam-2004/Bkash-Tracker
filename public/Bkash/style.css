@@ -2612,3 +2612,162 @@ textarea:focus {
     height: 20px;
 }
 
+/* ============================================================
+   DASHBOARD PERSON CARD — compact override only
+   Wins the cascade over all earlier .person blocks.
+   ============================================================ */
+
+.person {
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--line-2);
+    background: var(--card);
+    box-shadow:
+        0 1px 2px rgba(20, 22, 34, 0.03),
+        0 4px 12px rgba(20, 22, 34, 0.04);
+    transition:
+        transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.22s,
+        border-color 0.18s;
+}
+
+/* kill every decorative pseudo from the earlier passes */
+.person::before,
+.person::after {
+    display: none !important;
+}
+
+.person:hover {
+    transform: translateY(-1px);
+    border-color: rgba(209, 32, 83, 0.18);
+    box-shadow:
+        0 2px 4px rgba(20, 22, 34, 0.04),
+        0 10px 22px rgba(209, 32, 83, 0.08);
+}
+
+.person:active {
+    transform: translateY(0) scale(0.995);
+}
+
+/* top row: avatar + name + balance */
+.p-top {
+    gap: 10px;
+    align-items: center;
+}
+
+.p-top .avatar-sm {
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
+    font-weight: 800;
+    border: 2px solid #fff;
+    box-shadow:
+        0 0 0 1px rgba(20, 22, 34, 0.06),
+        0 2px 6px rgba(20, 22, 34, 0.05);
+}
+
+.p-name h3 {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+    gap: 6px;
+}
+
+.p-name .num {
+    font-size: 12px;
+    margin-top: 1px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.p-bal {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--ink);
+    line-height: 1.1;
+}
+
+/* limits block */
+.p-limits {
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(20, 22, 34, 0.08);
+}
+
+.p-limits .limit-row {
+    gap: 0;
+    font-size: 10.5px;
+    line-height: 1.3;
+    letter-spacing: 0.4px;
+}
+
+.p-limits .limit-row span {
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.p-limits .limit-row b {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-top: 1px;
+}
+
+.p-limits .bar {
+    height: 5px;
+    margin-top: 5px;
+}
+
+/* badges on the card */
+.bundle-pill {
+    padding: 1.5px 7px;
+    font-size: 10.5px;
+    border-radius: 20px;
+    gap: 2px;
+}
+
+.block-badge {
+    padding: 2px 7px;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    border-radius: 20px;
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    box-shadow: none;
+}
+
+/* grid density */
+.people-grid {
+    gap: 10px;
+}
+
+@media (min-width: 620px) {
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+    }
+}
+
+/* tiny screens */
+@media (max-width: 380px) {
+    .person {
+        padding: 10px 12px;
+    }
+
+    .p-top .avatar-sm {
+        width: 38px;
+        height: 38px;
+        font-size: 13px;
+    }
+
+    .p-name h3 {
+        font-size: 14px;
+    }
+
+    .p-bal {
+        font-size: 15.5px;
+    }
+}
