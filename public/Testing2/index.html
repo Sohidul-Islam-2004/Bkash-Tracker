@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#d12053" />
+    <title>বিকাশ হিসাব</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ============================================================
+         TOP BAR
+    ============================================================ -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <!-- Back button (smart — handled by script.js) -->
+        <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <img id="brandLogo" alt="লোগো" />
+        <div class="topbar-titles">
+          <h1>বিকাশ হিসাব</h1>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         MAIN CONTAINER
+    ============================================================ -->
+    <main class="container">
+      <!-- ========================================================
+             VIEW: DASHBOARD
+             Each person card now has:
+               • Balance (top-right)
+               • দৈনিক / মাসিক limit bars
+               • ↓ সেন্ড / ↑ রিসিভ buttons
+               • Inline collapsible history
+               • "বিস্তারিত ›" to open the full detail view
+        ========================================================= -->
+      <section id="viewDashboard" class="view">
+        <div id="searchBar" class="searchbar">
+          <input
+            id="searchBox"
+            type="search"
+            placeholder="নাম খুঁজুন"
+            oninput="renderDashboard()"
+            autocomplete="off"
+          />
+          <button
+            class="add-btn"
+            onclick="showAddPerson()"
+            aria-label="নতুন মানুষ যোগ করুন"
+          >
+            <i>+</i> যোগ
+          </button>
+        </div>
+
+        <!-- Cards are rendered here by renderDashboard() -->
+        <div id="peopleGrid" class="people-grid"></div>
+      </section>
+
+      <!-- ========================================================
+             VIEW: ADD PERSON
+        ========================================================= -->
+      <section id="viewAddPerson" class="view hidden">
+        <div class="panel">
+          <h2 class="panel-title">
+            <span class="panel-title-icon">✨</span>
+            নতুন মানুষ
+          </h2>
+
+          <form onsubmit="submitPerson(event)">
+            <div class="field">
+              <label>নাম</label>
+              <input name="name" type="text" required placeholder="যেমন: করিম" autocomplete="off" />
+            </div>
+
+            <div class="field">
+              <label>শুরুতে কত টাকা? <span class="opt">(না দিলেও চলবে)</span></label>
+              <input name="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0" />
+            </div>
+
+            <button class="btn btn-primary btn-block btn-xl" type="submit">
+              ✔ সংরক্ষণ করুন
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========================================================
+             VIEW: PERSON DETAIL
+             Opened only via the "বিস্তারিত ›" button on a card.
+             Handles edit / bundle / WhatsApp / delete / full history.
+        ========================================================= -->
+      <section id="viewPerson" class="view hidden">
+        <div id="personDetail"></div>
+      </section>
+    </main>
+
+    <!-- ============================================================
+         TOAST + MODAL ROOT
+    ============================================================ -->
+    <div class="toast" id="toast"></div>
+    <div id="modalRoot"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
