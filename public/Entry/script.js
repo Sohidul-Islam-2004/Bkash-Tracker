@@ -830,15 +830,32 @@ document.addEventListener('click', async ev => {
         const d = m && m.days[date];
         if (!d || !d.entries.length) return;
 
+        /* ✅ compute the summary values here (were previously undefined) */
+        const { bkash, ejaa, deposit, total } = computeDay(date, d);
+        const pawna = total - deposit;
+
         const arr = [...d.entries].reverse();
+        const line = '-------------------------------';
+        const sep = '━━━━━━━━━━━━━━━━━━━━';
+        const row = (label, value) => `   ${label.padEnd(12)}: ${value}`;
+
         const text = [
             fmtDate(date),
-            '--------------------------------------',
+            `${arr.length} টি নম্বর`,
+            line,
             '',
             ...arr.map(e => `${e.number} = ${e.amount}`),
-            '--------------------------------------',
+            line,
             '',
-            `${arr.length} টি নম্বর`
+            sep,
+            row('বিকাশ', bkash),
+            row('ইজা', ejaa),
+            '   ──────────────',
+            row('টোটাল', total),
+            row('জমা', deposit),
+            '   ──────────────',
+            row('হাসান পাওনা', pawna),
+            sep
         ].join('\n');
 
         cpAll.classList.add('copied');
@@ -865,16 +882,21 @@ document.addEventListener('click', async ev => {
         const { bkash, ejaa, deposit, total } = computeDay(date, d);
         const pawna = total - deposit;
 
-        const text =
-            ` ${fmtDate(date)}\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `   বিকাশ :     ${bkash}\n` +
-            `   ইজা    :     ${ejaa}\n` +
-            `   ──────────────\n` +
-            `   টোটাল :     ${total}\n` +
-            `   জমা  :        ${deposit}\n` +
-            `   ──────────────\n` +
-            `   হাসান পাওনা :   ${pawna}`;
+        const sep = '━━━━━━━━━━━━━━━━━━━━';
+        const row = (label, value) => `   ${label.padEnd(12)}: ${value}`;
+
+        const text = [
+            ` ${fmtDate(date)}`,
+            sep,
+            row('বিকাশ', bkash),
+            row('ইজা', ejaa),
+            '   ──────────────',
+            row('টোটাল', total),
+            row('জমা', deposit),
+            '   ──────────────',
+            row('হাসান পাওনা', pawna),
+            sep
+        ].join('\n');
 
         cpSum.classList.add('copied');
         setTimeout(() => cpSum.classList.remove('copied'), 900);
