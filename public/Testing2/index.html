@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#d12053" />
-    <title>বিকাশ হিসাব</title>
+    <title>হিসাব</title>
 
     <link rel="stylesheet" href="style.css" />
     <link
@@ -25,7 +25,6 @@
     ============================================================ -->
     <header class="topbar">
       <div class="topbar-left">
-        <!-- Back button (smart — handled by script.js) -->
         <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
           <svg
             viewBox="0 0 24 24"
@@ -41,7 +40,7 @@
 
         <img id="brandLogo" alt="লোগো" />
         <div class="topbar-titles">
-          <h1>বিকাশ হিসাব</h1>
+          <h1>হিসাব</h1>
         </div>
       </div>
     </header>
@@ -52,12 +51,6 @@
     <main class="container">
       <!-- ========================================================
              VIEW: DASHBOARD
-             Each person card now has:
-               • Balance (top-right)
-               • দৈনিক / মাসিক limit bars
-               • ↓ সেন্ড / ↑ রিসিভ buttons
-               • Inline collapsible history
-               • "বিস্তারিত ›" to open the full detail view
         ========================================================= -->
       <section id="viewDashboard" class="view">
         <div id="searchBar" class="searchbar">
@@ -77,7 +70,7 @@
           </button>
         </div>
 
-        <!-- Cards are rendered here by renderDashboard() -->
+        <!-- Cards rendered by renderDashboard() -->
         <div id="peopleGrid" class="people-grid"></div>
       </section>
 
@@ -94,12 +87,55 @@
           <form onsubmit="submitPerson(event)">
             <div class="field">
               <label>নাম</label>
-              <input name="name" type="text" required placeholder="যেমন: করিম" autocomplete="off" />
+              <input
+                name="name"
+                type="text"
+                required
+                placeholder="যেমন: করিম"
+                autocomplete="off"
+              />
             </div>
 
             <div class="field">
-              <label>শুরুতে কত টাকা? <span class="opt">(না দিলেও চলবে)</span></label>
-              <input name="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0" />
+              <label
+                >শুরুতে কত টাকা?
+                <span class="opt">(না দিলেও চলবে)</span></label
+              >
+              <input
+                name="amount"
+                type="number"
+                min="0"
+                step="1"
+                inputmode="numeric"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="field">
+              <label
+                >বিকাশ নম্বর <span class="opt">(না দিলেও চলবে)</span></label
+              >
+              <input
+                name="bkashNumber"
+                type="tel"
+                pattern="01[0-9]{9}"
+                maxlength="11"
+                inputmode="numeric"
+                placeholder="01XXXXXXXXX"
+              />
+            </div>
+
+            <div class="field">
+              <label
+                >হোয়াটসঅ্যাপ নম্বর
+                <span class="opt">(না দিলেও চলবে)</span></label
+              >
+              <input
+                name="whatsappNumber"
+                type="tel"
+                inputmode="numeric"
+                placeholder="8801XXXXXXXXX"
+              />
             </div>
 
             <button class="btn btn-primary btn-block btn-xl" type="submit">
@@ -110,9 +146,7 @@
       </section>
 
       <!-- ========================================================
-             VIEW: PERSON DETAIL
-             Opened only via the "বিস্তারিত ›" button on a card.
-             Handles edit / bundle / WhatsApp / delete / full history.
+             VIEW: PERSON DETAIL (ledger)
         ========================================================= -->
       <section id="viewPerson" class="view hidden">
         <div id="personDetail"></div>
