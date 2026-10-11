@@ -1546,3 +1546,10 @@ select {
 .lg-row .tx-del {
     justify-self: end;
 }
+
+.pc-btn.pc-wa {
+    background: linear-gradient(135deg, #14b866, #0a8347);
+    box-shadow: 0 6px 16px rgba(18, 160, 106, 0.28);
+    grid-column: 1 / -1;
+    margin-top: 8px;
+}

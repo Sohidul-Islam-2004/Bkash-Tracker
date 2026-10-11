@@ -1,51 +1,96 @@
 /* ============================================================
-   লেনদেন হিসাব — simple ledger
-   Person = name + amount.  Inside a person: সেন্ড / রিসিভ ledger.
+   হিসাব — simple ledger + optional bKash / WhatsApp
+   Storage: localStorage (no backend needed)
+   Person = name + optional bKash + optional WhatsApp.
    Balance = মোট রিসিভ − মোট সেন্ড   (computed from transactions)
    ============================================================ */
 
 /* ============================================================
+   STORAGE
+   ============================================================ */
+const STORAGE_KEY = "hisab_db_v1";
+
+function loadDB() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { people: [] };
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.people)) return { people: [] };
+        return parsed;
+    } catch (_) {
+        return { people: [] };
+    }
+}
+
+function saveDB() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    } catch (e) {
+        toast("সেভ করা যায়নি (স্টোরেজ পূর্ণ?)", "error");
+    }
+}
+
+/* ============================================================
    STATE
    ============================================================ */
-let db = { people: [] };
+let db = loadDB();
 let currentView = "viewDashboard";
 let currentPersonId = null;
 
 /* ============================================================
-   API HELPERS
+   DATA LAYER — replaces the old API calls
    ============================================================ */
-async function api(path, { method = "GET", body } = {}) {
-    const res = await fetch(path, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : undefined,
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || data.message || "Server error");
-    return data;
+function getAllPeople() {
+    return db.people;
 }
 
-async function apiForm(path, { method = "POST", formData } = {}) {
-    const res = await fetch(path, { method, body: formData });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || data.message || "Server error");
-    return data;
+function getPerson(id) {
+    return db.people.find((p) => p.id === id) || null;
+}
+
+function createPerson({ name, bkashNumber = "", whatsappNumber = "" }) {
+    const person = {
+        id: uid(),
+        name,
+        bkashNumber,
+        whatsappNumber,
+        transactions: [],
+        createdAt: new Date().toISOString(),
+    };
+    db.people.push(person);
+    saveDB();
+    return person;
+}
+
+function addTransaction(personId, { type, amount, date, counterparty = null, notes = null }) {
+    const p = getPerson(personId);
+    if (!p) throw new Error("person not found");
+    const txn = {
+        id: uid(),
+        type,
+        amount: Number(amount),
+        date: date || new Date().toISOString(),
+        counterparty,
+        notes,
+    };
+    p.transactions = p.transactions || [];
+    p.transactions.push(txn);
+    saveDB();
+    return txn;
+}
+
+function deleteTransaction(personId, txnId) {
+    const p = getPerson(personId);
+    if (!p) throw new Error("person not found");
+    const before = (p.transactions || []).length;
+    p.transactions = (p.transactions || []).filter((t) => t.id !== txnId);
+    if (p.transactions.length === before) throw new Error("Transaction not found");
+    saveDB();
 }
 
 /* ============================================================
-   NORMALIZE (_id → id) + LEDGER MATH
+   LEDGER MATH
    ============================================================ */
-function normalizePerson(p) {
-    return {
-        ...p,
-        id: p._id || p.id,
-        transactions: (p.transactions || []).map((t) => ({
-            ...t,
-            id: t._id || t.id,
-        })),
-    };
-}
-
 function totalsOf(p) {
     let sent = 0;
     let received = 0;
@@ -55,30 +100,6 @@ function totalsOf(p) {
         else received += a;
     });
     return { sent, received, balance: received - sent };
-}
-
-/* Load every person WITH transactions so balances are always exact */
-async function refreshPeople() {
-    const list = await api("/api/people");
-    db.people = await Promise.all(
-        list.map(async (item) => {
-            const np = normalizePerson(item);
-            if (Array.isArray(item.transactions)) return np;
-            try {
-                return normalizePerson(await api("/api/people/" + np.id));
-            } catch (_) {
-                return np;
-            }
-        })
-    );
-}
-
-async function refreshPerson(id) {
-    const np = normalizePerson(await api("/api/people/" + id));
-    const idx = db.people.findIndex((x) => x.id === id);
-    if (idx >= 0) db.people[idx] = np;
-    else db.people.push(np);
-    return np;
 }
 
 /* ============================================================
@@ -96,9 +117,6 @@ function translateError(msg) {
         "Person not found": "মানুষ খুঁজে পাওয়া যায়নি",
         "Invalid id": "ভুল আইডি",
         "Transaction not found": "লেনদেন খুঁজে পাওয়া যায়নি",
-        "exceeds daily limit": "আজকের সীমা পার হয়ে যাবে",
-        "exceeds monthly limit": "এই মাসের সীমা পার হয়ে যাবে",
-        "not enough balance": "ব্যালেন্স নেই",
     };
     for (const k in map) if (text.includes(k)) return map[k];
     return text;
@@ -171,13 +189,8 @@ function show(id) {
     window.scrollTo(0, 0);
 }
 
-async function showDashboard() {
+function showDashboard() {
     currentPersonId = null;
-    try {
-        await refreshPeople();
-    } catch (e) {
-        toast("সার্ভারে সংযোগ হয়নি", "error");
-    }
     renderDashboard();
     show("viewDashboard");
 }
@@ -188,11 +201,10 @@ function showAddPerson() {
     show("viewAddPerson");
 }
 
-async function showPerson(id) {
-    try {
-        await refreshPerson(id);
-    } catch (e) {
-        toast("লোড হয়নি: " + translateError(e.message), "error");
+function showPerson(id) {
+    const p = getPerson(id);
+    if (!p) {
+        toast("মানুষ খুঁজে পাওয়া যায়নি", "error");
         return;
     }
     currentPersonId = id;
@@ -368,10 +380,10 @@ function renderDashboard() {
             </div>
 
             <div class="pc-actions">
-                <button class="pc-btn pc-send" onclick="quickTxn('${p.id}','send')">
+                <button class="pc-btn pc-send" onclick="event.stopPropagation();quickTxn('${p.id}','send')">
                     <span class="pc-btn-arrow">↓</span> সেন্ড
                 </button>
-                <button class="pc-btn pc-receive" onclick="quickTxn('${p.id}','receive')">
+                <button class="pc-btn pc-receive" onclick="event.stopPropagation();quickTxn('${p.id}','receive')">
                     <span class="pc-btn-arrow">↑</span> রিসিভ
                 </button>
             </div>
@@ -384,7 +396,7 @@ function renderDashboard() {
    ADD SEND / RECEIVE  (dashboard card + person ledger)
    ============================================================ */
 async function quickTxn(id, type) {
-    const p = db.people.find((x) => x.id === id);
+    const p = getPerson(id);
     if (!p) return;
     const isSend = type === "send";
     const t = totalsOf(p);
@@ -409,17 +421,13 @@ async function quickTxn(id, type) {
     if (!amount || amount <= 0) return toast("টাকার পরিমাণ লিখুন", "error");
 
     try {
-        await api(`/api/transactions/${id}`, {
-            method: "POST",
-            body: {
-                type,
-                amount,
-                date: new Date().toISOString(),
-                counterparty: null,
-                notes: null,
-            },
+        addTransaction(id, {
+            type,
+            amount,
+            date: new Date().toISOString(),
+            counterparty: null,
+            notes: null,
         });
-        await refreshPerson(id);
         toast("যোগ হয়েছে ✔", "success");
         if (currentView === "viewPerson") renderPerson(id);
         else renderDashboard();
@@ -429,10 +437,10 @@ async function quickTxn(id, type) {
 }
 
 /* ============================================================
-   PERSON DETAIL — LEDGER (লেনদেন হিসাব)
+   PERSON DETAIL — LEDGER
    ============================================================ */
 function renderPerson(id) {
-    const p = db.people.find((x) => x.id === id);
+    const p = getPerson(id);
     if (!p) {
         showDashboard();
         return;
@@ -465,6 +473,7 @@ function renderPerson(id) {
                     <div class="lg-date">${dateStr} · ${timeStr}</div>
                 </div>
                 <div class="lg-col ${isSend ? "lg-out" : "lg-in"}">${isSend ? "-" : "+"}${money(tx.amount)}</div>
+                <button class="tx-del" onclick="deleteTxn('${p.id}','${tx.id}')" aria-label="মুছুন">✕</button>
             </div>`;
             })
             .join("")
@@ -480,6 +489,10 @@ function renderPerson(id) {
                 <div class="person-header-info">
                     <h2 class="person-header-name">${esc(p.name)}</h2>
                     <div class="lg-big bal-${balClass(t.balance)}">${money(t.balance)}</div>
+                    ${p.bkashNumber
+            ? `<div class="lg-date" style="margin-top:6px">বিকাশ: ${esc(p.bkashNumber)}</div>`
+            : ""
+        }
                 </div>
             </div>
 
@@ -490,6 +503,12 @@ function renderPerson(id) {
                 <button class="pc-btn pc-receive" onclick="quickTxn('${p.id}','receive')">
                     <span class="pc-btn-arrow">↑</span> রিসিভ
                 </button>
+                ${p.whatsappNumber
+            ? `<button class="pc-btn pc-wa" onclick="waRequest('${p.id}')">
+                               📱 হোয়াটসঅ্যাপে চান
+                           </button>`
+            : ""
+        }
             </div>
         </div>
 
@@ -501,51 +520,77 @@ function renderPerson(id) {
 }
 
 /* ============================================================
-   SUBMIT PERSON  (name + amount only)
+   WHATSAPP REQUEST
    ============================================================ */
-async function submitPerson(e) {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    const name = String(f.get("name") || "").trim();
-    const amount = Number(f.get("amount")) || 0;
-    if (!name) return toast("নাম লিখুন", "error");
+function waRequest(id) {
+    const p = getPerson(id);
+    if (!p || !p.whatsappNumber) return;
+    const t = totalsOf(p);
+    const msg = `আপনার বিকাশ নম্বর (${p.bkashNumber || "-"}) থেকে ${money(
+        Math.abs(t.balance) || 0
+    )} টাকা পাঠান।`;
+    let num = p.whatsappNumber.replace(/\D/g, "");
+    if (num.startsWith("01") && num.length === 11) num = "88" + num;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
+}
 
-    const fd = new FormData();
-    fd.append("name", name);
-    fd.append("bkashNumber", "");
-    fd.append("whatsappNumber", "");
-    fd.append("initialBalance", 0);
-    fd.append("dailyUsedBase", 0);
-    fd.append("monthlyUsedBase", 0);
+/* ============================================================
+   DELETE TRANSACTION
+   ============================================================ */
+async function deleteTxn(personId, txnId) {
+    const ok = await confirmModal({
+        title: "মুছে ফেলবেন?",
+        description: "এই লেনদেনটি চিরতরে মুছে যাবে।",
+        submitLabel: "হ্যাঁ, মুছুন",
+    });
+    if (!ok) return;
 
     try {
-        const created = await apiForm("/api/people", { formData: fd });
-        const newId = created._id || created.id;
-
-        /* starting amount becomes the first ledger entry (রিসিভ) */
-        if (amount > 0 && newId) {
-            await api(`/api/transactions/${newId}`, {
-                method: "POST",
-                body: {
-                    type: "receive",
-                    amount,
-                    date: new Date().toISOString(),
-                    counterparty: null,
-                    notes: null,
-                },
-            });
-        }
-
-        e.target.reset();
-        toast("যোগ হয়েছে ✔", "success");
-        await showDashboard();
+        deleteTransaction(personId, txnId);
+        toast("মুছে ফেলা হয়েছে");
+        if (currentView === "viewPerson") renderPerson(personId);
+        else renderDashboard();
     } catch (err) {
         toast(translateError(err.message), "error");
     }
 }
 
 /* ============================================================
-   DISABLE ZOOM + COPY  (kept from your original)
+   SUBMIT PERSON  (name + optional amount/bKash/WhatsApp)
+   ============================================================ */
+function submitPerson(e) {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const name = String(f.get("name") || "").trim();
+    const amount = Number(f.get("amount")) || 0;
+    const bkashNumber = String(f.get("bkashNumber") || "").replace(/\D/g, "");
+    const whatsappNumber = String(f.get("whatsappNumber") || "").replace(/\D/g, "");
+    if (!name) return toast("নাম লিখুন", "error");
+
+    try {
+        const p = createPerson({ name, bkashNumber, whatsappNumber });
+
+        /* Starting amount becomes the first ledger entry (রিসিভ) */
+        if (amount > 0) {
+            addTransaction(p.id, {
+                type: "receive",
+                amount,
+                date: new Date().toISOString(),
+                counterparty: null,
+                notes: null,
+            });
+        }
+
+        e.target.reset();
+        toast("যোগ হয়েছে ✔", "success");
+        showDashboard();
+    } catch (err) {
+        toast(translateError(err.message), "error");
+    }
+}
+
+/* ============================================================
+   DISABLE ZOOM + COPY
    ============================================================ */
 document.addEventListener(
     "wheel",
