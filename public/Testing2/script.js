@@ -498,10 +498,10 @@ function renderPerson(id) {
 
             <div class="pc-actions" style="margin-top:16px">
                 <button class="pc-btn pc-send" onclick="quickTxn('${p.id}','send')">
-                    <span class="pc-btn-arrow">↓</span> সেন্ড
+                    <span class="pc-btn-arrow">↓</span>হাসান পেয়েছি 
                 </button>
                 <button class="pc-btn pc-receive" onclick="quickTxn('${p.id}','receive')">
-                    <span class="pc-btn-arrow">↑</span> রিসিভ
+                    <span class="pc-btn-arrow">↑</span>হাসান দিয়েছি
                 </button>
                 ${p.whatsappNumber
             ? `<button class="pc-btn pc-wa" onclick="waRequest('${p.id}')">
