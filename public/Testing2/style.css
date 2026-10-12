@@ -1016,13 +1016,6 @@ textarea:focus {
     box-shadow: 0 6px 16px rgba(18, 160, 106, 0.24);
 }
 
-.pc-btn.pc-wa {
-    grid-column: 1 / -1;
-    background: linear-gradient(135deg, #14b866, #0a8347);
-    box-shadow: 0 6px 16px rgba(18, 160, 106, 0.24);
-    margin-top: 4px;
-}
-
 /* ------------------------------------------------------------
    TOTALS
 ------------------------------------------------------------ */
@@ -1208,8 +1201,6 @@ textarea:focus {
     }
 }
 
-/* The old rule was: @media (max-width: 380px) { .detail-actions { grid-template-columns: 1fr; } } */
-/* We removed that and replaced it with this to keep them side by side */
 @media (max-width: 380px) {
     .detail-actions {
         grid-template-columns: 1fr 1fr;

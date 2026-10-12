@@ -1,119 +1,176 @@
 /* ============================================================
-   হিসাব — simple ledger + optional bKash / WhatsApp
-   Storage: localStorage. No backend.
+   হিসাব — simple ledger (backend-driven)
+   All data fetched/saved via REST API. No localStorage.
 
-   Convention (পাওনা-focused):
+   Backend endpoints:
+     GET    /api/people/pawna                              → { people: [...] }
+     POST   /api/people/pawna                              → { person: {...} }
+     POST   /api/people/pawna/:id/transactions             → { transaction, summary }
+     DELETE /api/people/pawna/:id/transactions/:txnId      → { ok, summary }
+
+   Person shape:
+     { id, name, createdAt, summary, transactions: [...] }
+
+   Summary shape (from server):
+     { totalSend, totalReceive, net, status }
+
+   Transaction shape:
+     { id, type: "send"|"receive", amount, date, notes }
+
+   Convention:
      "send"    = আমি বাকি দিয়েছি (I gave / they owe me)
      "receive" = আমি টাকা পেয়েছি (I received money back)
-     net = totalGiven − totalReceived
-     net > 0  → "পাব"  (they owe me)   → green
-     net < 0  → "দেব"  (I owe them)    → red   (edge case)
+     net = totalSend − totalReceive
+     net > 0  → "পাব"   (they owe me)   → green
+     net < 0  → "দেব"   (I owe them)    → red
      net = 0  → "সমান"
    ============================================================ */
 
-const STORAGE_KEY = "hisab_db_v2";
+/* ------------------------------------------------------------
+   CONFIG
+------------------------------------------------------------ */
+// "" = same origin (Express serves the HTML too)
+// "http://localhost:3000" = Live Server / different origin
+const API_BASE = "";
+const API_ROOT = "/api/pawna/people";
 
 /* ============================================================
-   STORAGE
+   API LAYER
    ============================================================ */
-function loadDB() {
+async function api(path, options = {}) {
+    const url = API_BASE + path;
+    const { headers, ...rest } = options;
+
+    let res;
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { people: [] };
-        const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.people)) return { people: [] };
-        return parsed;
-    } catch (_) {
-        return { people: [] };
+        res = await fetch(url, {
+            ...rest,                       // method, body, etc.
+            headers: {
+                "Content-Type": "application/json",
+                ...(headers || {}),        // caller's headers merge in
+            },
+        });
+    } catch (netErr) {
+        console.error("Network error:", netErr);
+        throw new Error("সার্ভারের সাথে সংযোগ করা যায়নি");
     }
+
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+            const body = await res.json();
+            if (body && body.message) msg = body.message;
+            else if (body && body.error) msg = body.error;
+        } catch (_) { /* ignore */ }
+        throw new Error(msg);
+    }
+
+    if (res.status === 204) return null;
+    return res.json().catch(() => null);
 }
 
-function saveDB() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-    } catch (e) {
-        toast("সেভ করা যায়নি (স্টোরেজ পূর্ণ?)", "error");
-    }
+/* ---- normalize a person from the server ---- */
+function normalizePerson(p) {
+    if (!p) return null;
+    return {
+        id: p.id || p._id,
+        name: p.name,
+        createdAt: p.createdAt || new Date().toISOString(),
+        summary: p.summary || null,
+        transactions: Array.isArray(p.transactions) ? p.transactions : [],
+    };
+}
+
+async function fetchPeople() {
+    const data = await api(API_ROOT);
+    const list = data && Array.isArray(data.people) ? data.people : [];
+    return list.map(normalizePerson).filter(Boolean);
+}
+
+async function apiCreatePerson({ name }) {
+    const data = await api(API_ROOT, {
+        method: "POST",
+        body: JSON.stringify({ name }),
+    });
+    if (!data || !data.person) throw new Error("Invalid response");
+    return normalizePerson(data.person);
+}
+
+async function apiAddTransaction(personId, txn) {
+    const data = await api(
+        `${API_ROOT}/${encodeURIComponent(personId)}/transactions`,
+        {
+            method: "POST",
+            body: JSON.stringify(txn),
+        }
+    );
+    if (!data || !data.transaction) throw new Error("Invalid response");
+    return data;
+}
+
+async function apiDeleteTransaction(personId, txnId) {
+    return api(
+        `${API_ROOT}/${encodeURIComponent(
+            personId
+        )}/transactions/${encodeURIComponent(txnId)}`,
+        { method: "DELETE" }
+    );
 }
 
 /* ============================================================
    STATE
    ============================================================ */
-let db = loadDB();
+let db = { people: [] };
 let currentView = "viewDashboard";
 let currentPersonId = null;
+let loading = false;
 
 /* ============================================================
    DATA LAYER
    ============================================================ */
-function getAllPeople() {
-    return db.people;
-}
-
 function getPerson(id) {
     return db.people.find((p) => p.id === id) || null;
-}
-
-function createPerson({ name, bkashNumber = "", whatsappNumber = "" }) {
-    const person = {
-        id: uid(),
-        name,
-        bkashNumber,
-        whatsappNumber,
-        transactions: [],
-        createdAt: new Date().toISOString(),
-    };
-    db.people.push(person);
-    saveDB();
-    return person;
-}
-
-function addTransaction(personId, { type, amount, date, notes = null }) {
-    const p = getPerson(personId);
-    if (!p) throw new Error("person not found");
-    const txn = {
-        id: uid(),
-        type,
-        amount: Number(amount),
-        date: date || new Date().toISOString(),
-        notes,
-    };
-    p.transactions = p.transactions || [];
-    p.transactions.push(txn);
-    saveDB();
-    return txn;
-}
-
-function deleteTransaction(personId, txnId) {
-    const p = getPerson(personId);
-    if (!p) throw new Error("person not found");
-    const idx = (p.transactions || []).findIndex((t) => t.id === txnId);
-    if (idx < 0) throw new Error("Transaction not found");
-    const [removed] = p.transactions.splice(idx, 1);
-    saveDB();
-    return removed;
-}
-
-function restoreTransaction(personId, txn) {
-    const p = getPerson(personId);
-    if (!p || !txn) return;
-    p.transactions = p.transactions || [];
-    p.transactions.push(txn);
-    saveDB();
 }
 
 /* ============================================================
    LEDGER MATH
    ============================================================ */
 function totalsOf(p) {
+    if (p.summary) {
+        // Server may return totalSend/totalReceive OR totalPawna/totalPaid.
+        // Support both so it keeps working regardless of backend naming.
+        const given = Number(
+            p.summary.totalSend ??
+            p.summary.totalPawna ??
+            0
+        );
+        const got = Number(
+            p.summary.totalReceive ??
+            p.summary.totalPaid ??
+            0
+        );
+        const net = Number(p.summary.net ?? (given - got));
+        return { given, got, net };
+    }
+
     let given = 0;   // বাকি দিয়েছি
     let got = 0;     // টাকা পেয়েছি
     (p.transactions || []).forEach((t) => {
         const a = Number(t.amount || 0);
-        if (t.type === "send") given += a;
+        if (t.type === "send" || t.type === "pawna") given += a;
         else got += a;
     });
     return { given, got, net: given - got };
+}
+
+function applySummary(p, summary) {
+    if (!summary) return;
+    p.summary = {
+        totalSend: Number(summary.totalSend ?? summary.totalPawna ?? 0),
+        totalReceive: Number(summary.totalReceive ?? summary.totalPaid ?? 0),
+        net: Number(summary.net || 0),
+        status: summary.status || "soman",
+    };
 }
 
 /* ============================================================
@@ -438,6 +495,20 @@ function renderDashboard() {
 
     const people = db.people;
 
+    /* -------- loading state -------- */
+    if (loading) {
+        summary.hidden = true;
+        summary.innerHTML = "";
+        if (sb) sb.classList.add("solo");
+        grid.innerHTML = `
+            <div class="empty" style="grid-column:1/-1">
+                <div class="icon">⏳</div>
+                <h3>লোড হচ্ছে…</h3>
+                <p>ডেটা আনা হচ্ছে, একটু অপেক্ষা করুন।</p>
+            </div>`;
+        return;
+    }
+
     /* -------- summary strip -------- */
     if (people.length === 0) {
         summary.hidden = true;
@@ -478,12 +549,7 @@ function renderDashboard() {
     if (clearBtn) clearBtn.hidden = !q;
 
     const list = q
-        ? people.filter(
-            (p) =>
-                (p.name || "").toLowerCase().includes(q) ||
-                (p.bkashNumber || "").includes(q) ||
-                (p.whatsappNumber || "").includes(q)
-        )
+        ? people.filter((p) => (p.name || "").toLowerCase().includes(q))
         : people;
 
     if (list.length === 0) {
@@ -491,7 +557,7 @@ function renderDashboard() {
             <div class="empty" style="grid-column:1/-1">
                 <div class="icon">🔍</div>
                 <h3>কাউকে পাওয়া যায়নি</h3>
-                <p>অন্য নাম বা নম্বর দিয়ে খুঁজুন।</p>
+                <p>অন্য নাম দিয়ে খুঁজুন।</p>
             </div>`;
         return;
     }
@@ -536,7 +602,30 @@ function renderDashboard() {
 }
 
 /* ============================================================
-   QUICK TRANSACTION
+   RELOAD FROM SERVER
+   ============================================================ */
+async function reload({ silent = false } = {}) {
+    if (!silent) {
+        loading = true;
+        renderDashboard();
+    }
+    try {
+        db.people = await fetchPeople();
+        loading = false;
+        if (currentView === "viewPerson" && currentPersonId) {
+            renderPerson(currentPersonId);
+        } else {
+            renderDashboard();
+        }
+    } catch (err) {
+        loading = false;
+        renderDashboard();
+        if (!silent) toast("ডেটা আনতে ব্যর্থ: " + err.message, "error");
+    }
+}
+
+/* ============================================================
+   QUICK TRANSACTION  (type: "send" | "receive")
    ============================================================ */
 async function quickTxn(id, type) {
     const p = getPerson(id);
@@ -553,16 +642,22 @@ async function quickTxn(id, type) {
     if (!amount) return;
 
     try {
-        addTransaction(id, {
+        const data = await apiAddTransaction(id, {
             type,
             amount,
             date: new Date().toISOString(),
         });
+
+        // Update local mirror
+        p.transactions = p.transactions || [];
+        p.transactions.push(data.transaction);
+        applySummary(p, data.summary);
+
         toast("যোগ হয়েছে ✔", "success");
         if (currentView === "viewPerson") renderPerson(id);
         else renderDashboard();
     } catch (err) {
-        toast("কিছু ভুল হয়েছে", "error");
+        toast("সেভ করা যায়নি: " + err.message, "error");
     }
 }
 
@@ -587,14 +682,14 @@ function renderPerson(id) {
     const rowsHtml = txns.length
         ? txns
             .map((tx) => {
-                const isSend = tx.type === "send";
+                const isSend = tx.type === "send" || tx.type === "pawna";
                 return `
             <div class="lg-row">
                 <div class="lg-icon ${isSend ? "out" : "in"}">
                     ${isSend ? "↓" : "↑"}
                 </div>
                 <div class="lg-main">
-                    <div class="lg-note">${isSend ? "হাসান দিয়েছি" : "হাসান পেয়েছি"}</div>
+                    <div class="lg-note">${isSend ? "বাকি দিয়েছি" : "টাকা পেয়েছি"}</div>
                     <div class="lg-date">${fmtDate(tx.date)}</div>
                 </div>
                 <div class="lg-col ${isSend ? "lg-out" : "lg-in"}">
@@ -609,14 +704,6 @@ function renderPerson(id) {
                <p>এখনো কোনো লেনদেন নেই।</p>
            </div>`;
 
-    const subParts = [];
-    if (p.bkashNumber) subParts.push(`<span>💳 ${esc(p.bkashNumber)}</span>`);
-    if (p.whatsappNumber) subParts.push(`<span>📱 ${esc(p.whatsappNumber)}</span>`);
-
-    /* 
-      NOTE: To change the button text to "হাসান দিয়েছি" and "হাসান পেয়েছি", 
-      simply edit the text inside the <button> tags below.
-    */
     document.getElementById("personDetail").innerHTML = `
         <div class="panel">
             <div class="person-header">
@@ -625,10 +712,6 @@ function renderPerson(id) {
                     <h2 class="person-header-name">${esc(p.name)}</h2>
                     <div class="lg-big bal-${cls}">${money(Math.abs(t.net))}</div>
                     <div class="lg-big-label">${label}</div>
-                    ${subParts.length
-            ? `<div class="person-header-sub">${subParts.join("")}</div>`
-            : ""
-        }
                 </div>
             </div>
 
@@ -645,15 +728,11 @@ function renderPerson(id) {
 
             <div class="detail-actions">
                 <button class="pc-btn pc-send" data-txn="send" data-id="${p.id}">
-                    ↓ হাসান দিয়েছি
+                    ↓ বাকি দিয়েছি
                 </button>
                 <button class="pc-btn pc-receive" data-txn="receive" data-id="${p.id}">
-                    ↑ হাসান পেয়েছি
+                    ↑ টাকা পেয়েছি
                 </button>
-                ${p.whatsappNumber
-            ? `<button class="pc-btn pc-wa" data-wa="${p.id}">📱 হোয়াটসঅ্যাপে জানান</button>`
-            : ""
-        }
             </div>
         </div>
 
@@ -668,41 +747,9 @@ function renderPerson(id) {
     detail.querySelectorAll("[data-txn]").forEach((el) => {
         el.addEventListener("click", () => quickTxn(el.dataset.id, el.dataset.txn));
     });
-    detail.querySelectorAll("[data-wa]").forEach((el) => {
-        el.addEventListener("click", () => waRequest(el.dataset.wa));
-    });
     detail.querySelectorAll("[data-del]").forEach((el) => {
         el.addEventListener("click", () => deleteTxn(p.id, el.dataset.del));
     });
-}
-
-/* ============================================================
-   WHATSAPP REQUEST
-   ============================================================ */
-function waRequest(id) {
-    const p = getPerson(id);
-    if (!p || !p.whatsappNumber) return;
-    const t = totalsOf(p);
-
-    let msg;
-    if (t.net > 0) {
-        msg = `আসসালামু আলাইকুম। আমাদের হিসাব অনুযায়ী আপনার কাছে আমার ${money(
-            t.net
-        )} পাওনা আছে।`;
-    } else if (t.net < 0) {
-        msg = `আসসালামু আলাইকুম। আমাদের হিসাব অনুযায়ী আপনার ${money(
-            -t.net
-        )} পাওনা আছে।`;
-    } else {
-        msg = `আসসালামু আলাইকুম। আমাদের হিসাব সমান।`;
-    }
-    if (p.bkashNumber) msg += `\nবিকাশ: ${p.bkashNumber}`;
-
-    let num = p.whatsappNumber.replace(/\D/g, "");
-    if (num.startsWith("01") && num.length === 11) num = "88" + num;
-    if (num.length === 11 && !num.startsWith("880")) num = "88" + num;
-
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
 }
 
 /* ============================================================
@@ -719,64 +766,97 @@ async function deleteTxn(personId, txnId) {
     });
     if (!ok) return;
 
+    const p = getPerson(personId);
+    if (!p) return;
+
+    const idx = (p.transactions || []).findIndex((t) => t.id === txnId);
+    if (idx < 0) return;
+    const removed = p.transactions[idx];
+
     try {
-        const removed = deleteTransaction(personId, txnId);
+        const data = await apiDeleteTransaction(personId, txnId);
+
+        // Update local mirror
+        p.transactions.splice(idx, 1);
+        if (data && data.summary) applySummary(p, data.summary);
+        else p.summary = null; // force local recalc
 
         if (currentView === "viewPerson") renderPerson(personId);
         else renderDashboard();
 
         toast("মুছে ফেলা হয়েছে", "", {
             actionLabel: "ফিরিয়ে আনুন",
-            onAction: () => {
-                restoreTransaction(personId, removed);
-                if (currentView === "viewPerson") renderPerson(personId);
-                else renderDashboard();
-                toast("ফিরিয়ে আনা হয়েছে", "success");
+            onAction: async () => {
+                try {
+                    const restored = await apiAddTransaction(personId, {
+                        type: removed.type,
+                        amount: removed.amount,
+                        date: removed.date,
+                        notes: removed.notes || null,
+                    });
+                    p.transactions.push(restored.transaction);
+                    applySummary(p, restored.summary);
+                    if (currentView === "viewPerson") renderPerson(personId);
+                    else renderDashboard();
+                    toast("ফিরিয়ে আনা হয়েছে", "success");
+                } catch (err) {
+                    toast("ফিরিয়ে আনা যায়নি: " + err.message, "error");
+                }
             },
             duration: 4500,
         });
     } catch (err) {
-        toast("মুছতে পারা যায়নি", "error");
+        toast("মুছতে পারা যায়নি: " + err.message, "error");
     }
 }
 
 /* ============================================================
    SUBMIT PERSON
    ============================================================ */
-function submitPerson(e) {
+async function submitPerson(e) {
     e.preventDefault();
     const f = new FormData(e.target);
     const name = String(f.get("name") || "").trim();
     const amount = Number(f.get("amount")) || 0;
-    const bkashNumber = String(f.get("bkashNumber") || "").replace(/\D/g, "");
-    const whatsappNumber = String(f.get("whatsappNumber") || "").replace(
-        /\D/g,
-        ""
-    );
 
     if (!name) {
         toast("নাম লিখুন", "error");
         return;
     }
 
-    try {
-        const p = createPerson({ name, bkashNumber, whatsappNumber });
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : "";
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "সেভ হচ্ছে…";
+    }
 
-        /* Starting amount = they owe me → a "send" (I gave them) */
+    try {
+        const p = await apiCreatePerson({ name });
+        db.people.push(p);
+
+        /* Starting amount = they owe me → a "send" entry */
         if (amount > 0) {
-            addTransaction(p.id, {
+            const data = await apiAddTransaction(p.id, {
                 type: "send",
                 amount,
                 date: new Date().toISOString(),
                 notes: "শুরুর বাকি",
             });
+            p.transactions.push(data.transaction);
+            applySummary(p, data.summary);
         }
 
         e.target.reset();
         toast("যোগ হয়েছে ✔", "success");
         showDashboard();
     } catch (err) {
-        toast("যোগ করা যায়নি", "error");
+        toast("যোগ করা যায়নি: " + err.message, "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
     }
 }
 
@@ -835,7 +915,7 @@ document.addEventListener(
 /* ============================================================
    INIT
    ============================================================ */
-function init() {
+async function init() {
     renderLogo();
 
     /* back button */
@@ -871,8 +951,10 @@ function init() {
         .getElementById("addPersonForm")
         .addEventListener("submit", submitPerson);
 
-    /* start */
+    /* start — show loading then fetch from backend */
+    loading = true;
     showDashboard();
+    await reload();
 }
 
 init();
