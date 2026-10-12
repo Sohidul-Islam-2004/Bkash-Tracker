@@ -1,169 +1,34 @@
 /* ============================================================
-   হিসাব — complete stylesheet (DEEP COLORS)
-   Rich, visible palette. Light + dark theme.
-   ============================================================ */
-
-/* ============================================================
-   1. ROOT TOKENS — DEEP
+   ROOT TOKENS
    ============================================================ */
 :root {
-    color-scheme: light;
-
-    /* surfaces — deeper bg, white cards */
-    --bg: #e6e1e9;
+    --bg: #f4f6f9;
     --card: #ffffff;
-    --surface: #ffffff;
-    --surface-2: #faf7fb;
-    --surface-3: #ddd4de;
-    --surface-4: #d0c7d3;
+    --ink: #1e2430;
+    --ink-soft: #3b4456;
+    --muted: #5b6475;
+    --line: #e2e6ee;
 
-    /* ink — darker, higher contrast */
-    --ink: #0f1017;
-    --ink-2: #262a38;
-    --ink-soft: #262a38;
-    --muted: #4d5468;
-    --muted-2: #6d7488;
-    --muted-3: #8b8fa1;
+    --pink: #d12053;
+    --pink-press: #a8153f;
+    --pink-soft: #fde8ef;
 
-    /* lines — visible */
-    --line: #c9c0cc;
-    --line-2: #d8cfda;
-    --dash-line: #b9a8b5;
+    --green: #12a06a;
+    --amber: #f0a010;
+    --red: #dc2648;
+    --wa: #128c4a;
 
-    /* brand pink — deeper */
-    --pink: #b81845;
-    --pink-2: #d62c60;
-    --pink-press: #7d0f2e;
-    --pink-soft: #f9c9d8;
-    --pink-tint: #fce4ed;
-
-    /* accents — deeper */
-    --green: #0a7a4d;
-    --amber: #c97d00;
-    --red: #b8183c;
-    --wa: #0d6d3a;
-
-    --rose-bg: #f9c9d8;
-    --rose-bg-2: #f5a8c0;
-    --rose-ink: #7d0f2e;
-    --rose-line: #e88fa8;
-    --ok-bg: #b8e8d1;
-    --ok-ink: #064432;
-    --ok-line: #8ed4b4;
-    --warn-bg: #f8e0ab;
-    --warn-ink: #5c3200;
-    --warn-line: #e8c070;
-    --blue-bg: #cfe0fb;
-    --blue-bg-2: #b0ccf5;
-    --blue-ink: #123066;
-    --blue-line: #92b3e8;
-
-    /* radii */
-    --r-sm: 12px;
-    --r: 16px;
-    --r-md: 20px;
-    --r-lg: 24px;
-
-    /* shadows — strong, visible */
-    --shadow-xs: 0 1px 2px rgba(15, 16, 23, 0.08);
-    --shadow-sm: 0 2px 6px rgba(15, 16, 23, 0.10);
-    --shadow: 0 4px 14px rgba(15, 16, 23, 0.12);
-    --shadow-md: 0 10px 30px rgba(15, 16, 23, 0.14);
-    --shadow-lg: 0 24px 48px rgba(15, 16, 23, 0.18);
-    --shadow-pink: 0 8px 22px rgba(184, 24, 69, 0.32);
-
-    /* chrome */
-    --topbar-bg: rgba(255, 255, 255, 0.94);
-    --toast-bg: #0f1017;
-    --shine: rgba(255, 255, 255, 0.95);
-    --shine-soft: rgba(255, 255, 255, 0.55);
-
-    /* fonts */
-    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-    --wrap: 720px;
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     --top: env(safe-area-inset-top, 0px);
     --bottom: env(safe-area-inset-bottom, 0px);
+    --wrap: 1080px;
 }
 
 /* ============================================================
-   2. DARK THEME TOKENS — deeper
-   ============================================================ */
-:root[data-theme="dark"] {
-    color-scheme: dark;
-
-    --bg: #0a0c11;
-    --card: #14171f;
-    --surface: #14171f;
-    --surface-2: #1a1e28;
-    --surface-3: #232838;
-    --surface-4: #2e3444;
-
-    --ink: #f6f8fd;
-    --ink-2: #d0d6e4;
-    --ink-soft: #d0d6e4;
-    --muted: #9ba3b8;
-    --muted-2: #6f7788;
-    --muted-3: #6f7788;
-
-    --line: #232838;
-    --line-2: #1c2028;
-    --dash-line: #3a4052;
-
-    --pink: #ff3d75;
-    --pink-2: #ff6690;
-    --pink-press: #c81b4d;
-    --pink-soft: #3a1424;
-    --pink-tint: #1c0e17;
-
-    --green: #29d193;
-    --amber: #f5b13a;
-    --red: #ff5272;
-    --wa: #25b86a;
-
-    --rose-bg: #3a1424;
-    --rose-bg-2: #4a1b30;
-    --rose-ink: #ff8da3;
-    --rose-line: #5c2231;
-    --ok-bg: #0d2a1e;
-    --ok-ink: #5fe0ac;
-    --ok-line: #1b4a37;
-    --warn-bg: #33260d;
-    --warn-ink: #f7c46a;
-    --warn-line: #5a4318;
-    --blue-bg: #14233d;
-    --blue-bg-2: #19305a;
-    --blue-ink: #8db8ff;
-    --blue-line: #274a80;
-
-    --topbar-bg: rgba(20, 23, 31, 0.94);
-    --toast-bg: #232838;
-    --shine: rgba(255, 255, 255, 0.08);
-    --shine-soft: rgba(255, 255, 255, 0.06);
-
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.5);
-    --shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
-    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.65);
-    --shadow-pink: 0 8px 22px rgba(255, 61, 117, 0.32);
-}
-
-/* ============================================================
-   3. BASE
+   BASE
    ============================================================ */
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }
 
 html,
@@ -172,36 +37,16 @@ body {
     padding: 0;
 }
 
-html {
-    -webkit-text-size-adjust: 100%;
-    touch-action: manipulation;
-}
-
 body {
-    font-family: var(--font-body);
-    background-color: var(--bg);
-    background-image:
-        radial-gradient(1200px 600px at 50% -200px,
-            rgba(184, 24, 69, 0.12),
-            transparent 70%),
-        radial-gradient(900px 500px at 100% 100%,
-            rgba(110, 80, 120, 0.10),
-            transparent 70%);
-    background-attachment: fixed;
+    font-family: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
     color: var(--ink);
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 16px;
+    line-height: 1.6;
     min-height: 100vh;
     padding-bottom: calc(32px + var(--bottom));
     -webkit-font-smoothing: antialiased;
-    transition: background-color 0.25s ease, color 0.25s ease;
-}
-
-:root[data-theme="dark"] body {
-    background-image:
-        radial-gradient(1200px 600px at 50% -200px,
-            rgba(255, 61, 117, 0.16),
-            transparent 70%);
 }
 
 img {
@@ -214,7 +59,7 @@ button {
 }
 
 :focus-visible {
-    outline: 3px solid var(--pink);
+    outline: 3px solid var(--ink);
     outline-offset: 2px;
 }
 
@@ -222,6 +67,1992 @@ button {
     display: none !important;
 }
 
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--surface);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(10px + var(--top)) max(16px, calc((100% - var(--wrap)) / 2 + 16px)) 10px;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+#brandLogo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--surface);
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.topbar-titles {
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.topbar-titles h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.topbar-titles .sub {
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.container {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 16px 14px 32px;
+}
+
+.view {
+    animation: fade 0.25s ease-out;
+}
+
+#viewAddPerson {
+    max-width: 560px;
+    margin-inline: auto;
+}
+
+#viewPerson {
+    max-width: 860px;
+    margin-inline: auto;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ============================================================
+   SEARCH BAR + ADD BUTTON
+   ============================================================ */
+.searchbar {
+    position: sticky;
+    top: calc(61px + var(--top));
+    z-index: 30;
+    background: var(--bg);
+    padding: 2px 0 12px;
+    display: flex;
+    gap: 10px;
+}
+
+.searchbar input {
+    flex: 1;
+    min-height: 52px;
+    padding-left: 46px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    font-size: 16px;
+    font-family: inherit;
+    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%235b6475' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='6.5'/%3E%3Cpath d='M14 14l4 4'/%3E%3C/svg%3E") no-repeat 16px center;
+    color: var(--ink);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.searchbar input:focus {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: 0 0 0 4px var(--pink-soft);
+}
+
+.searchbar.solo input {
+    display: none;
+}
+
+.searchbar.solo .add-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.add-btn {
+    flex-shrink: 0;
+    height: 52px;
+    padding: 0 18px 0 14px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--pink);
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+}
+
+.add-btn i {
+    font-style: normal;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1;
+    margin-top: -3px;
+}
+
+.add-btn:hover {
+    background: var(--pink-press);
+}
+
+.add-btn:active {
+    transform: scale(0.96);
+}
+
+/* ============================================================
+   PEOPLE LIST
+   ============================================================ */
+.people-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.person {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 12px 14px;
+    cursor: pointer;
+    animation: cardIn 0.3s ease-out backwards;
+    transition: border-color 0.15s, transform 0.12s;
+}
+
+.person:hover {
+    border-color: var(--dash-line);
+}
+
+.person:active {
+    transform: scale(0.985);
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.p-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.p-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.p-name h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.p-name .num {
+    font-size: 14px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.p-bal {
+    font-family: "Noto Sans Bengali", inherit;
+    font-size: 22px;
+    font-weight: 800;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.p-limits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.p-limits .limit-row {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 12.5px;
+    line-height: 1.35;
+}
+
+.p-limits .limit-row b {
+    font-size: 14px;
+}
+
+.p-limits .limit-row b.over {
+    color: var(--rose-ink);
+}
+
+.p-limits .bar {
+    height: 8px;
+    margin: 4px 0 0;
+}
+
+/* ============================================================
+   LIMIT ROWS + BARS
+   ============================================================ */
+.limit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 0;
+}
+
+.limit-row b {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.bar {
+    height: 14px;
+    border-radius: 99px;
+    background: var(--surface-3);
+    margin: 5px 0 12px;
+    overflow: hidden;
+}
+
+.bar:last-child {
+    margin-bottom: 0;
+}
+
+.bar span {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease-out;
+}
+
+/* ============================================================
+   AVATARS
+   ============================================================ */
+.avatar {
+    border-radius: 50%;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+img.avatar {
+    border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+}
+
+.avatar-sm {
+    width: 52px;
+    height: 52px;
+    font-size: 19px;
+}
+
+.avatar-lg {
+    width: 68px;
+    height: 68px;
+    font-size: 24px;
+}
+
+.avatar-xl {
+    width: 96px;
+    height: 96px;
+    font-size: 34px;
+}
+
+/* ============================================================
+   PANELS
+   ============================================================ */
+.panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 20px 16px;
+    margin-bottom: 14px;
+}
+
+.panel-title,
+.panel h2 {
+    margin: 0 0 16px;
+    font-size: 19px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-title-icon {
+    font-size: 22px;
+}
+
+.section-label {
+    font-size: 15.5px;
+    margin: 22px 0 12px;
+    color: var(--ink-soft);
+    font-weight: 700;
+}
+
+/* ============================================================
+   STATS (person detail)
+   ============================================================ */
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat {
+    background: var(--bg);
+    border-radius: 16px;
+    padding: 14px;
+}
+
+.stat:first-child {
+    grid-column: 1 / -1;
+    background: var(--pink);
+    color: #ffffff;
+    padding: 18px;
+}
+
+.stat .lbl {
+    font-size: 13.5px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.stat .val {
+    font-family: "Noto Sans Bengali", inherit;
+    font-size: 24px;
+    font-weight: 800;
+    margin-top: 2px;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat .sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.stat:first-child .lbl {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.stat:first-child .val {
+    font-size: 34px;
+}
+
+/* ============================================================
+   FORMS
+   ============================================================ */
+form .row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0 14px;
+}
+
+.field {
+    margin-bottom: 16px;
+    min-width: 0;
+}
+
+label {
+    display: block;
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+label .opt {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 13px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    font-size: 16px;
+    font-family: inherit;
+    background: var(--surface-2);
+    color: var(--ink);
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input::placeholder {
+    color: var(--muted-3);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--pink);
+    background: var(--surface);
+    box-shadow: 0 0 0 4px var(--pink-soft);
+}
+
+select {
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none' stroke='%236f626b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+}
+
+/* Photo picker */
+.photo-field {
+    margin-bottom: 20px;
+}
+
+.photo-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 16px;
+    background: var(--bg);
+    border: 1.5px dashed var(--dash-line);
+    border-radius: 22px;
+}
+
+.photo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 0 20px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.photo-btn:hover {
+    background: var(--pink-soft);
+}
+
+.photo-btn:active {
+    transform: scale(0.97);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+    border: 0;
+    border-radius: 14px;
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: background 0.15s, transform 0.12s;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-primary {
+    background: var(--pink);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: var(--pink-press);
+}
+
+.btn-ghost {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
+.btn-light {
+    background: var(--surface-3);
+    color: var(--ink);
+}
+
+.btn-light:hover {
+    background: var(--surface-4);
+}
+
+.btn-danger {
+    background: var(--rose-bg);
+    color: var(--rose-ink);
+}
+
+.btn-danger:hover {
+    background: var(--rose-bg-2);
+}
+
+.btn-wa {
+    background: var(--wa);
+    color: #ffffff;
+}
+
+.btn-wa:hover {
+    background: #0e723c;
+}
+
+.btn-muted {
+    background: var(--surface-4);
+    color: var(--muted-3);
+    cursor: not-allowed;
+}
+
+.btn-muted:hover {
+    background: var(--surface-4);
+    transform: none;
+}
+
+.btn-sm {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 15px;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn-xl {
+    min-height: 56px;
+    font-size: 17px;
+    margin-top: 8px;
+}
+
+/* Toolbar */
+.toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.toolbar .btn {
+    padding: 0 10px;
+}
+
+/* Back button */
+.back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px 0 12px;
+    margin-bottom: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--ink);
+    font-size: 15.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.back:hover {
+    background: var(--pink-soft);
+}
+
+.back:active {
+    transform: scale(0.97);
+}
+
+/* ============================================================
+   FOLD-OUT PANELS (details/summary)
+   ============================================================ */
+.fold {
+    padding: 0;
+}
+
+.fold summary {
+    list-style: none;
+    cursor: pointer;
+    min-height: 60px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.fold summary::-webkit-details-marker {
+    display: none;
+}
+
+.fold summary::after {
+    content: "+";
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--pink);
+}
+
+.fold[open] summary::after {
+    content: "−";
+}
+
+.fold form {
+    padding: 4px 16px 20px;
+}
+
+.fold-body {
+    padding: 0 16px 18px;
+}
+
+/* ============================================================
+   TRANSACTION LIST
+   ============================================================ */
+.tx-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.tx-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.tx-item:first-child {
+    padding-top: 4px;
+}
+
+.tx-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Row 1: tag + counterparty + amount + delete */
+.tx-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tx-counterparty {
+    flex: 1;
+    min-width: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tx-counterparty.tx-empty {
+    color: var(--muted-3);
+    font-weight: 400;
+}
+
+.tx-amount {
+    font-family: "Noto Sans Bengali", inherit;
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    padding-left: 8px;
+    letter-spacing: -0.3px;
+}
+
+.tx-amount.send {
+    color: var(--red);
+}
+
+.tx-amount.send::before {
+    content: "− ";
+}
+
+.tx-amount.receive {
+    color: var(--green);
+}
+
+.tx-amount.receive::before {
+    content: "+ ";
+}
+
+/* Small delete button */
+.tx-del {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--surface-3);
+    color: var(--rose-ink);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.tx-del:hover {
+    background: var(--rose-bg-2);
+}
+
+.tx-del:active {
+    transform: scale(0.92);
+}
+
+/* Row 2: date + time */
+.tx-date {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.1px;
+}
+
+/* Row 3: notes */
+.tx-notes {
+    margin-top: 4px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   TAGS
+   ============================================================ */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.tag.send {
+    background: var(--rose-bg);
+    color: var(--rose-ink);
+}
+
+.tag.receive,
+.tag.verified {
+    background: var(--ok-bg);
+    color: var(--ok-ink);
+}
+
+.tag.pending {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+}
+
+.block-badge {
+    display: inline-block;
+    background: var(--rose-bg);
+    color: var(--rose-ink);
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.trx-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--surface-3);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    word-break: break-all;
+}
+
+/* ============================================================
+   EMPTY / WARN / INFO
+   ============================================================ */
+.empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+    background: var(--card);
+    border-radius: 22px;
+    border: 1.5px dashed var(--dash-line);
+}
+
+.empty .icon {
+    font-size: 60px;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+
+.empty h3 {
+    color: var(--ink);
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.empty p {
+    margin: 0;
+    font-size: 15.5px;
+}
+
+.warn,
+.info {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    font-size: 15px;
+    line-height: 1.65;
+    word-break: break-word;
+}
+
+.warn {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-line);
+    color: var(--warn-ink);
+    font-weight: 600;
+}
+
+.info {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+}
+
+.info-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(30px + var(--bottom));
+    transform: translate(-50%, 30px);
+    background: var(--toast-bg);
+    color: #ffffff;
+    padding: 13px 22px;
+    border-radius: 14px;
+    font-size: 15.5px;
+    font-weight: 600;
+    text-align: center;
+    max-width: 90vw;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 300;
+    transition: opacity 0.25s, transform 0.25s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.toast.success {
+    background: #0d7a51;
+}
+
+.toast.error {
+    background: #c31e3f;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(31, 23, 32, 0.55);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fade 0.2s ease-out;
+}
+
+.modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-radius: 28px 28px 0 0;
+    padding: 12px 20px calc(22px + var(--bottom));
+    animation: sheet 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.modal::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--line);
+    margin: 0 auto 16px;
+}
+
+@keyframes sheet {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+
+    to {
+        transform: none;
+        opacity: 1;
+    }
+}
+
+.modal h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.modal .modal-sub {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 18px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.modal-actions .btn {
+    flex: 1;
+}
+
+.preview-msg {
+    background: var(--ok-bg);
+    border: 1px solid var(--ok-line);
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 15px;
+    white-space: pre-wrap;
+    line-height: 1.7;
+    margin: 12px 0;
+    max-height: 220px;
+    overflow-y: auto;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (min-width: 520px) {
+    form .row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (min-width: 720px) {
+    body {
+        font-size: 16.5px;
+    }
+
+    .container {
+        padding: 28px 24px 40px;
+    }
+
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 12px;
+    }
+
+    .panel {
+        padding: 26px 24px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat:first-child {
+        grid-column: auto;
+    }
+
+    .stat:first-child .val {
+        font-size: 26px;
+    }
+
+    .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .toolbar .btn {
+        padding: 0 18px;
+    }
+
+    .modal-bg {
+        align-items: center;
+        padding: 16px;
+    }
+
+    .modal {
+        border-radius: 26px;
+        padding: 26px 24px;
+    }
+
+    .modal::before {
+        display: none;
+    }
+
+    .tx-item {
+        padding: 16px 0;
+    }
+
+    .tx-amount {
+        font-size: 19px;
+    }
+
+    .tx-date {
+        font-size: 13.5px;
+    }
+}
+
+@media (max-width: 360px) {
+    .toolbar .btn {
+        font-size: 14.5px;
+    }
+
+    .p-bal {
+        font-size: 19px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.person {
+    background: var(--surface);
+    padding: 12px 14px;
+    cursor: pointer;
+    border-radius: 20px;
+    animation: cardIn 0.3s ease-out backwards;
+
+    /* 1. SOFT TRANSLUCENT PINK BORDER: Ties the border edge directly into the bKash theme */
+    border: 2px solid rgba(209, 32, 83, 0.25);
+
+    /* 2. THEME-MATCHED FADED GLOW SHADOW: Creates a soft, multi-layered depth halo 
+       that prevents blending with the page background */
+    box-shadow: 0 10px 24px rgba(209, 32, 83, 0.08),
+        0 4px 12px rgba(30, 36, 48, 0.05),
+        0 0 0 4px rgba(209, 32, 83, 0.03);
+
+    /* Ensures clean structural rendering transitions */
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.person:hover {
+    /* solidifies the theme border and adds a crisp interactive lift */
+    border-color: var(--pink);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px rgba(209, 32, 83, 0.14),
+        0 6px 16px rgba(30, 36, 48, 0.08);
+}
+
+/* Balances alignment between the Bengali labels and the English digits */
+.detail-num {
+    font-size: 15px !important;
+    line-height: 1 !important;
+    display: inline-block;
+    vertical-align: middle;
+    /* Optional: Makes numbers look clean and evenly spaced */
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   BUNDLE STAT BOX
+   ============================================================ */
+.stat-bundle {
+    background: linear-gradient(135deg, var(--blue-bg) 0%, var(--blue-bg-2) 100%);
+    border-color: var(--blue-line);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-bundle::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.15), transparent 70%);
+    pointer-events: none;
+}
+
+.stat-bundle .lbl {
+    color: var(--blue-ink);
+    font-size: 12px;
+    letter-spacing: 0.2px;
+}
+
+.stat-bundle .val {
+    color: var(--blue-ink);
+    font-size: 22px;
+}
+
+.stat-bundle .sub {
+    color: var(--blue-ink);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Empty state — lighter */
+.stat-bundle.stat-bundle-empty {
+    background: var(--surface-2);
+    border-color: var(--line);
+}
+
+.stat-bundle.stat-bundle-empty::before {
+    display: none;
+}
+
+.stat-bundle.stat-bundle-empty .lbl {
+    color: var(--muted);
+}
+
+.stat-bundle.stat-bundle-empty .val {
+    color: var(--muted-3);
+}
+
+.stat-bundle.stat-bundle-empty .sub {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+/* Expired state — red tint */
+.stat-bundle.stat-bundle-expired {
+    background: linear-gradient(135deg, var(--rose-bg) 0%, var(--rose-bg) 100%);
+    border-color: var(--rose-line);
+}
+
+.stat-bundle.stat-bundle-expired::before {
+    background: radial-gradient(circle, rgba(225, 29, 72, 0.18), transparent 70%);
+}
+
+.stat-bundle.stat-bundle-expired .lbl {
+    color: var(--rose-ink);
+}
+
+.stat-bundle.stat-bundle-expired .val {
+    color: var(--rose-ink);
+}
+
+.stat-bundle.stat-bundle-expired .sub {
+    color: var(--rose-ink);
+    font-weight: 700;
+}
+
+/* 4-column desktop grid */
+@media (min-width: 720px) {
+    .stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat:first-child {
+        grid-column: auto;
+    }
+}
+
+/* ============================================================
+   PERSON HEADER — aligned avatar + info
+   ============================================================ */
+.person-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.person-header-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.person-header-name {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.person-header-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14.5px;
+    line-height: 1.5;
+}
+
+.person-header-lbl {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+    min-width: 64px;
+}
+
+.person-header-val {
+    color: var(--ink-soft);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.2px;
+    word-break: break-all;
+}
+
+/* ============================================================
+   PERSON STATS — no empty gaps
+   ============================================================ */
+.person-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.person-stats .stat-balance {
+    grid-column: 1 / -1;
+}
+
+.person-stats .stat-bundle {
+    grid-column: 1 / -1;
+}
+
+/* ============================================================
+   PERSON TOOLBAR — primary full, rest 2-col
+   ============================================================ */
+.person-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.person-toolbar .toolbar-full {
+    grid-column: 1 / -1;
+}
+
+/* ============================================================
+   DESKTOP — 4-col stats, wrapped toolbar
+   ============================================================ */
+@media (min-width: 720px) {
+    .person-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .person-stats .stat-balance,
+    .person-stats .stat-bundle {
+        grid-column: auto;
+    }
+
+    .person-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .person-toolbar .toolbar-full {
+        grid-column: auto;
+        flex: 1 1 100%;
+    }
+
+    .person-toolbar .btn {
+        padding: 0 20px;
+    }
+}
+
+
+/* ============================================================
+   PEOPLE GRID
+   ============================================================ */
+.people-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+@media (min-width: 620px) {
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+    }
+}
+
+/* ============================================================
+   PERSON CARD
+   ============================================================ */
+.person {
+    position: relative;
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 18px 18px 16px;
+    cursor: pointer;
+    overflow: hidden;
+    border: 1px solid rgba(18, 23, 43, 0.06);
+    box-shadow:
+        0 1px 2px rgba(18, 23, 43, 0.03),
+        0 8px 22px rgba(18, 23, 43, 0.05);
+    transition:
+        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.22s,
+        border-color 0.22s;
+    animation: cardIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* Soft gradient accent on the top-right corner */
+.person::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(209, 32, 83, 0.08), transparent 70%);
+    pointer-events: none;
+    transition: transform 0.3s;
+}
+
+/* Top edge highlight */
+.person::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 20px;
+    right: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--shine), transparent);
+    pointer-events: none;
+}
+
+.person:hover {
+    transform: translateY(-4px);
+    border-color: rgba(209, 32, 83, 0.18);
+    box-shadow:
+        0 4px 8px rgba(18, 23, 43, 0.04),
+        0 20px 40px rgba(209, 32, 83, 0.1);
+}
+
+.person:hover::before {
+    transform: scale(1.4);
+}
+
+.person:active {
+    transform: translateY(-1px) scale(0.995);
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Blocked state — subtle tint */
+.person.blocked {
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%);
+}
+
+/* ============================================================
+   TOP ROW — avatar + name + balance
+   ============================================================ */
+.p-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.p-top .avatar-sm {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+    border: 2.5px solid var(--surface);
+    box-shadow:
+        0 0 0 1px rgba(18, 23, 43, 0.06),
+        0 6px 16px rgba(18, 23, 43, 0.08);
+}
+
+.p-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.p-name h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.p-name .num {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+}
+
+/* Balance — gradient text, prominent */
+.p-bal {
+    font-family: "Noto Sans Bengali", inherit;
+    font-size: 22px;
+    font-weight: 800;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.6px;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--ink-soft) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   LIMITS BLOCK — two side-by-side columns
+   ============================================================ */
+.p-limits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(18, 23, 43, 0.08);
+    position: relative;
+    z-index: 1;
+}
+
+.p-limits>div {
+    min-width: 0;
+}
+
+.p-limits .limit-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 11.5px;
+    line-height: 1.3;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.p-limits .limit-row span {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.p-limits .limit-row b {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+}
+
+.p-limits .limit-row b.over {
+    color: var(--red);
+}
+
+/* Progress bars — thin, pill, with shimmer */
+.p-limits .bar {
+    height: 6px;
+    margin: 8px 0 0;
+    background: var(--surface-4);
+    box-shadow: inset 0 1px 2px rgba(18, 23, 43, 0.04);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.p-limits .bar span {
+    border-radius: 99px;
+    position: relative;
+    overflow: hidden;
+    display: block;
+    height: 100%;
+    transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.p-limits .bar span::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 35%, var(--shine-soft) 50%, transparent 65%);
+    animation: barShimmer 3s infinite;
+}
+
+@keyframes barShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ============================================================
+   BLOCK BADGE — sits next to name
+   ============================================================ */
+.block-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: linear-gradient(135deg, var(--rose-bg), var(--rose-bg-2));
+    color: var(--rose-ink);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.15);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   PEOPLE GRID — clearer separation
+   ============================================================ */
+.people-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 620px) {
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 18px;
+    }
+}
+
+/* ============================================================
+   PERSON CARD — bigger text, plain balance, strong shadow
+   ============================================================ */
+.person {
+    position: relative;
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 20px 20px 18px;
+    cursor: pointer;
+    overflow: hidden;
+    border: 1px solid rgba(18, 23, 43, 0.06);
+    box-shadow:
+        0 2px 4px rgba(18, 23, 43, 0.04),
+        0 10px 24px rgba(18, 23, 43, 0.08),
+        0 24px 48px rgba(18, 23, 43, 0.06);
+    transition:
+        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.22s,
+        border-color 0.22s;
+    animation: cardIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+/* Remove the pink radial tint in the corner */
+.person::before {
+    display: none;
+}
+
+/* Keep top highlight */
+.person::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--shine), transparent);
+    pointer-events: none;
+}
+
+.person:hover {
+    transform: translateY(-4px);
+    border-color: rgba(209, 32, 83, 0.15);
+    box-shadow:
+        0 4px 8px rgba(18, 23, 43, 0.05),
+        0 16px 36px rgba(18, 23, 43, 0.12),
+        0 32px 64px rgba(18, 23, 43, 0.08);
+}
+
+.person:active {
+    transform: translateY(-1px) scale(0.995);
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   TOP ROW — avatar + name + balance
+   ============================================================ */
+.p-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.p-top .avatar-sm {
+    width: 62px;
+    height: 62px;
+    font-size: 22px;
+    border: 3px solid var(--surface);
+    box-shadow:
+        0 0 0 1px rgba(18, 23, 43, 0.06),
+        0 6px 16px rgba(18, 23, 43, 0.1);
+}
+
+.p-name {
+    flex: 1;
+    min-width: 0;
+}
+
+/* BIGGER NAME */
+.p-name h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* BIGGER NUMBER */
+.p-name .num {
+    font-size: 15px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* PLAIN BALANCE — no gradient, no color */
+.p-bal {
+    font-family: "Noto Sans Bengali", inherit;
+    font-size: 26px;
+    font-weight: 800;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.6px;
+    color: var(--ink);
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   LIMITS BLOCK
+   ============================================================ */
+.p-limits {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(18, 23, 43, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.p-limits>div {
+    min-width: 0;
+}
+
+.p-limits .limit-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.p-limits .limit-row span {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 11.5px;
+}
+
+.p-limits .limit-row b {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.4px;
+    text-transform: none;
+    font-variant-numeric: tabular-nums;
+    margin-top: 3px;
+}
+
+.p-limits .limit-row b.over {
+    color: var(--red);
+}
+
+/* Bars */
+.p-limits .bar {
+    height: 7px;
+    margin: 9px 0 0;
+    background: var(--surface-4);
+    box-shadow: inset 0 1px 2px rgba(18, 23, 43, 0.04);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.p-limits .bar span {
+    border-radius: 99px;
+    position: relative;
+    overflow: hidden;
+    display: block;
+    height: 100%;
+    transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.p-limits .bar span::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 35%, var(--shine-soft) 50%, transparent 65%);
+    animation: barShimmer 3s infinite;
+}
+
+@keyframes barShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ============================================================
+   BLOCK BADGE
+   ============================================================ */
+.block-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: linear-gradient(135deg, var(--rose-bg), var(--rose-bg-2));
+    color: var(--rose-ink);
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.15);
+    flex-shrink: 0;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.summary-item {
+    background: var(--surface);
+    border: 1px solid var(--line, var(--line));
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.summary-item span {
+    display: block;
+    font-size: 13px;
+    color: var(--muted, #5b6475);
+}
+
+.summary-item b {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 620px) {
+    .summary {
+        max-width: 420px;
+    }
+}
+
+/* ============================================================
+   BUNDLE PILL — small badge on dashboard cards
+   ============================================================ */
+.bundle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--blue-bg) 0%, var(--blue-bg-2) 100%);
+    color: var(--blue-ink);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    line-height: 1.5;
+    border: 1px solid var(--blue-line);
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
+    vertical-align: middle;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
+/* Bundle pill — empty (0 count) state */
+.bundle-pill-empty {
+    background: var(--surface-3);
+    color: var(--muted-3);
+    border-color: var(--line);
+    box-shadow: none;
+    opacity: 0.9;
+}
+
+/* Disable text selection + copy */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Allow selection only in input fields (so users can still edit) */
 input,
 textarea,
 select,
@@ -232,18 +2063,104 @@ select,
     user-select: text;
 }
 
-/* tabular numerals */
-.pc-bal,
-.lg-big,
-.lg-col,
-.lg-total b,
-.summary-item b,
-.amount-chip,
-.p-name .num,
-.p-limits .limit-row b,
+/* Prevent long-press context menu on mobile */
+img,
+a,
+button {
+    -webkit-touch-callout: none;
+}
+
+/* Prevent double-tap zoom on iOS */
+html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+/* ============================================================
+   THEME ALIGNMENT WITH DASHBOARD
+   ------------------------------------------------------------
+   Brings this bKash হিসাব app in line with the dashboard:
+   same pink (#d12053), same surface palette (#f5f3f6),
+   same pink radial glow, same font stack, same radii scale,
+   same pink-tinted shadows, glass topbar, matching cards.
+   Paste at the BOTTOM of style.css.
+   ============================================================ */
+
+/* ---------- 1. TOKENS ---------- */
+:root {
+    /* surface */
+    --bg: #f5f3f6;
+    --card: #ffffff;
+
+    /* ink */
+    --ink: #17181f;
+    --ink-2: #3a3d4a;
+    --ink-soft: #3a3d4a;
+    --muted: #6e7180;
+    --muted-2: #a1a4b3;
+
+    /* lines */
+    --line: #ebe6ec;
+    --line-2: #f3eef4;
+
+    /* brand pink — matches dashboard */
+    --pink: #d12053;
+    --pink-2: #e8437a;
+    --pink-press: #a8153f;
+    --pink-soft: #fde8ef;
+    --pink-tint: #fff6fa;
+
+    /* accents */
+    --green: #12a06a;
+    --amber: #f0a010;
+    --red: #dc2648;
+    --wa: #128c4a;
+
+    /* radii — dashboard scale */
+    --r-sm: 12px;
+    --r: 16px;
+    --r-md: 20px;
+    --r-lg: 24px;
+
+    /* shadows — dashboard pink-tinted */
+    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
+    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
+    --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
+    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
+    --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
+    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+
+    /* fonts — dashboard stack */
+    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    /* layout — the dashboard shell feel, still room for 2-col grid */
+    --wrap: 720px;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- 2. BODY — pink radial glow ---------- */
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg);
+    background-image: radial-gradient(1200px 600px at 50% -200px,
+            rgba(209, 32, 83, 0.08),
+            transparent 70%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* numbers use the tabular numeral font, like the dashboard */
 .p-bal,
 .tx-amount,
 .stat .val,
+.summary-item b,
+.limit-row b,
+.p-name .num,
 .person-header-val,
 .tx-date,
 .bundle-pill {
@@ -251,59 +2168,422 @@ select,
     font-variant-numeric: tabular-nums;
 }
 
-/* ============================================================
-   4. TOPBAR
-   ============================================================ */
+/* ---------- 3. TOPBAR — glass + blur like dashboard ---------- */
 .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
     background: var(--topbar-bg);
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 1.5px solid var(--line);
-    box-shadow: 0 2px 10px rgba(15, 16, 23, 0.08);
-    display: flex;
-    align-items: center;
+    border-bottom: 1px solid var(--line-2);
     padding: calc(10px + var(--top)) 16px 10px;
-    transition: background 0.25s ease;
+    transition: box-shadow 0.25s var(--ease);
 }
 
 .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
     max-width: var(--wrap);
     margin: 0 auto;
     width: 100%;
 }
 
+/* brand logo — dashboard tile treatment */
 #brandLogo {
     width: 42px;
     height: 42px;
     border-radius: 13px;
     object-fit: cover;
+    background: transparent;
+    padding: 0;
     box-shadow: var(--shadow-pink);
     flex-shrink: 0;
 }
 
-.topbar-titles {
-    min-width: 0;
-    flex: 1;
-}
-
 .topbar-titles h1 {
-    margin: 0;
     font-size: 17px;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.4px;
     color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
+/* ---------- 4. LAYOUT ---------- */
+.container {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 16px 14px calc(32px + var(--bottom));
+}
+
+#viewAddPerson {
+    max-width: 560px;
+    margin-inline: auto;
+}
+
+#viewPerson {
+    max-width: 720px;
+    margin-inline: auto;
+}
+
+/* ---------- 5. PANELS — dashboard radius + soft shadow ---------- */
+.panel {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    padding: 18px 16px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 12px;
+}
+
+.panel-title,
+.panel h2 {
+    font-size: 16px;
+    letter-spacing: -0.2px;
+    margin: 0 0 14px;
+    color: var(--ink);
+}
+
+/* ---------- 6. PERSON CARD — clean, dashboard-shaped ---------- */
+.person {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: transform 0.2s var(--ease),
+        box-shadow 0.25s var(--ease),
+        border-color 0.2s var(--ease);
+}
+
+/* remove the old decorative glows on person cards */
+.person::before,
+.person::after {
+    display: none;
+}
+
+.person:hover {
+    transform: translateY(-2px);
+    border-color: rgba(209, 32, 83, 0.18);
+    box-shadow: var(--shadow-md);
+}
+
+.person:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.person.blocked {
+    background: var(--pink-tint);
+}
+
+/* ---------- 7. SUMMARY + STAT tiles ---------- */
+.summary-item {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-xs);
+}
+
+.stat {
+    background: var(--surface-2);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+}
+
+.stat:first-child,
+.person-stats .stat-balance {
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: var(--shadow-pink);
+}
+
+/* ---------- 8. BUTTONS — dashboard look ---------- */
+.btn {
+    border-radius: 14px;
+    font-weight: 700;
+    transition: transform 0.15s var(--ease),
+        box-shadow 0.2s var(--ease),
+        background 0.15s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    color: #fff;
+    box-shadow: var(--shadow-pink);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--pink-2), var(--pink-press));
+    box-shadow: 0 10px 26px rgba(209, 32, 83, 0.36);
+}
+
+.btn-light {
+    background: var(--surface-3);
+    color: var(--ink-2);
+}
+
+.btn-light:hover {
+    background: var(--surface-4);
+}
+
+.btn-ghost {
+    background: var(--surface);
+    color: var(--ink-2);
+    border: 1px solid var(--line);
+}
+
+.btn-danger {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+}
+
+.btn-danger:hover {
+    background: var(--rose-bg-2);
+}
+
+.btn-wa {
+    background: linear-gradient(135deg, #14b866, #0a8347);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(18, 160, 106, 0.28);
+}
+
+.btn-wa:hover {
+    box-shadow: 0 10px 26px rgba(18, 160, 106, 0.36);
+}
+
+.btn-muted {
+    background: var(--surface-3);
+    color: var(--muted-2);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.add-btn {
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
+    box-shadow: var(--shadow-pink);
+    border-radius: 14px;
+}
+
+.add-btn:hover {
+    box-shadow: 0 10px 26px rgba(209, 32, 83, 0.42);
+}
+
+.back {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--ink-2);
+}
+
+.back:hover {
+    background: var(--pink-tint);
+    border-color: rgba(209, 32, 83, 0.2);
+}
+
+/* ---------- 9. INPUTS — dashboard radius + focus ring ---------- */
+input,
+select,
+textarea {
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface-2);
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--pink);
+    background: var(--surface);
+    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+}
+
+.searchbar input {
+    border-radius: 14px;
+    background-color: var(--surface);
+}
+
+.searchbar input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+}
+
+/* ---------- 10. TAGS + BADGES ---------- */
+.tag.send {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+}
+
+.tag.receive,
+.tag.verified {
+    background: var(--ok-bg);
+    color: var(--ok-ink);
+}
+
+.tag.pending {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+}
+
+.block-badge {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    box-shadow: none;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.bundle-pill {
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    border-color: var(--rose-line);
+    box-shadow: none;
+}
+
+.bundle-pill-empty {
+    background: var(--surface-3);
+    color: var(--muted-2);
+    border-color: var(--line);
+}
+
+/* ---------- 11. LIMIT BARS ---------- */
+.bar {
+    background: var(--surface-3);
+    box-shadow: inset 0 1px 2px rgba(20, 22, 34, 0.04);
+}
+
+/* ---------- 12. MODAL — dashboard sheet ---------- */
+.modal {
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -20px 60px rgba(20, 22, 34, 0.15);
+}
+
+.modal::before {
+    background: var(--line);
+}
+
+.modal h3 {
+    font-size: 17px;
+    letter-spacing: -0.2px;
+}
+
+@media (min-width: 720px) {
+    .modal {
+        border-radius: 24px;
+    }
+}
+
+/* ---------- 13. TOAST — dashboard style ---------- */
+.toast {
+    background: var(--toast-bg);
+    color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+    font-weight: 600;
+}
+
+.toast.success {
+    background: #0d7a51;
+}
+
+.toast.error {
+    background: #b81d38;
+}
+
+/* ---------- 14. EMPTY / WARN / INFO ---------- */
+.empty {
+    background: var(--card);
+    border: 1.5px dashed var(--dash-line);
+    border-radius: var(--r-lg);
+    color: var(--muted);
+}
+
+.empty h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.empty p {
+    font-size: 13.5px;
+}
+
+.warn {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-line);
+    border-radius: 14px;
+    color: var(--warn-ink);
+}
+
+.info {
+    background: var(--pink-soft);
+    border-radius: 14px;
+    color: var(--pink-press);
+}
+
+/* ---------- 15. TX LIST — lighter dividers ---------- */
+.tx-item {
+    border-bottom: 1px solid var(--line-2);
+}
+
+.tx-notes {
+    color: var(--ink-soft);
+}
+
+/* ---------- 16. STAGGER — match dashboard card entrance ---------- */
+.person:nth-child(1) {
+    animation-delay: 0.02s;
+}
+
+.person:nth-child(2) {
+    animation-delay: 0.05s;
+}
+
+.person:nth-child(3) {
+    animation-delay: 0.08s;
+}
+
+.person:nth-child(4) {
+    animation-delay: 0.11s;
+}
+
+.person:nth-child(5) {
+    animation-delay: 0.14s;
+}
+
+.person:nth-child(6) {
+    animation-delay: 0.17s;
+}
+
+/* ---------- 17. RESPONSIVE — dashboard shell rhythm ---------- */
+@media (min-width: 480px) {
+    .container {
+        padding: 18px 16px calc(36px + var(--bottom));
+    }
+}
+
+@media (min-width: 720px) {
+    .container {
+        padding: 24px 20px calc(40px + var(--bottom));
+    }
+
+    /* keep the 2×2 stat grid tight */
+    .stats,
+    .person-stats {
+        gap: 12px;
+    }
+}
+
+/* ---------- 18. REDUCED MOTION — respect user choice ---------- */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================================
+   BACK BUTTON — matches the dashboard / entry manager style
+   ============================================================ */
 .back-btn {
     width: 40px;
     height: 40px;
@@ -311,12 +2591,12 @@ select,
     border: 0;
     border-radius: 12px;
     background: var(--pink-soft);
-    color: var(--pink-press);
+    color: var(--pink);
     display: grid;
     place-items: center;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(184, 24, 69, 0.15);
     transition: background 0.15s, transform 0.12s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .back-btn:hover {
@@ -332,6 +2612,294 @@ select,
     height: 20px;
 }
 
+/* ============================================================
+   DASHBOARD PERSON CARD — compact override only
+   Wins the cascade over all earlier .person blocks.
+   ============================================================ */
+
+.person {
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--line-2);
+    background: var(--card);
+    box-shadow:
+        0 1px 2px rgba(20, 22, 34, 0.03),
+        0 4px 12px rgba(20, 22, 34, 0.04);
+    transition:
+        transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.22s,
+        border-color 0.18s;
+}
+
+/* kill every decorative pseudo from the earlier passes */
+.person::before,
+.person::after {
+    display: none !important;
+}
+
+.person:hover {
+    transform: translateY(-1px);
+    border-color: rgba(209, 32, 83, 0.18);
+    box-shadow:
+        0 2px 4px rgba(20, 22, 34, 0.04),
+        0 10px 22px rgba(209, 32, 83, 0.08);
+}
+
+.person:active {
+    transform: translateY(0) scale(0.995);
+}
+
+/* top row: avatar + name + balance */
+.p-top {
+    gap: 10px;
+    align-items: center;
+}
+
+.p-top .avatar-sm {
+    width: 42px;
+    height: 42px;
+    font-size: 15px;
+    font-weight: 800;
+    border: 2px solid var(--surface);
+    box-shadow:
+        0 0 0 1px rgba(20, 22, 34, 0.06),
+        0 2px 6px rgba(20, 22, 34, 0.05);
+}
+
+.p-name h3 {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+    gap: 6px;
+}
+
+.p-name .num {
+    font-size: 12px;
+    margin-top: 1px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.p-bal {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--ink);
+    line-height: 1.1;
+}
+
+/* limits block */
+.p-limits {
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px dashed rgba(20, 22, 34, 0.08);
+}
+
+.p-limits .limit-row {
+    gap: 0;
+    font-size: 10.5px;
+    line-height: 1.3;
+    letter-spacing: 0.4px;
+}
+
+.p-limits .limit-row span {
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.p-limits .limit-row b {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-top: 1px;
+}
+
+.p-limits .bar {
+    height: 5px;
+    margin-top: 5px;
+}
+
+/* badges on the card */
+.bundle-pill {
+    padding: 1.5px 7px;
+    font-size: 10.5px;
+    border-radius: 20px;
+    gap: 2px;
+}
+
+.block-badge {
+    padding: 2px 7px;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    border-radius: 20px;
+    background: var(--pink-soft);
+    color: var(--pink-press);
+    box-shadow: none;
+}
+
+/* grid density */
+.people-grid {
+    gap: 10px;
+}
+
+@media (min-width: 620px) {
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+    }
+}
+
+/* tiny screens */
+@media (max-width: 380px) {
+    .person {
+        padding: 10px 12px;
+    }
+
+    .p-top .avatar-sm {
+        width: 38px;
+        height: 38px;
+        font-size: 13px;
+    }
+
+    .p-name h3 {
+        font-size: 14px;
+    }
+
+    .p-bal {
+        font-size: 15.5px;
+    }
+}
+
+/* ============================================================
+   THEME  —  light / dark  (toggle button in the topbar)
+   ============================================================ */
+:root {
+    color-scheme: light;
+    /* softer, less glaring white */
+    --bg: #ebe7ec;
+    --card: #f7f4f7;
+    --surface: #f7f4f7;
+    --surface-2: #f2eef2;
+    --surface-3: #ebe5ea;
+    --surface-4: #e3dce2;
+    --muted-3: #8b93a7;
+    --rose-bg: #fde3e8;
+    --rose-bg-2: #fadbe1;
+    --rose-ink: #b3122f;
+    --rose-line: #fecdd3;
+    --ok-bg: #d9f4e7;
+    --ok-ink: #0a6b45;
+    --ok-line: #c8ead9;
+    --warn-bg: #fff3df;
+    --warn-ink: #7a4600;
+    --warn-line: #f3d29b;
+    --blue-bg: #eef6ff;
+    --blue-bg-2: #dbeafe;
+    --blue-ink: #1e40af;
+    --blue-line: #bfdbfe;
+    --dash-line: #d8cbd2;
+    --topbar-bg: rgba(247, 244, 247, 0.88);
+    --toast-bg: #17181f;
+    --shine: rgba(255, 255, 255, 0.95);
+    --shine-soft: rgba(255, 255, 255, 0.5);
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1117;
+    --card: #181b24;
+    --surface: #181b24;
+    --surface-2: #1d212c;
+    --surface-3: #232836;
+    --surface-4: #2a3040;
+
+    --ink: #eef0f6;
+    --ink-2: #c6cad7;
+    --ink-soft: #c6cad7;
+    --muted: #9aa1b3;
+    --muted-2: #6f768a;
+    --muted-3: #6f768a;
+
+    --line: #2a2f3d;
+    --line-2: #232836;
+
+    --pink: #ec3f73;
+    --pink-2: #ff6a98;
+    --pink-press: #d12053;
+    --pink-soft: #3a1626;
+    --pink-tint: #1f1620;
+
+    --green: #2ad08f;
+    --amber: #f5b53a;
+    --red: #ff5272;
+    --wa: #25b86a;
+
+    --rose-bg: #3a1621;
+    --rose-bg-2: #4a1b29;
+    --rose-ink: #ff8da3;
+    --rose-line: #5c2231;
+    --ok-bg: #0f2e22;
+    --ok-ink: #5fe0ac;
+    --ok-line: #1b4a37;
+    --warn-bg: #33260d;
+    --warn-ink: #f7c46a;
+    --warn-line: #5a4318;
+    --blue-bg: #14233d;
+    --blue-bg-2: #19305a;
+    --blue-ink: #8db8ff;
+    --blue-line: #274a80;
+    --dash-line: #3a4052;
+
+    --topbar-bg: rgba(24, 27, 36, 0.85);
+    --toast-bg: #2a3040;
+    --shine: rgba(255, 255, 255, 0.07);
+    --shine-soft: rgba(255, 255, 255, 0.06);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+    --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.55);
+    --shadow-pink: 0 8px 22px rgba(236, 63, 115, 0.25);
+}
+
+:root[data-theme="dark"] body {
+    background-image: radial-gradient(1200px 600px at 50% -200px,
+            rgba(236, 63, 115, 0.12), transparent 70%);
+}
+
+:root[data-theme="dark"] .modal-bg {
+    background: rgba(0, 0, 0, 0.65);
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+    color: var(--ink);
+}
+
+:root[data-theme="dark"] ::placeholder {
+    color: var(--muted-2);
+}
+
+:root[data-theme="dark"] .toast {
+    color: #fff;
+}
+
+/* smooth switch */
+body,
+.topbar,
+.panel,
+.modal,
+.person-card,
+.p-card,
+.toast {
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ---------- theme toggle button ---------- */
 .theme-btn {
     margin-left: auto;
     width: 40px;
@@ -340,11 +2908,10 @@ select,
     border: 0;
     border-radius: 12px;
     background: var(--pink-soft);
-    color: var(--pink-press);
+    color: var(--pink);
     display: grid;
     place-items: center;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(184, 24, 69, 0.15);
     transition: background 0.15s, transform 0.12s;
 }
 
@@ -373,1590 +2940,293 @@ select,
     display: none;
 }
 
-/* ============================================================
-   5. LAYOUT
-   ============================================================ */
-.container {
-    max-width: var(--wrap);
-    margin: 0 auto;
-    padding: 16px 14px calc(32px + var(--bottom));
-}
-
-.view {
-    animation: fade 0.22s ease-out;
-}
-
-#viewAddPerson {
-    max-width: 560px;
-    margin-inline: auto;
-}
-
-#viewPerson {
-    max-width: 720px;
-    margin-inline: auto;
-}
-
-@keyframes fade {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-/* ============================================================
-   6. SUMMARY
-   ============================================================ */
-.summary {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-
-.summary-item {
-    background: var(--card);
-    border: 1.5px solid var(--line);
-    border-radius: var(--r);
-    padding: 12px 14px;
-    box-shadow: var(--shadow-sm);
-}
-
-.summary-item span {
-    display: block;
-    font-size: 12.5px;
-    color: var(--muted);
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.summary-item b {
-    display: block;
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-    color: var(--ink);
-}
-
-.summary-item.in b {
-    color: var(--green);
-}
-
-.summary-item.out b {
-    color: var(--red);
-}
-
-@media (min-width: 620px) {
-    .summary {
-        max-width: 420px;
-    }
-}
-
-/* ============================================================
-   7. SEARCH BAR
-   ============================================================ */
-.searchbar {
-    position: sticky;
-    top: calc(61px + var(--top));
-    z-index: 30;
-    background: var(--bg);
-    padding: 2px 0 12px;
-    display: flex;
-    gap: 10px;
-    transition: background 0.25s ease;
-}
-
-.searchbar input {
-    flex: 1;
-    min-height: 52px;
-    padding-left: 46px;
-    border: 1.5px solid var(--line);
-    border-radius: 14px;
-    font-size: 16px;
-    font-family: inherit;
-    background-color: var(--surface);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%234d5468' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='6.5'/%3E%3Cpath d='M14 14l4 4'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: 16px center;
-    color: var(--ink);
-    -webkit-appearance: none;
-    appearance: none;
-    box-shadow: 0 1px 3px rgba(15, 16, 23, 0.06);
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-}
-
-.searchbar input:focus {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow:
-        0 0 0 4px rgba(184, 24, 69, 0.15),
-        0 2px 8px rgba(184, 24, 69, 0.12);
-}
-
-.searchbar.solo input {
-    display: none;
-}
-
-.searchbar.solo .add-btn {
-    flex: 1;
-    justify-content: center;
-}
-
-.add-btn {
-    flex-shrink: 0;
-    height: 52px;
-    padding: 0 18px 0 14px;
-    border: 0;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #ffffff;
-    font-size: 17px;
-    font-weight: 800;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    box-shadow:
-        0 4px 12px rgba(184, 24, 69, 0.30),
-        0 8px 24px rgba(184, 24, 69, 0.20);
-    transition: box-shadow 0.2s, transform 0.12s;
-}
-
-.add-btn:hover {
-    box-shadow:
-        0 6px 16px rgba(184, 24, 69, 0.40),
-        0 12px 32px rgba(184, 24, 69, 0.28);
-}
-
-.add-btn:active {
-    transform: scale(0.96);
-}
-
-.add-btn i {
-    font-style: normal;
-    font-size: 28px;
-    font-weight: 400;
-    line-height: 1;
-    margin-top: -3px;
-}
-
-/* ============================================================
-   8. PANELS
-   ============================================================ */
-.panel {
-    background: var(--card);
-    border: 1.5px solid var(--line-2);
-    border-radius: var(--r-lg);
-    padding: 18px 16px;
-    box-shadow:
-        0 1px 2px rgba(15, 16, 23, 0.05),
-        0 4px 14px rgba(15, 16, 23, 0.08);
-    margin-bottom: 12px;
-}
-
-.panel-title,
-.panel h2 {
-    font-size: 16px;
-    letter-spacing: -0.2px;
-    margin: 0 0 14px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ink);
-}
-
-.panel-title-icon {
-    font-size: 20px;
-}
-
-.section-label {
-    font-size: 14px;
-    margin: 0 0 12px;
-    color: var(--ink-soft);
-    font-weight: 800;
-}
-
-/* ============================================================
-   9. AVATARS
-   ============================================================ */
-.avatar {
-    border-radius: 50%;
-    object-fit: cover;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--pink-soft), var(--rose-bg-2));
-    color: var(--pink-press);
-    font-weight: 800;
-    flex-shrink: 0;
-    letter-spacing: 0.3px;
-}
-
-img.avatar {
-    border: 2px solid var(--card);
-    box-shadow: 0 0 0 1.5px var(--line);
-}
-
-.avatar-sm {
-    width: 44px;
-    height: 44px;
-    font-size: 16px;
-}
-
-.avatar-lg {
-    width: 68px;
-    height: 68px;
-    font-size: 24px;
-}
-
-.avatar-xl {
-    width: 96px;
-    height: 96px;
-    font-size: 34px;
-}
-
-/* ============================================================
-   10. FORMS
-   ============================================================ */
-form .row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0 14px;
-}
-
-.field {
-    margin-bottom: 16px;
-    min-width: 0;
-}
-
-label {
-    display: block;
-    font-size: 14.5px;
-    color: var(--ink-2);
-    margin-bottom: 6px;
-    font-weight: 700;
-}
-
-label .req {
-    color: var(--pink);
-    font-weight: 800;
-}
-
-label .opt {
-    color: var(--muted);
-    font-weight: 500;
-    font-size: 13px;
-}
-
-input,
-select,
-textarea {
-    width: 100%;
-    min-width: 0;
-    min-height: 52px;
-    padding: 12px 14px;
-    border: 1.5px solid var(--line);
-    border-radius: 14px;
-    font-size: 16px;
-    font-family: inherit;
-    background: var(--surface);
-    color: var(--ink);
-    -webkit-appearance: none;
-    appearance: none;
-    box-shadow: 0 1px 2px rgba(15, 16, 23, 0.04);
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-}
-
-input::placeholder {
-    color: var(--muted-3);
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    outline: none;
-    border-color: var(--pink);
-    background: var(--surface);
-    box-shadow: 0 0 0 4px rgba(184, 24, 69, 0.15);
-}
-
-select {
-    padding-right: 42px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none' stroke='%234d5468' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-}
-
-.money-input {
-    position: relative;
-}
-
-.money-input input {
-    padding-left: 38px;
-}
-
-.money-prefix {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--muted);
-    pointer-events: none;
-    font-family: var(--font-num);
-}
-
-.hint {
-    margin: 6px 2px 0;
-    font-size: 12.5px;
-    color: var(--muted);
-    font-weight: 500;
-    line-height: 1.5;
-}
-
-.photo-field {
-    margin-bottom: 20px;
-}
-
-.photo-picker {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 22px 16px;
+/* ---------- dark: box colour fixes ---------- */
+:root[data-theme="dark"] .photo-picker {
     background: var(--surface-2);
-    border: 2px dashed var(--dash-line);
-    border-radius: 22px;
 }
 
-.photo-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    background: var(--surface);
-    border: 1.5px solid var(--line);
-    color: var(--ink);
-    padding: 0 20px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.photo-btn:hover {
+:root[data-theme="dark"] .info {
     background: var(--pink-soft);
-}
-
-.photo-btn:active {
-    transform: scale(0.97);
+    color: #ffb3c9;
 }
 
 /* ============================================================
-   11. BUTTONS
+   FINAL THEME OVERRIDE — MATCHING THE SCREENSHOT
    ============================================================ */
-.btn {
-    border: 0;
-    border-radius: 14px;
-    min-height: 48px;
-    padding: 0 20px;
-    font-size: 16px;
-    font-weight: 800;
-    font-family: inherit;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    white-space: nowrap;
-    transition: transform 0.15s var(--ease), box-shadow 0.2s,
-        background 0.15s;
+
+:root {
+    /* Clean Light Background */
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f8f9fa;
+    --surface-3: #f1f3f5;
+    --surface-4: #e9ecef;
+
+    /* Text Colors */
+    --ink: #1e2430;
+    --ink-soft: #3b4456;
+    --muted: #6e7180;
+    --muted-3: #8b93a7;
+
+    /* Brand Pink/Red from the image */
+    --pink: #c2185b;
+    --pink-press: #a0154a;
+    --pink-soft: #fde8ef;
+    --pink-tint: #fff6fa;
+
+    /* Lines & Borders */
+    --line: #e2e6ee;
+    --line-2: #f0f2f5;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.06);
+    --shadow-pink: 0 8px 24px rgba(194, 24, 91, 0.25);
+
+    /* Radii */
+    --r-sm: 12px;
+    --r: 16px;
+    --r-md: 20px;
+    --r-lg: 24px;
 }
 
-.btn:active {
-    transform: scale(0.97);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #ffffff;
-    box-shadow:
-        0 4px 12px rgba(184, 24, 69, 0.30),
-        0 10px 28px rgba(184, 24, 69, 0.20);
-}
-
-.btn-primary:hover {
-    box-shadow:
-        0 6px 16px rgba(184, 24, 69, 0.40),
-        0 14px 36px rgba(184, 24, 69, 0.28);
-}
-
-.btn-ghost {
-    background: var(--surface);
+body {
+    background-color: var(--bg);
+    background-image: none;
+    /* Remove old radial gradients */
     color: var(--ink);
-    border: 1.5px solid var(--line);
-}
-
-.btn-light {
-    background: var(--surface-3);
-    color: var(--ink-2);
-}
-
-.btn-light:hover {
-    background: var(--surface-4);
-}
-
-.btn-danger {
-    background: var(--rose-bg);
-    color: var(--rose-ink);
-}
-
-.btn-danger:hover {
-    background: var(--rose-bg-2);
-}
-
-.btn-wa {
-    background: linear-gradient(135deg, #0e9e50, #056231);
-    color: #ffffff;
-    box-shadow:
-        0 4px 12px rgba(13, 109, 58, 0.30),
-        0 10px 28px rgba(13, 109, 58, 0.20);
-}
-
-.btn-wa:hover {
-    box-shadow:
-        0 6px 16px rgba(13, 109, 58, 0.40),
-        0 14px 36px rgba(13, 109, 58, 0.28);
-}
-
-.btn-muted {
-    background: var(--surface-3);
-    color: var(--muted-2);
-    cursor: not-allowed;
-}
-
-.btn-sm {
-    min-height: 44px;
-    padding: 0 16px;
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
     font-size: 15px;
 }
 
-.btn-block {
-    width: 100%;
-}
-
-.btn-xl {
-    min-height: 56px;
-    font-size: 17px;
-    margin-top: 8px;
-}
-
-.toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 16px;
-}
-
-.toolbar .btn {
-    padding: 0 10px;
-}
-
-.back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    padding: 0 16px 0 12px;
-    margin-bottom: 12px;
-    background: var(--surface);
-    border: 1.5px solid var(--line);
-    border-radius: 14px;
-    color: var(--ink);
-    font-size: 15.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.back:hover {
-    background: var(--pink-tint);
-}
-
-.back:active {
-    transform: scale(0.97);
-}
-
-/* ============================================================
-   12. FOLD-OUT
-   ============================================================ */
-.fold {
-    padding: 0;
-}
-
-.fold summary {
-    list-style: none;
-    cursor: pointer;
-    min-height: 60px;
-    padding: 0 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.fold summary::-webkit-details-marker {
-    display: none;
-}
-
-.fold summary::after {
-    content: "+";
-    font-size: 28px;
-    font-weight: 400;
-    color: var(--pink);
-}
-
-.fold[open] summary::after {
-    content: "−";
-}
-
-.fold form {
-    padding: 4px 16px 20px;
-}
-
-.fold-body {
-    padding: 0 16px 18px;
-}
-
-/* ============================================================
-   13. TRANSACTION LIST
-   ============================================================ */
-.tx-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.tx-item {
-    padding: 14px 0;
-    border-bottom: 1px solid var(--line-2);
-}
-
-.tx-item:first-child {
-    padding-top: 4px;
-}
-
-.tx-item:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-}
-
-.tx-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.tx-counterparty {
-    flex: 1;
-    min-width: 0;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--ink-soft);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.tx-counterparty.tx-empty {
-    color: var(--muted-3);
-    font-weight: 500;
-}
-
-.tx-amount {
-    font-size: 18px;
-    font-weight: 800;
-    white-space: nowrap;
-    padding-left: 8px;
-    letter-spacing: -0.3px;
-}
-
-.tx-amount.send {
-    color: var(--red);
-}
-
-.tx-amount.send::before {
-    content: "− ";
-}
-
-.tx-amount.receive {
-    color: var(--green);
-}
-
-.tx-amount.receive::before {
-    content: "+ ";
-}
-
-.tx-del {
-    flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border: 0;
-    border-radius: 10px;
-    background: var(--surface-3);
-    color: var(--rose-ink);
-    font-size: 15px;
-    font-weight: 800;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.15s, transform 0.1s;
-}
-
-.tx-del:hover {
-    background: var(--rose-bg-2);
-}
-
-.tx-del:active {
-    transform: scale(0.92);
-}
-
-.tx-date {
-    margin-top: 6px;
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 500;
-    letter-spacing: 0.1px;
-}
-
-.tx-notes {
-    margin-top: 4px;
-    font-size: 13.5px;
-    color: var(--ink-soft);
-    line-height: 1.55;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-}
-
-/* ============================================================
-   14. TAGS
-   ============================================================ */
-.tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 12px;
-    border-radius: 99px;
-    font-size: 13px;
-    font-weight: 800;
-    flex-shrink: 0;
-}
-
-.tag.send {
-    background: var(--rose-bg);
-    color: var(--rose-ink);
-}
-
-.tag.receive,
-.tag.verified {
-    background: var(--ok-bg);
-    color: var(--ok-ink);
-}
-
-.tag.pending {
-    background: var(--warn-bg);
-    color: var(--warn-ink);
-}
-
-.block-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: var(--pink-soft);
-    color: var(--pink-press);
-    padding: 3px 9px;
-    border-radius: 99px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.2px;
-    flex-shrink: 0;
-}
-
-.trx-code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: var(--surface-3);
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ink-soft);
-    word-break: break-all;
-}
-
-/* ============================================================
-   15. EMPTY / WARN / INFO
-   ============================================================ */
-.empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--muted);
+/* ------------------------------------------------------------
+   1. TOPBAR & HEADER
+   ------------------------------------------------------------ */
+.topbar {
     background: var(--card);
-    border-radius: var(--r-lg);
-    border: 2px dashed var(--dash-line);
-    box-shadow: 0 1px 3px rgba(15, 16, 23, 0.04);
+    border-bottom: 1px solid var(--line-2);
+    box-shadow: none;
+    padding: calc(12px + var(--top)) 16px 12px;
 }
 
-.empty .icon {
-    font-size: 60px;
-    line-height: 1;
-    margin-bottom: 12px;
-}
-
-.empty h3 {
-    color: var(--ink);
-    margin: 0 0 6px;
-    font-size: 16px;
-    font-weight: 800;
-}
-
-.empty p {
-    margin: 0;
-    font-size: 13.5px;
-    font-weight: 500;
-}
-
-.warn,
-.info {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    margin-bottom: 16px;
-    font-size: 15px;
-    line-height: 1.65;
-    word-break: break-word;
-}
-
-.warn {
-    background: var(--warn-bg);
-    border: 1.5px solid var(--warn-line);
-    color: var(--warn-ink);
-    font-weight: 700;
-}
-
-.info {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-    font-weight: 700;
-}
-
-.info-icon {
+.topbar-titles h1 {
     font-size: 18px;
-    flex-shrink: 0;
-}
-
-/* ============================================================
-   16. TOAST
-   ============================================================ */
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(30px + var(--bottom));
-    transform: translate(-50%, 30px);
-    background: var(--toast-bg);
-    color: #ffffff;
-    padding: 13px 22px;
-    border-radius: 14px;
-    font-size: 15.5px;
     font-weight: 700;
-    text-align: center;
-    max-width: 90vw;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 300;
-    box-shadow:
-        0 6px 16px rgba(15, 16, 23, 0.28),
-        0 16px 40px rgba(15, 16, 23, 0.35);
-    transition: opacity 0.25s, transform 0.25s;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
-    pointer-events: auto;
-}
-
-.toast.success {
-    background: #0a6b45;
-}
-
-.toast.error {
-    background: #a3162f;
-}
-
-.toast .toast-action {
-    background: rgba(255, 255, 255, 0.25);
-    border: 0;
-    color: #fff;
-    font-weight: 800;
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 9px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s;
-}
-
-.toast .toast-action:hover {
-    background: rgba(255, 255, 255, 0.38);
-}
-
-/* ============================================================
-   17. MODAL
-   ============================================================ */
-.modal-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 200;
-    background: rgba(15, 12, 20, 0.68);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    animation: fade 0.2s ease-out;
-}
-
-.modal {
-    width: 100%;
-    max-width: 480px;
-    max-height: 92vh;
-    overflow-y: auto;
-    background: var(--surface);
-    color: var(--ink);
-    border-radius: 28px 28px 0 0;
-    padding: 12px 20px calc(22px + var(--bottom));
-    box-shadow: 0 -20px 60px rgba(15, 16, 23, 0.35);
-    animation: sheet 0.28s var(--ease);
-}
-
-.modal::before {
-    content: "";
-    display: block;
-    width: 40px;
-    height: 4px;
-    border-radius: 4px;
-    background: var(--line);
-    margin: 0 auto 16px;
-}
-
-@keyframes sheet {
-    from {
-        transform: translateY(40px);
-        opacity: 0;
-    }
-
-    to {
-        transform: none;
-        opacity: 1;
-    }
-}
-
-.modal h3 {
-    margin: 0 0 6px;
-    font-size: 17px;
-    font-weight: 800;
     color: var(--ink);
 }
 
-.modal .modal-sub {
+.topbar-titles .sub {
+    font-size: 13px;
     color: var(--muted);
-    font-size: 14.5px;
-    margin-bottom: 18px;
-    line-height: 1.55;
-    font-weight: 500;
 }
 
-.modal .modal-sub b {
-    color: var(--ink);
-    font-weight: 800;
+/* Round Action Buttons (Back, Plus, Theme) */
+.back-btn,
+.theme-btn,
+.add-btn {
+    background: var(--pink-soft);
+    color: var(--pink);
+    border: none;
+    border-radius: var(--r-sm);
+    box-shadow: none;
+    transition: background 0.2s, transform 0.1s;
 }
 
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 18px;
+.back-btn:hover,
+.theme-btn:hover,
+.add-btn:hover {
+    background: #fbd3e1;
+    /* Slightly darker pink on hover */
+    box-shadow: none;
+    transform: none;
 }
 
-.modal-actions .btn {
-    flex: 1;
-}
-
-.chips {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 8px 0 4px;
-}
-
-.amount-chip {
-    min-height: 44px;
-    border: 1.5px solid var(--line);
-    border-radius: 12px;
-    background: var(--surface);
-    color: var(--ink-2);
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all 0.15s var(--ease);
-}
-
-.amount-chip:hover {
-    border-color: var(--pink);
-    color: var(--pink-press);
-    background: var(--pink-tint);
-}
-
-.amount-chip:active {
+.back-btn:active,
+.theme-btn:active,
+.add-btn:active {
     transform: scale(0.95);
 }
 
-.amount-chip.selected {
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    border-color: var(--pink);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(184, 24, 69, 0.42);
-}
-
-.preview-msg {
-    background: var(--ok-bg);
-    border: 1.5px solid var(--ok-line);
-    padding: 14px 16px;
-    border-radius: 14px;
+.add-btn {
+    padding: 0 16px;
+    height: 40px;
     font-size: 15px;
-    white-space: pre-wrap;
-    line-height: 1.7;
-    margin: 12px 0;
-    max-height: 220px;
-    overflow-y: auto;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    color: var(--ok-ink);
-    font-weight: 600;
-}
-
-/* ============================================================
-   18. PERSON STATS
-   ============================================================ */
-.stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.stat {
-    background: var(--surface-2);
-    border: 1.5px solid var(--line-2);
-    border-radius: 16px;
-    padding: 14px;
-}
-
-.stat:first-child,
-.person-stats .stat-balance {
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #ffffff;
-    border-color: transparent;
-    box-shadow:
-        0 4px 14px rgba(184, 24, 69, 0.28),
-        0 12px 32px rgba(184, 24, 69, 0.18);
-    padding: 18px;
-}
-
-.stat .lbl {
-    font-size: 13px;
-    color: var(--muted);
     font-weight: 700;
 }
 
-.stat .val {
-    font-size: 24px;
-    font-weight: 800;
-    margin-top: 2px;
-    line-height: 1.2;
-    color: var(--ink);
-}
-
-.stat .sub {
-    font-size: 12.5px;
-    color: var(--muted);
-    font-weight: 500;
-    margin-top: 4px;
-}
-
-.stat:first-child .lbl,
-.person-stats .stat-balance .lbl {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.stat:first-child .val,
-.person-stats .stat-balance .val {
-    font-size: 30px;
-    color: #fff;
-}
-
-.stat-bundle {
-    background: linear-gradient(135deg, var(--blue-bg) 0%, var(--blue-bg-2) 100%);
-    border-color: var(--blue-line);
+/* ------------------------------------------------------------
+   2. HERO CARD (Total Balance / Summary)
+   ------------------------------------------------------------ */
+/* Matches the big deep red card in the image */
+.summary,
+.stat:first-child,
+.person-stats .stat-balance {
+    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    color: #ffffff;
+    box-shadow: var(--shadow-pink);
+    border: none;
     position: relative;
     overflow: hidden;
 }
 
-.stat-bundle::before {
+/* Add a subtle decorative curve like in the image */
+.summary::after,
+.stat:first-child::after,
+.person-stats .stat-balance::after {
     content: "";
     position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 100px;
-    height: 100px;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.22), transparent 70%);
+    background: rgba(255, 255, 255, 0.08);
     pointer-events: none;
 }
 
-.stat-bundle .lbl {
-    color: var(--blue-ink);
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.stat-bundle .val {
-    color: var(--blue-ink);
-    font-size: 22px;
-}
-
-.stat-bundle .sub {
-    color: var(--blue-ink);
-    font-weight: 700;
-    font-size: 12px;
-}
-
-.stat-bundle.stat-bundle-empty {
-    background: var(--surface-2);
-    border-color: var(--line);
-}
-
-.stat-bundle.stat-bundle-empty::before {
-    display: none;
-}
-
-.stat-bundle.stat-bundle-empty .lbl {
-    color: var(--muted);
-}
-
-.stat-bundle.stat-bundle-empty .val {
-    color: var(--muted-3);
-}
-
-.stat-bundle.stat-bundle-empty .sub {
-    color: var(--muted);
+.stat:first-child .lbl,
+.summary-item span {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
     font-weight: 500;
 }
 
-.stat-bundle.stat-bundle-expired {
-    background: var(--rose-bg);
-    border-color: var(--rose-line);
-}
-
-.stat-bundle.stat-bundle-expired::before {
-    background: radial-gradient(circle, rgba(184, 24, 60, 0.25), transparent 70%);
-}
-
-.stat-bundle.stat-bundle-expired .lbl,
-.stat-bundle.stat-bundle-expired .val,
-.stat-bundle.stat-bundle-expired .sub {
-    color: var(--rose-ink);
-}
-
-.stat-bundle.stat-bundle-expired .sub {
+.stat:first-child .val,
+.summary-item b {
+    color: #ffffff;
+    font-size: 34px;
     font-weight: 800;
-}
-
-/* ============================================================
-   19. PERSON DETAIL
-   ============================================================ */
-.person-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.person-header-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.person-header-name {
-    margin: 0 0 4px;
-    font-size: 22px;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: -0.3px;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.person-header-row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 14.5px;
-    line-height: 1.5;
-}
-
-.person-header-lbl {
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 13px;
-    flex-shrink: 0;
-    min-width: 64px;
-}
-
-.person-header-val {
-    color: var(--ink-soft);
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    word-break: break-all;
-}
-
-.lg-big {
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1.15;
-    letter-spacing: -0.6px;
-    margin-top: 4px;
-    color: var(--ink);
-}
-
-.lg-big-label {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 700;
-    margin-top: 2px;
-}
-
-.detail-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 16px;
-}
-
-.pc-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 48px;
-    border: 0;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 800;
-    font-family: inherit;
-    cursor: pointer;
-    transition: transform 0.12s, box-shadow 0.18s;
-    color: #fff;
-}
-
-.pc-btn:active {
-    transform: scale(0.97);
-}
-
-.pc-deposit,
-.pc-receive {
-    background: linear-gradient(135deg, #0e9e50, #056231);
-    box-shadow:
-        0 4px 12px rgba(13, 109, 58, 0.28),
-        0 10px 24px rgba(13, 109, 58, 0.18);
-}
-
-.pc-withdraw,
-.pc-send {
-    background: linear-gradient(135deg, #cf2450, #7d0f2e);
-    box-shadow:
-        0 4px 12px rgba(184, 24, 69, 0.28),
-        0 10px 24px rgba(184, 24, 69, 0.18);
-}
-
-.pc-btn.pc-wa {
-    grid-column: 1 / -1;
-    background: linear-gradient(135deg, #0e9e50, #056231);
-    box-shadow:
-        0 4px 12px rgba(13, 109, 58, 0.28),
-        0 10px 24px rgba(13, 109, 58, 0.18);
+    letter-spacing: -0.5px;
+    font-family: "Noto Sans Bengali", inherit;
     margin-top: 4px;
 }
 
-.lg-totals {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.lg-total {
-    border-radius: 14px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.lg-total span {
-    font-size: 12.5px;
-    opacity: 0.9;
-    font-weight: 700;
-}
-
-.lg-total b {
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-}
-
-.lg-total-in {
-    background: var(--ok-bg);
-    color: var(--ok-ink);
-}
-
-.lg-total-out {
-    background: var(--rose-bg);
-    color: var(--rose-ink);
-}
-
-.lg-panel {
-    padding-top: 16px;
-}
-
-.lg-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--line-2);
-}
-
-.lg-row:first-of-type {
-    padding-top: 4px;
-}
-
-.lg-row:last-child {
-    border-bottom: 0;
-    padding-bottom: 0;
-}
-
-.lg-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
+/* ------------------------------------------------------------
+   3. SECTION LABELS (e.g., "দৈনিক হিসাব")
+   ------------------------------------------------------------ */
+.section-label {
     font-size: 16px;
-    font-weight: 800;
-    flex-shrink: 0;
-}
-
-.lg-icon.in {
-    background: var(--ok-bg);
-    color: var(--ok-ink);
-}
-
-.lg-icon.out {
-    background: var(--rose-bg);
-    color: var(--rose-ink);
-}
-
-.lg-main {
-    flex: 1;
-    min-width: 0;
-}
-
-.lg-note {
-    font-weight: 800;
-    font-size: 14.5px;
+    font-weight: 700;
     color: var(--ink);
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 24px 0 12px;
 }
 
-.lg-date {
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 500;
-    margin-top: 2px;
+/* The pink dot indicator */
+.section-label::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--pink);
 }
 
-.lg-col {
-    text-align: right;
-    font-size: 15px;
-    font-weight: 800;
-    white-space: nowrap;
-    letter-spacing: -0.2px;
-    flex-shrink: 0;
-}
-
-.lg-in {
-    color: var(--green);
-}
-
-.lg-out {
-    color: var(--red);
-}
-
-/* ============================================================
-   20. PEOPLE GRID
-   ============================================================ */
+/* ------------------------------------------------------------
+   4. PERSON CARDS (List Items)
+   ------------------------------------------------------------ */
 .people-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding-top: 6px;
+    gap: 12px;
 }
 
-@media (min-width: 620px) {
-    .people-grid {
-        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-        gap: 16px;
-    }
-}
-
-/* ---------- POP-UP ROUNDED CARD ---------- */
 .person {
-    position: relative;
-    padding: 14px 15px 14px;
-    border-radius: 18px;
-    cursor: pointer;
-    overflow: hidden;
-
     background: var(--card);
-    border: 1.5px solid var(--line);
-
-    /* strong visible pop-up shadow */
-    box-shadow:
-        0 1px 2px rgba(15, 16, 23, 0.06),
-        0 3px 8px rgba(15, 16, 23, 0.08),
-        0 10px 22px rgba(15, 16, 23, 0.10),
-        0 20px 40px rgba(15, 16, 23, 0.08);
-
-    transition:
-        transform 0.22s var(--ease),
-        box-shadow 0.26s var(--ease),
-        border-color 0.2s;
-    animation: cardIn 0.4s var(--ease) backwards;
+    border: none;
+    border-radius: var(--r-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Remove all old decorative pseudo-elements */
 .person::before,
 .person::after {
     display: none !important;
 }
 
 .person:hover {
-    transform: translateY(-4px);
-    border-color: rgba(184, 24, 69, 0.38);
-    box-shadow:
-        0 2px 6px rgba(15, 16, 23, 0.08),
-        0 8px 16px rgba(15, 16, 23, 0.10),
-        0 18px 36px rgba(184, 24, 69, 0.16),
-        0 32px 64px rgba(15, 16, 23, 0.12);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border: none;
 }
 
 .person:active {
-    transform: translateY(-1px) scale(0.995);
-    transition-duration: 0.12s;
+    transform: translateY(0) scale(0.99);
 }
 
-.person.blocked {
-    background: var(--pink-tint);
-}
-
-@keyframes cardIn {
-    from {
-        opacity: 0;
-        transform: translateY(14px) scale(0.96);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.person:nth-child(1) {
-    animation-delay: 0.02s;
-}
-
-.person:nth-child(2) {
-    animation-delay: 0.05s;
-}
-
-.person:nth-child(3) {
-    animation-delay: 0.08s;
-}
-
-.person:nth-child(4) {
-    animation-delay: 0.11s;
-}
-
-.person:nth-child(5) {
-    animation-delay: 0.14s;
-}
-
-.person:nth-child(6) {
-    animation-delay: 0.17s;
-}
-
-/* ---------- CARD INNER ---------- */
+/* Top Row Layout */
 .p-top {
     display: flex;
     align-items: center;
-    gap: 12px;
-    position: relative;
-    z-index: 1;
+    gap: 14px;
 }
 
+/* Avatar as a rounded square (mimicking the date blocks in the image) */
 .p-top .avatar-sm {
-    width: 46px;
-    height: 46px;
-    font-size: 17px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    font-size: 20px;
     font-weight: 800;
-    border: 2px solid var(--card);
-    background: linear-gradient(135deg, var(--pink-soft), var(--rose-bg-2));
-    color: var(--pink-press);
-    box-shadow:
-        0 0 0 1.5px var(--line),
-        0 4px 10px rgba(184, 24, 69, 0.14);
-}
-
-.p-name {
-    flex: 1;
-    min-width: 0;
+    border: none;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .p-name h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 800;
-    line-height: 1.25;
-    letter-spacing: -0.2px;
+    font-size: 17px;
+    font-weight: 700;
     color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    margin-bottom: 2px;
 }
 
 .p-name .num {
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--muted);
-    margin-top: 2px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
+    font-weight: 500;
 }
 
+/* Balance Amount */
 .p-bal {
-    font-size: 19px;
+    color: var(--pink);
+    font-size: 20px;
     font-weight: 800;
-    white-space: nowrap;
-    letter-spacing: -0.4px;
-    color: var(--ink);
-    line-height: 1.1;
-    flex-shrink: 0;
+    font-family: "Noto Sans Bengali", inherit;
+    letter-spacing: -0.3px;
     background: none;
-    -webkit-text-fill-color: currentColor;
-    -webkit-background-clip: unset;
-    background-clip: unset;
+    -webkit-text-fill-color: initial;
 }
 
-.bal-pos {
-    color: var(--green);
-}
-
-.bal-neg {
-    color: var(--red);
-}
-
-.bal-zero {
-    color: var(--muted);
-}
-
-.pc-chevron {
-    font-size: 22px;
-    font-weight: 300;
-    color: var(--muted-2);
-    margin-left: 4px;
-    flex-shrink: 0;
-    line-height: 1;
-}
-
-/* crease + limits */
+/* Limits Section inside the card */
 .p-limits {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 12px;
-    padding-top: 11px;
-    border-top: 1.5px dashed var(--dash-line);
-    position: relative;
-    z-index: 1;
-}
-
-.p-limits>div {
-    min-width: 0;
+    border-top: 1px solid var(--line-2);
+    margin-top: 16px;
+    padding-top: 14px;
+    gap: 16px;
 }
 
 .p-limits .limit-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-    font-size: 10.5px;
-    line-height: 1.3;
-    letter-spacing: 0.4px;
+    font-size: 11px;
+    color: var(--muted);
     text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 800;
-}
-
-.p-limits .limit-row span {
-    font-size: 10.5px;
-    color: var(--muted);
-    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .p-limits .limit-row b {
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 16px;
     color: var(--ink);
-    letter-spacing: -0.3px;
-    text-transform: none;
-    margin-top: 2px;
+    font-weight: 800;
+    margin-top: 4px;
 }
 
 .p-limits .limit-row b.over {
@@ -1965,221 +3235,346 @@ select {
 
 .p-limits .bar {
     height: 6px;
-    margin-top: 7px;
+    background: var(--surface-3);
     border-radius: 99px;
-    background: var(--surface-4);
-    box-shadow: inset 0 1px 3px rgba(15, 16, 23, 0.10);
-    overflow: hidden;
+    margin-top: 8px;
 }
 
 .p-limits .bar span {
     border-radius: 99px;
-    height: 100%;
-    display: block;
+    background: var(--pink);
+}
+
+/* Remove shimmer animation for a cleaner look */
+.p-limits .bar span::after {
+    display: none;
+}
+
+/* ------------------------------------------------------------
+   5. BADGES & PILLS
+   ------------------------------------------------------------ */
+.bundle-pill,
+.block-badge {
+    background: var(--pink-soft);
+    color: var(--pink);
+    border: none;
+    box-shadow: none;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+}
+
+/* ------------------------------------------------------------
+   6. SEARCH BAR & INPUTS
+   ------------------------------------------------------------ */
+.searchbar input {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-sm);
+    min-height: 48px;
+}
+
+.searchbar input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px var(--pink-soft);
+}
+
+/* ------------------------------------------------------------
+   7. MODALS & PANELS
+   ------------------------------------------------------------ */
+.panel {
+    background: var(--card);
+    border: none;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+}
+
+.modal {
+    background: var(--card);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal::before {
+    background: var(--line);
+}
+
+/* ------------------------------------------------------------
+   8. RESPONSIVE ADJUSTMENTS
+   ------------------------------------------------------------ */
+@media (min-width: 620px) {
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+    }
+}
+
+/* 1. The Outer Magenta Container */
+.summary {
+    background: linear-gradient(135deg, #c2185b, #8e0038);
+    /* Deep pink/magenta */
+    border-radius: 20px;
+    padding: 16px;
+    display: flex;
+    /* Aligns the inner boxes side by side */
+    gap: 12px;
+    /* Space between the two white boxes */
+    box-shadow: 0 8px 24px rgba(194, 24, 91, 0.25);
+}
+
+/* 2. The Inner White Boxes */
+.summary-item {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    /* Remove any default borders or shadows if they exist */
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 3. Make the first box narrow and the second box wider (like the image) */
+.summary-item:first-child {
+    flex: 1;
+    /* Takes up 1 part of the space */
+}
+
+.summary-item:last-child {
+    flex: 2;
+    /* Takes up 2 parts of the space */
+}
+
+/* Text styling inside the white boxes */
+.summary-item span {
+    font-size: 12px;
+    color: #6e7180;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.summary-item b {
+    font-size: 20px;
+    color: #1e2430;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   DUES CARD (Match Image)
+   ============================================================ */
+
+.dues-card {
+    /* Deep magenta/pink gradient matching the screenshot */
+    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
+    border-radius: 20px;
+    padding: 20px;
+    color: #ffffff;
     position: relative;
     overflow: hidden;
-    transition: width 0.7s var(--ease);
+    box-shadow: 0 10px 24px rgba(194, 24, 91, 0.25);
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
 }
 
-.p-limits .bar span::after {
+/* Decorative soft circles in the background */
+.dues-card::before {
     content: "";
     position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg,
-            transparent 35%,
-            var(--shine-soft) 50%,
-            transparent 65%);
-    animation: barShimmer 3s infinite;
+    top: -60px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    /* Soft light overlay */
+    pointer-events: none;
 }
 
-@keyframes barShimmer {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
+.dues-card::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    right: -20px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
 }
 
-.bundle-pill {
-    display: inline-flex;
+/* Top Row (Icon + Title and Badge) */
+.dues-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 3px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--pink-soft), var(--rose-bg-2));
-    color: var(--rose-ink);
-    font-size: 11px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+    /* Keeps text above the background circles */
+}
+
+.dues-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Circular Taka Icon */
+.icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* "বাকি" Pill Badge */
+.badge-due {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Large Amount Text */
+.dues-amount {
+    font-size: 34px;
     font-weight: 800;
-    letter-spacing: 0.2px;
-    line-height: 1.5;
-    border: 1px solid var(--rose-line);
-    vertical-align: middle;
-    flex-shrink: 0;
-    margin-left: 2px;
-}
-
-.bundle-pill-empty {
-    background: var(--surface-3);
-    color: var(--muted-2);
-    border-color: var(--line);
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+    /* Keeps text above the background circles */
+    line-height: 1.2;
+    font-family: "Noto Sans Bengali", inherit;
+    /* Ensures Bengali numbers look correct */
 }
 
 /* ============================================================
-   21. DARK THEME — pop-up card shadows
+   DASHBOARD HERO CARD (Match Image)
    ============================================================ */
-:root[data-theme="dark"] .person {
-    background: var(--card);
-    border-color: var(--line);
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.5),
-        0 4px 10px rgba(0, 0, 0, 0.55),
-        0 14px 28px rgba(0, 0, 0, 0.6),
-        0 28px 56px rgba(0, 0, 0, 0.5);
+
+.summary-card {
+    /* Deep magenta/pink gradient matching the screenshot */
+    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
+    border-radius: 20px;
+    padding: 20px;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(194, 24, 91, 0.25);
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
+    margin-bottom: 16px;
+    /* Space before the people grid */
 }
 
-:root[data-theme="dark"] .person:hover {
-    border-color: rgba(255, 61, 117, 0.45);
-    box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.55),
-        0 10px 20px rgba(0, 0, 0, 0.6),
-        0 24px 48px rgba(255, 61, 117, 0.22),
-        0 44px 88px rgba(0, 0, 0, 0.55);
+/* Decorative soft circles in the background */
+.summary-card::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    /* Soft light overlay */
+    pointer-events: none;
 }
 
-:root[data-theme="dark"] .person.blocked {
-    background: #22161e;
+.summary-card::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    right: -20px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
 }
 
-/* ============================================================
-   22. RESPONSIVE
-   ============================================================ */
-@media (min-width: 480px) {
-    .container {
-        padding: 18px 16px calc(36px + var(--bottom));
-    }
+/* Top Row (Icon + Title and Badge) */
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+    /* Keeps text above the background circles */
 }
 
-@media (min-width: 520px) {
-    form .row {
-        grid-template-columns: 1fr 1fr;
-    }
+.summary-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
 }
 
-@media (min-width: 720px) {
-    body {
-        font-size: 15.5px;
-    }
-
-    .container {
-        padding: 24px 20px calc(40px + var(--bottom));
-    }
-
-    .panel {
-        padding: 22px 20px;
-    }
-
-    .stats {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .stat:first-child {
-        grid-column: auto;
-    }
-
-    .stat:first-child .val {
-        font-size: 26px;
-    }
-
-    .person-stats {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .person-stats .stat-balance,
-    .person-stats .stat-bundle {
-        grid-column: auto;
-    }
-
-    .toolbar,
-    .person-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .toolbar .btn {
-        padding: 0 18px;
-    }
-
-    .modal-bg {
-        align-items: center;
-        padding: 16px;
-    }
-
-    .modal {
-        border-radius: 24px;
-        padding: 26px 24px;
-    }
-
-    .modal::before {
-        display: none;
-    }
-
-    .tx-item {
-        padding: 16px 0;
-    }
-
-    .tx-amount {
-        font-size: 19px;
-    }
-
-    .tx-date {
-        font-size: 13.5px;
-    }
+/* Circular Taka Icon */
+.taka-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
 }
 
-@media (max-width: 380px) {
-    .person {
-        padding: 12px 13px;
-    }
-
-    .p-top .avatar-sm {
-        width: 40px;
-        height: 40px;
-        font-size: 14px;
-    }
-
-    .p-name h3 {
-        font-size: 14px;
-    }
-
-    .p-bal {
-        font-size: 16px;
-    }
-
-    .pc-btn {
-        font-size: 14px;
-        min-height: 44px;
-    }
-
-    .toolbar .btn {
-        font-size: 14.5px;
-    }
-
-    .chips {
-        grid-template-columns: repeat(2, 1fr);
-    }
+/* "বাকি" Pill Badge */
+.status-badge {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
-/* ============================================================
-   23. REDUCED MOTION
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
+/* Large Amount Text */
+.summary-amount {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+    line-height: 1.2;
+    font-family: "Noto Sans Bengali", inherit;
+    /* Ensures Bengali numbers look correct */
+}
 
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-    }
+/* Footer (Total People count) */
+.summary-footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    position: relative;
+    z-index: 1;
+    opacity: 0.9;
+}
+
+.summary-footer b {
+    font-weight: 700;
+    font-size: 15px;
 }
