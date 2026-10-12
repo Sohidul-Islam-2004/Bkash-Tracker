@@ -5,6 +5,7 @@
    Bank     = { id, name, accountNumber, transactions[] }
    Txn type = "deposit"  → জমা (money in)
               "withdraw" → উত্তোলন (money out)
+   Txn also has: name (who deposited / who received)
    Balance  = totalDeposits − totalWithdrawals
    ============================================================ */
 
@@ -64,7 +65,7 @@ function createBank({ name, accountNumber = "" }) {
     return bank;
 }
 
-function addTransaction(bankId, { type, amount, date, notes = null }) {
+function addTransaction(bankId, { type, amount, date, name = null, notes = null }) {
     const b = getBank(bankId);
     if (!b) throw new Error("bank not found");
     const txn = {
@@ -72,6 +73,7 @@ function addTransaction(bankId, { type, amount, date, notes = null }) {
         type,
         amount: Number(amount),
         date: date || new Date().toISOString(),
+        name: name || null,       // ← who deposited / who received
         notes,
     };
     b.transactions = b.transactions || [];
@@ -262,7 +264,8 @@ function confirmModal({
 
 const QUICK_AMOUNTS = [500, 1000, 5000, 10000];
 
-function askAmount({ title, description = "" }) {
+/* ---------- Amount modal with optional NAME field ---------- */
+function askAmount({ title, description = "", namePlaceholder = "নাম লিখুন" }) {
     return new Promise((resolve) => {
         const id = "m" + uid();
         const root = document.getElementById("modalRoot");
@@ -284,6 +287,13 @@ function askAmount({ title, description = "" }) {
             }
 
                     <div class="field">
+                        <label for="${id}_name">নাম <span class="opt">(না দিলেও চলবে)</span></label>
+                        <input id="${id}_name" type="text"
+                               placeholder="${esc(namePlaceholder)}"
+                               autocomplete="off" />
+                    </div>
+
+                    <div class="field">
                         <label for="${id}_amt">টাকার পরিমাণ</label>
                         <div class="money-input">
                             <span class="money-prefix">৳</span>
@@ -300,7 +310,9 @@ function askAmount({ title, description = "" }) {
                 </div>
             </div>`;
 
+        const nameInput = document.getElementById(`${id}_name`);
         const input = document.getElementById(`${id}_amt`);
+
         const cleanup = (r) => {
             root.innerHTML = "";
             resolve(r);
@@ -339,15 +351,22 @@ function askAmount({ title, description = "" }) {
                 }
                 return;
             }
-            cleanup(v);
+            cleanup({
+                amount: v,
+                name: (nameInput.value || "").trim() || null,
+            });
         };
 
         document.getElementById(`${id}_ok`).onclick = submit;
+
+        nameInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") input.focus();
+        });
         input.addEventListener("keydown", (e) => {
             if (e.key === "Enter") submit();
         });
 
-        setTimeout(() => input.focus(), 80);
+        setTimeout(() => nameInput.focus(), 80);
     });
 }
 
@@ -535,16 +554,18 @@ async function quickTxn(bankId, type) {
     const isDeposit = type === "deposit";
     const t = totalsOf(b);
 
-    const amount = await askAmount({
+    const result = await askAmount({
         title: isDeposit ? "↓ জমা" : "↑ উত্তোলন",
         description: `<b>${esc(b.name)}</b> · ব্যালেন্স ${money(t.balance)}`,
+        namePlaceholder: isDeposit ? "যিনি জমা দিলেন" : "যিনি নিলেন",
     });
-    if (!amount) return;
+    if (!result) return;
 
     try {
         addTransaction(bankId, {
             type,
-            amount,
+            amount: result.amount,
+            name: result.name,
             date: new Date().toISOString(),
         });
         toast(isDeposit ? "জমা হয়েছে ✔" : "উত্তোলন হয়েছে ✔", "success");
@@ -574,6 +595,7 @@ function renderBank(id) {
         ? txns
             .map((tx) => {
                 const isDeposit = tx.type === "deposit";
+                const personName = tx.name ? esc(tx.name) : "";
                 return `
             <div class="lg-row">
                 <div class="lg-icon ${isDeposit ? "in" : "out"}">
@@ -581,6 +603,10 @@ function renderBank(id) {
                 </div>
                 <div class="lg-main">
                     <div class="lg-note">${isDeposit ? "জমা" : "উত্তোলন"}</div>
+                    ${personName
+                        ? `<div class="lg-person">👤 ${personName}</div>`
+                        : ""
+                    }
                     <div class="lg-date">${fmtDate(tx.date)}</div>
                 </div>
                 <div class="lg-col ${isDeposit ? "lg-in" : "lg-out"}">
