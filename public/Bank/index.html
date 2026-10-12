@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#0a5c3e" />
+    <title>ব্যাংক হিসাব</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <img id="brandLogo" alt="" />
+        <div class="topbar-titles">
+          <h1 id="pageTitle">ব্যাংক হিসাব</h1>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- ========================================================
+           VIEW: DASHBOARD
+      ========================================================= -->
+      <section id="viewDashboard" class="view">
+        <!-- HERO TOTAL BALANCE -->
+        <div class="hero">
+          <div class="hero-label">মোট ব্যালেন্স</div>
+          <div class="hero-amount" id="heroAmount">৳০</div>
+          <div class="hero-sub" id="heroSub">০টি ব্যাংক</div>
+        </div>
+
+        <!-- SEARCH + ADD -->
+        <div class="searchbar" id="searchBar">
+          <div class="search-wrap">
+            <input
+              id="searchBox"
+              type="search"
+              placeholder="ব্যাংক খুঁজুন"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="search-clear"
+              id="searchClear"
+              aria-label="মুছুন"
+              hidden
+            >
+              ✕
+            </button>
+          </div>
+          <button
+            class="add-btn"
+            type="button"
+            id="addBankBtn"
+            aria-label="নতুন ব্যাংক যোগ করুন"
+          >
+            <span class="add-plus">+</span> যোগ
+          </button>
+        </div>
+
+        <div id="banksList" class="banks-list"></div>
+      </section>
+
+      <!-- ========================================================
+           VIEW: ADD BANK
+      ========================================================= -->
+      <section id="viewAddBank" class="view hidden">
+        <div class="panel">
+          <h2 class="panel-title">
+            <span class="panel-title-icon">🏦</span>
+            নতুন ব্যাংক
+          </h2>
+
+          <form id="addBankForm" autocomplete="off">
+            <div class="field">
+              <label for="abName"
+                >ব্যাংকের নাম <span class="req">*</span></label
+              >
+              <input
+                id="abName"
+                name="name"
+                type="text"
+                required
+                placeholder="যেমন: ডাচ-বাংলা ব্যাংক"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label for="abAcc"
+                >অ্যাকাউন্ট নম্বর
+                <span class="opt">(না দিলেও চলবে)</span></label
+              >
+              <input
+                id="abAcc"
+                name="accountNumber"
+                type="text"
+                inputmode="numeric"
+                placeholder="XXXXXXXXXXXX"
+                autocomplete="off"
+              />
+            </div>
+
+            <div class="field">
+              <label for="abBalance"
+                >বর্তমান ব্যালেন্স
+                <span class="opt">(না দিলেও চলবে)</span></label
+              >
+              <div class="money-input">
+                <span class="money-prefix">৳</span>
+                <input
+                  id="abBalance"
+                  name="balance"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  placeholder="0"
+                />
+              </div>
+              <p class="hint">এই টাকা শুরুর জমা হিসেবে যোগ হবে।</p>
+            </div>
+
+            <button class="btn btn-primary btn-block btn-xl" type="submit">
+              সংরক্ষণ করুন
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           VIEW: BANK DETAIL
+      ========================================================= -->
+      <section id="viewBank" class="view hidden">
+        <div id="bankDetail"></div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div id="modalRoot"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
