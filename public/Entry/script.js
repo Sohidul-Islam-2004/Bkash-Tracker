@@ -844,7 +844,7 @@ document.addEventListener('click', async ev => {
             `${arr.length} টি নম্বর`,
             line,
             '',
-            ...arr.map(e => `${e.number} = ${e.amount}`),
+            ...[...arr].reverse().map(e => `${e.number} = ${e.amount}`),
             line,
             '',
             sep,
