@@ -104,6 +104,15 @@ const fmtDate = iso => {
     return `${d}/${m}/${y}`;
 };
 
+const fmtTime = () => {
+    const d = new Date();
+    return d.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
+};
+
 /* ============================================================
    TOAST
    ============================================================ */
@@ -840,7 +849,9 @@ document.addEventListener('click', async ev => {
         const row = (label, value) => `   ${label.padEnd(12)}: ${value}`;
 
         const text = [
-            fmtDate(date),
+            'সালাম ভাই,',
+            '',
+            `${fmtDate(date)} · ${fmtTime(date)}`,   // date + time on top
             `${arr.length} টি নম্বর`,
             line,
             '',
