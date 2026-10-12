@@ -1297,5 +1297,20 @@ document.getElementById("backBtn").onclick = () => {
     window.location.href = "/";
 };
 
+/* ============================================================
+   THEME (dark / light)
+   ============================================================ */
+function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", t === "dark" ? "#181b24" : "#d12053");
+    try { localStorage.setItem("theme", t); } catch (e) { }
+}
+
+document.getElementById("themeBtn").onclick = () => {
+    const now = document.documentElement.getAttribute("data-theme");
+    applyTheme(now === "dark" ? "light" : "dark");
+};
+
 renderLogo();
 showDashboard();
