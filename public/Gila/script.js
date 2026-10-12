@@ -510,7 +510,7 @@ function renderPersonView(pid) {
                 <article class="month-card person-month-card">
                     <button class="month-btn" data-open-pmonth="${esc(pid)}|${ym}" type="button">
        <div class="month-info">
-    <div class="month-name">${formatMonthMY(ym)}</div>
+    <div class="month-name">1/${formatMonthMY(ym)}</div>
     <div class="month-year">${monthName(ym)}</div>
 </div>
                         <div class="month-total">
