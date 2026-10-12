@@ -182,7 +182,7 @@ function fmtDate(iso) {
 }
 
 /* ============================================================
-   TOAST  (with optional action button for undo)
+   TOAST
    ============================================================ */
 let toastTimer = null;
 
@@ -429,7 +429,7 @@ function renderLogo() {
 }
 
 /* ============================================================
-   DASHBOARD  (পাওনা-focused: no quick buttons, cards are clickable)
+   DASHBOARD
    ============================================================ */
 function renderDashboard() {
     const grid = document.getElementById("peopleGrid");
@@ -438,12 +438,12 @@ function renderDashboard() {
 
     const people = db.people;
 
-    /* -------- summary strip (Only "মোট পাওনা") -------- */
+    /* -------- summary strip -------- */
     if (people.length === 0) {
         summary.hidden = true;
         summary.innerHTML = "";
     } else {
-        let receivable = 0; // they owe me
+        let receivable = 0;
         people.forEach((p) => {
             const t = totalsOf(p);
             if (t.net > 0) receivable += t.net;
@@ -496,7 +496,7 @@ function renderDashboard() {
         return;
     }
 
-    /* -------- cards (no quick buttons, whole card clickable) -------- */
+    /* -------- cards -------- */
     grid.innerHTML = list
         .map((p, i) => {
             const t = totalsOf(p);
@@ -536,12 +536,12 @@ function renderDashboard() {
 }
 
 /* ============================================================
-   QUICK TRANSACTION (from person detail)
+   QUICK TRANSACTION
    ============================================================ */
 async function quickTxn(id, type) {
     const p = getPerson(id);
     if (!p) return;
-    const isSend = type === "send"; // send = নতুন বাকি দিয়েছি
+    const isSend = type === "send";
     const t = totalsOf(p);
     const balText =
         t.net === 0 ? "সমান" : `${money(Math.abs(t.net))} ${balLabel(t.net)}`;
@@ -613,6 +613,10 @@ function renderPerson(id) {
     if (p.bkashNumber) subParts.push(`<span>💳 ${esc(p.bkashNumber)}</span>`);
     if (p.whatsappNumber) subParts.push(`<span>📱 ${esc(p.whatsappNumber)}</span>`);
 
+    /* 
+      NOTE: To change the button text to "হাসান দিয়েছি" and "হাসান পেয়েছি", 
+      simply edit the text inside the <button> tags below.
+    */
     document.getElementById("personDetail").innerHTML = `
         <div class="panel">
             <div class="person-header">
@@ -641,10 +645,10 @@ function renderPerson(id) {
 
             <div class="detail-actions">
                 <button class="pc-btn pc-send" data-txn="send" data-id="${p.id}">
-                    + নতুন বাকি
+                    ↓ হাসান দিয়েছি
                 </button>
                 <button class="pc-btn pc-receive" data-txn="receive" data-id="${p.id}">
-                    ✓ টাকা পেলাম
+                    ↑ হাসান পেয়েছি
                 </button>
                 ${p.whatsappNumber
             ? `<button class="pc-btn pc-wa" data-wa="${p.id}">📱 হোয়াটসঅ্যাপে জানান</button>`
@@ -673,7 +677,7 @@ function renderPerson(id) {
 }
 
 /* ============================================================
-   WHATSAPP REQUEST  (পাওনা-focused message)
+   WHATSAPP REQUEST
    ============================================================ */
 function waRequest(id) {
     const p = getPerson(id);
@@ -820,7 +824,7 @@ document.addEventListener("contextmenu", (e) => {
 let lastTouchEnd = 0;
 document.addEventListener(
     "touchend",
-    (e) => {
+    () => {
         const now = Date.now();
         if (now - lastTouchEnd <= 300) e.preventDefault();
         lastTouchEnd = now;

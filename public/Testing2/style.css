@@ -1,12 +1,9 @@
 /* ============================================================
-   হিসাব — ledger UI  (mobile‑first, Bangla)
+   হিসাব — personal ledger (পাওনা)
    ============================================================ */
 
-/* ------------------------------------------------------------
-   TOKENS
------------------------------------------------------------- */
 :root {
-    --bg: #f6f4f7;
+    --bg: #f5f3f6;
     --card: #ffffff;
 
     --ink: #17181f;
@@ -38,7 +35,6 @@
 
     --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
     --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
-    --shadow-md: 0 8px 24px rgba(20, 22, 34, 0.08);
     --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
     --shadow-green: 0 6px 16px rgba(18, 160, 106, 0.28);
 
@@ -54,9 +50,6 @@
     --bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ------------------------------------------------------------
-   BASE
------------------------------------------------------------- */
 * {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
@@ -121,13 +114,12 @@ select,
     user-select: text;
 }
 
-/* tabular numerals everywhere money appears */
 .money,
 .pc-bal,
 .lg-big,
 .lg-col,
 .lg-total b,
-.stat .val,
+.summary-item b,
 .amount-chip {
     font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
@@ -240,11 +232,11 @@ select,
 }
 
 /* ------------------------------------------------------------
-   SUMMARY STRIP  (dashboard)
+   SUMMARY STRIP
 ------------------------------------------------------------ */
 .summary {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 10px;
     margin-bottom: 14px;
 }
@@ -319,7 +311,6 @@ select,
     box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
 }
 
-/* hide native clear (we add our own) */
 .search-wrap input::-webkit-search-cancel-button {
     -webkit-appearance: none;
     appearance: none;
@@ -519,7 +510,6 @@ textarea:focus {
     box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
 }
 
-/* money input with ৳ prefix */
 .money-input {
     position: relative;
 }
@@ -768,7 +758,6 @@ textarea:focus {
     flex: 1;
 }
 
-/* amount chips inside modal */
 .chips {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -829,12 +818,13 @@ textarea:focus {
     background: var(--card);
     border: 1px solid var(--line-2);
     border-radius: 18px;
-    padding: 14px 14px 12px;
+    padding: 14px;
     box-shadow: 0 1px 2px rgba(20, 22, 34, 0.03),
         0 4px 12px rgba(20, 22, 34, 0.04);
     transition: transform 0.18s var(--ease), box-shadow 0.22s,
         border-color 0.18s;
     animation: cardIn 0.4s var(--ease) backwards;
+    cursor: pointer;
 }
 
 .person-card:hover {
@@ -856,22 +846,10 @@ textarea:focus {
     }
 }
 
-/* head */
 .pc-head {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding-bottom: 12px;
-    cursor: pointer;
-    border-radius: 12px;
-    transition: background 0.15s;
-    margin: -4px -6px 0;
-    padding-left: 6px;
-    padding-right: 6px;
-}
-
-.pc-head:hover {
-    background: var(--pink-tint);
 }
 
 .pc-info {
@@ -919,7 +897,6 @@ textarea:focus {
     font-weight: 600;
 }
 
-/* balance colors */
 .bal-pos {
     color: var(--green);
 }
@@ -932,45 +909,17 @@ textarea:focus {
     color: var(--muted);
 }
 
-/* actions */
-.pc-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.pc-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 44px;
-    border: 0;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: transform 0.12s, box-shadow 0.18s, opacity 0.15s;
-    color: #fff;
-}
-
-.pc-btn:active {
-    transform: scale(0.97);
-}
-
-.pc-send {
-    background: linear-gradient(135deg, #d12053, #a8153f);
-    box-shadow: 0 6px 16px rgba(209, 32, 83, 0.24);
-}
-
-.pc-receive {
-    background: linear-gradient(135deg, #14b866, #0a8347);
-    box-shadow: 0 6px 16px rgba(18, 160, 106, 0.24);
+.pc-chevron {
+    font-size: 22px;
+    font-weight: 300;
+    color: #c9cdd8;
+    margin-left: 6px;
+    flex-shrink: 0;
+    line-height: 1;
 }
 
 /* ------------------------------------------------------------
-   PERSON DETAIL — HEADER PANEL
+   PERSON DETAIL — HEADER
 ------------------------------------------------------------ */
 .person-header {
     display: flex;
@@ -1024,7 +973,9 @@ textarea:focus {
     margin-top: 2px;
 }
 
-/* quick action buttons row (person detail) */
+/* ------------------------------------------------------------
+   DETAIL ACTIONS (SIDE BY SIDE FIX)
+------------------------------------------------------------ */
 .detail-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1032,18 +983,48 @@ textarea:focus {
     margin-top: 16px;
 }
 
-.detail-actions .pc-btn {
+.pc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     min-height: 48px;
+    border: 0;
+    border-radius: 12px;
+    font-size: 14px;
+    /* Slightly smaller to fit side-by-side */
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.18s, opacity 0.15s;
+    color: #fff;
+    padding: 0 8px;
+    text-align: center;
+}
+
+.pc-btn:active {
+    transform: scale(0.97);
+}
+
+.pc-send {
+    background: linear-gradient(135deg, #d12053, #a8153f);
+    box-shadow: 0 6px 16px rgba(209, 32, 83, 0.24);
+}
+
+.pc-receive {
+    background: linear-gradient(135deg, #14b866, #0a8347);
+    box-shadow: 0 6px 16px rgba(18, 160, 106, 0.24);
 }
 
 .pc-btn.pc-wa {
     grid-column: 1 / -1;
     background: linear-gradient(135deg, #14b866, #0a8347);
     box-shadow: 0 6px 16px rgba(18, 160, 106, 0.24);
+    margin-top: 4px;
 }
 
 /* ------------------------------------------------------------
-   TOTALS STRIP
+   TOTALS
 ------------------------------------------------------------ */
 .lg-totals {
     display: grid;
@@ -1191,7 +1172,7 @@ textarea:focus {
 }
 
 /* ------------------------------------------------------------
-   RESPONSIVE
+   RESPONSIVE FIX — Keep buttons side by side
 ------------------------------------------------------------ */
 @media (min-width: 480px) {
     .container {
@@ -1227,32 +1208,18 @@ textarea:focus {
     }
 }
 
+/* The old rule was: @media (max-width: 380px) { .detail-actions { grid-template-columns: 1fr; } } */
+/* We removed that and replaced it with this to keep them side by side */
 @media (max-width: 380px) {
-    .person-card {
-        padding: 12px 12px 10px;
-    }
-
-    .pc-head .avatar-sm {
-        width: 42px;
-        height: 42px;
-        font-size: 15px;
-    }
-
-    .pc-info h3 {
-        font-size: 14.5px;
-    }
-
-    .pc-bal {
-        font-size: 18px;
+    .detail-actions {
+        grid-template-columns: 1fr 1fr;
+        /* Stays side by side */
+        gap: 6px;
     }
 
     .pc-btn {
-        font-size: 14px;
-        min-height: 42px;
-    }
-
-    .detail-actions {
-        grid-template-columns: 1fr;
+        font-size: 13px;
+        min-height: 44px;
     }
 
     .chips {
@@ -1260,9 +1227,6 @@ textarea:focus {
     }
 }
 
-/* ------------------------------------------------------------
-   REDUCED MOTION
------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -1272,160 +1236,3 @@ textarea:focus {
         transition-duration: 0.01ms !important;
     }
 }
-
-/* ============================================================
-   SUMMARY STRIP (Updated for single column)
-   ============================================================ */
-.summary {
-    display: grid;
-    grid-template-columns: 1fr;
-    /* Single column for just "পাওনা" */
-    gap: 10px;
-    margin-bottom: 14px;
-}
-
-.summary-item {
-    background: var(--card);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r);
-    padding: 12px 14px;
-    box-shadow: var(--shadow-xs);
-}
-
-.summary-item span {
-    display: block;
-    font-size: 12.5px;
-    color: var(--muted);
-    margin-bottom: 2px;
-}
-
-.summary-item b {
-    display: block;
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-}
-
-.summary-item.in b {
-    color: var(--green-ink);
-}
-
-.summary-item.out b {
-    color: var(--red-ink);
-}
-
-/* ============================================================
-   PERSON CARD (Updated - no buttons)
-   ============================================================ */
-.person-card {
-    position: relative;
-    background: var(--card);
-    border: 1px solid var(--line-2);
-    border-radius: 18px;
-    padding: 16px;
-    /* Adjusted padding */
-    box-shadow: 0 1px 2px rgba(20, 22, 34, 0.03),
-        0 4px 12px rgba(20, 22, 34, 0.04);
-    transition: transform 0.18s var(--ease), box-shadow 0.22s,
-        border-color 0.18s;
-    animation: cardIn 0.4s var(--ease) backwards;
-    cursor: pointer;
-}
-
-.person-card:hover {
-    transform: translateY(-1px);
-    border-color: rgba(209, 32, 83, 0.18);
-    box-shadow: 0 2px 4px rgba(20, 22, 34, 0.04),
-        0 10px 22px rgba(209, 32, 83, 0.08);
-}
-
-@keyframes cardIn {
-    from {
-        opacity: 0;
-        transform: translateY(14px) scale(0.97);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* head */
-.pc-head {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 0;
-    /* Removed bottom padding */
-}
-
-.pc-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.pc-info h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pc-meta {
-    font-size: 12.5px;
-    color: var(--muted);
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pc-bal-wrap {
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.pc-bal {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    line-height: 1.1;
-    white-space: nowrap;
-}
-
-.pc-bal-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-    font-weight: 600;
-}
-
-/* Chevron icon for clickable cards */
-.pc-chevron {
-    font-size: 22px;
-    font-weight: 300;
-    color: #c9cdd8;
-    margin-left: 6px;
-    flex-shrink: 0;
-    line-height: 1;
-}
-
-/* balance colors */
-.bal-pos {
-    color: var(--green);
-}
-
-.bal-neg {
-    color: var(--red-ink);
-}
-
-.bal-zero {
-    color: var(--muted);
-}
-
-/* (Keep the rest of your existing CSS below) */
