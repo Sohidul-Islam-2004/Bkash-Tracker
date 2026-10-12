@@ -152,6 +152,56 @@ const GilaPersonSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
+
+
+
+
+
+
+
+const PawnaSchema = new mongoose.Schema(
+    {
+        type: { type: String, enum: ["send", "receive"], required: true },
+        amount: { type: Number, required: true, min: 1 },
+        date: { type: Date, default: Date.now },
+        notes: { type: String, default: null },
+    },
+    { _id: true }
+);
+
+const PawnaPersonSchema = new mongoose.Schema(
+    {
+        name: { type: String, required: true, trim: true },
+        transactions: { type: [PawnaSchema], default: [] },
+    },
+    { timestamps: true }
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================
    INDEXES
    ============================================================ */
@@ -181,5 +231,7 @@ module.exports = {
     TransactionSchema,
     EntriesSchema,
     GilaPersonSchema,
+    PawnaSchema,
+    PawnaPersonSchema
 
 };

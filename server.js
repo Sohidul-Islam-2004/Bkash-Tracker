@@ -15,7 +15,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const multer = require("multer");
 const { createClient } = require("@supabase/supabase-js");
-const { PersonSchema, TransactionSchema, EntriesSchema, GilaPersonSchema } = require("./schema");
+const { PersonSchema, TransactionSchema, EntriesSchema, GilaPersonSchema, PawnaPersonSchema } = require("./schema");
 
 /* DNS — helps MongoDB Atlas connect on some hosts */
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
@@ -42,6 +42,7 @@ const Person = mongoose.model("Person", PersonSchema);
 const Transaction = mongoose.model("Transaction", TransactionSchema);
 const Entries = mongoose.model("Entries", EntriesSchema);
 const Gila = mongoose.model("Gila", GilaPersonSchema);
+const PawnaPerson = mongoose.model("Pawna", PawnaPersonSchema);
 mongoose
     .connect(process.env.DB_URL)
     .then(() => console.log("Cloud Database connected successfully!"))
@@ -654,6 +655,281 @@ app.delete("/Gila/persons/:id/entries/:date", async (req, res) => {
     await person.save();
     res.status(204).end();
 });
+
+
+
+
+
+
+/* ============================================================
+   GET /api/pawna/people  →  { people: [ {...person, summary} ] }
+   ============================================================ */
+app.get("/api/pawna/people", async (req, res) => {
+    try {
+        const people = await PawnaPerson.find().sort({ createdAt: -1 });
+
+        const out = people.map((p) => ({
+            id: p._id.toString(),
+            name: p.name,
+            createdAt: p.createdAt,
+            summary: summarize(p),
+            transactions: (p.transactions || [])
+                .slice()
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((t) => ({
+                    id: t._id.toString(),
+                    type: t.type,                 // "send" | "receive"
+                    amount: t.amount,
+                    date: t.date,
+                    notes: t.notes ?? null,
+                })),
+        }));
+
+        res.json({ people: out });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ============================================================
+   POST /api/pawna/people  →  { person: {...} }
+   body: { name }
+   ============================================================ */
+app.post("/api/pawna/people", async (req, res) => {
+    try {
+        const name = String((req.body && req.body.name) || "").trim();
+        if (!name) return res.status(400).json({ message: "নাম দিতে হবে" });
+
+        const person = await PawnaPerson.create({ name, transactions: [] });
+
+        res.status(201).json({
+            person: {
+                id: person._id.toString(),
+                name: person.name,
+                createdAt: person.createdAt,
+                summary: summarize(person),
+                transactions: [],
+            },
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ============================================================
+   POST /api/pawna/people/:id/transactions
+   →  { transaction, summary }
+   body: { type: "send"|"receive", amount, date?, notes? }
+   ============================================================ */
+app.post("/api/pawna/people/:id/transactions", async (req, res) => {
+    try {
+        const body = req.body || {};
+        const { type } = body;
+        const amount = Number(body.amount);
+
+        /* ---- validation ---- */
+        if (type !== "send" && type !== "receive") {
+            return res
+                .status(400)
+                .json({ message: "type অবশ্যই send অথবা receive" });
+        }
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return res
+                .status(400)
+                .json({ message: "amount ধনাত্মক হতে হবে" });
+        }
+
+        const person = await PawnaPerson.findById(req.params.id);
+        if (!person) {
+            return res
+                .status(404)
+                .json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
+        }
+
+        /* ---- push + save ---- */
+        person.transactions.push({
+            type,
+            amount,
+            date: body.date ? new Date(body.date) : new Date(),
+            notes: body.notes ?? null,
+        });
+        await person.save();
+
+        const created = person.transactions[person.transactions.length - 1];
+
+        /* ---- respond ---- */
+        res.status(201).json({
+            transaction: {
+                id: created._id.toString(),
+                type: created.type,
+                amount: created.amount,
+                date: created.date,
+                notes: created.notes ?? null,
+            },
+            summary: summarize(person),
+        });
+    } catch (err) {
+        console.error(err);
+        if (err.name === "CastError") {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ============================================================
+   DELETE /api/pawna/people/:id/transactions/:txnId
+   →  { ok: true, summary }
+   ============================================================ */
+app.delete("/api/pawna/people/:id/transactions/:txnId", async (req, res) => {
+    try {
+        const { id, txnId } = req.params;
+
+        const result = await PawnaPerson.updateOne(
+            { _id: id },
+            { $pull: { transactions: { _id: txnId } } }
+        );
+
+        if (result.matchedCount === 0) {
+            return res
+                .status(404)
+                .json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
+        }
+        if (result.modifiedCount === 0) {
+            return res
+                .status(404)
+                .json({ message: "লেনদেন খুঁজে পাওয়া যায়নি" });
+        }
+
+        const person = await PawnaPerson.findById(id);
+        res.json({ ok: true, summary: summarize(person) });
+    } catch (err) {
+        console.error(err);
+        if (err.name === "CastError") {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ============================================================
+   HELPER — build summary once, use everywhere
+   ============================================================ */
+function summarize(person) {
+    let totalSend = 0;      // মোট বাকি দিয়েছি
+    let totalReceive = 0;   // মোট পেয়েছি
+
+    (person.transactions || []).forEach((t) => {
+        const a = Number(t.amount || 0);
+        if (t.type === "send") totalSend += a;
+        else if (t.type === "receive") totalReceive += a;
+    });
+
+    const net = totalSend - totalReceive;
+    return {
+        totalSend,
+        totalReceive,
+        net,
+        status: net > 0 ? "pabe" : net < 0 ? "debe" : "soman",
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
