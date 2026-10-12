@@ -38,9 +38,9 @@
           </svg>
         </button>
 
-        <img id="brandLogo" alt="লোগো" />
+        <img id="brandLogo" alt="" />
         <div class="topbar-titles">
-          <h1>হিসাব</h1>
+          <h1 id="pageTitle">হিসাব</h1>
         </div>
       </div>
     </header>
@@ -50,23 +50,36 @@
     ============================================================ -->
     <main class="container">
       <!-- ========================================================
-             VIEW: DASHBOARD
-        ========================================================= -->
+           VIEW: DASHBOARD
+      ========================================================= -->
       <section id="viewDashboard" class="view">
+        <div id="dashSummary" class="summary" hidden></div>
+
         <div id="searchBar" class="searchbar">
-          <input
-            id="searchBox"
-            type="search"
-            placeholder="নাম খুঁজুন"
-            oninput="renderDashboard()"
-            autocomplete="off"
-          />
+          <div class="search-wrap">
+            <input
+              id="searchBox"
+              type="search"
+              placeholder="নাম বা নম্বর খুঁজুন"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="search-clear"
+              id="searchClear"
+              aria-label="খোঁজা মুছুন"
+              hidden
+            >
+              ✕
+            </button>
+          </div>
           <button
             class="add-btn"
-            onclick="showAddPerson()"
+            type="button"
+            id="addPersonBtn"
             aria-label="নতুন মানুষ যোগ করুন"
           >
-            <i>+</i> যোগ
+            <span class="add-plus">+</span> যোগ
           </button>
         </div>
 
@@ -75,8 +88,8 @@
       </section>
 
       <!-- ========================================================
-             VIEW: ADD PERSON
-        ========================================================= -->
+           VIEW: ADD PERSON
+      ========================================================= -->
       <section id="viewAddPerson" class="view hidden">
         <div class="panel">
           <h2 class="panel-title">
@@ -84,38 +97,43 @@
             নতুন মানুষ
           </h2>
 
-          <form onsubmit="submitPerson(event)">
+          <form id="addPersonForm" autocomplete="off">
             <div class="field">
-              <label>নাম</label>
+              <label for="apName">নাম <span class="req">*</span></label>
               <input
+                id="apName"
                 name="name"
                 type="text"
                 required
                 placeholder="যেমন: করিম"
-                autocomplete="off"
               />
             </div>
 
             <div class="field">
-              <label
-                >শুরুতে কত টাকা?
-                <span class="opt">(না দিলেও চলবে)</span></label
+              <label for="apAmount"
+                >শুরুর বাকি <span class="opt">(না দিলেও চলবে)</span></label
               >
-              <input
-                name="amount"
-                type="number"
-                min="0"
-                step="1"
-                inputmode="numeric"
-                placeholder="0"
-              />
+              <div class="money-input">
+                <span class="money-prefix">৳</span>
+                <input
+                  id="apAmount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  placeholder="0"
+                />
+              </div>
+              <p class="hint">এই টাকা আপনি পাবেন।</p>
             </div>
 
             <div class="field">
-              <label
+              <label for="apBkash"
                 >বিকাশ নম্বর <span class="opt">(না দিলেও চলবে)</span></label
               >
               <input
+                id="apBkash"
                 name="bkashNumber"
                 type="tel"
                 pattern="01[0-9]{9}"
@@ -126,11 +144,12 @@
             </div>
 
             <div class="field">
-              <label
+              <label for="apWa"
                 >হোয়াটসঅ্যাপ নম্বর
                 <span class="opt">(না দিলেও চলবে)</span></label
               >
               <input
+                id="apWa"
                 name="whatsappNumber"
                 type="tel"
                 inputmode="numeric"
@@ -139,15 +158,15 @@
             </div>
 
             <button class="btn btn-primary btn-block btn-xl" type="submit">
-              ✔ সংরক্ষণ করুন
+              সংরক্ষণ করুন
             </button>
           </form>
         </div>
       </section>
 
       <!-- ========================================================
-             VIEW: PERSON DETAIL (ledger)
-        ========================================================= -->
+           VIEW: PERSON DETAIL (ledger)
+      ========================================================= -->
       <section id="viewPerson" class="view hidden">
         <div id="personDetail"></div>
       </section>
@@ -156,7 +175,7 @@
     <!-- ============================================================
          TOAST + MODAL ROOT
     ============================================================ -->
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div id="modalRoot"></div>
 
     <script src="script.js"></script>

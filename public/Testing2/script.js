@@ -1,15 +1,21 @@
 /* ============================================================
    হিসাব — simple ledger + optional bKash / WhatsApp
-   Storage: localStorage (no backend needed)
-   Person = name + optional bKash + optional WhatsApp.
-   Balance = মোট রিসিভ − মোট সেন্ড   (computed from transactions)
+   Storage: localStorage. No backend.
+
+   Convention (পাওনা-focused):
+     "send"    = আমি বাকি দিয়েছি (I gave / they owe me)
+     "receive" = আমি টাকা পেয়েছি (I received money back)
+     net = totalGiven − totalReceived
+     net > 0  → "পাব"  (they owe me)   → green
+     net < 0  → "দেব"  (I owe them)    → red   (edge case)
+     net = 0  → "সমান"
    ============================================================ */
+
+const STORAGE_KEY = "hisab_db_v2";
 
 /* ============================================================
    STORAGE
    ============================================================ */
-const STORAGE_KEY = "hisab_db_v1";
-
 function loadDB() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -38,7 +44,7 @@ let currentView = "viewDashboard";
 let currentPersonId = null;
 
 /* ============================================================
-   DATA LAYER — replaces the old API calls
+   DATA LAYER
    ============================================================ */
 function getAllPeople() {
     return db.people;
@@ -62,7 +68,7 @@ function createPerson({ name, bkashNumber = "", whatsappNumber = "" }) {
     return person;
 }
 
-function addTransaction(personId, { type, amount, date, counterparty = null, notes = null }) {
+function addTransaction(personId, { type, amount, date, notes = null }) {
     const p = getPerson(personId);
     if (!p) throw new Error("person not found");
     const txn = {
@@ -70,7 +76,6 @@ function addTransaction(personId, { type, amount, date, counterparty = null, not
         type,
         amount: Number(amount),
         date: date || new Date().toISOString(),
-        counterparty,
         notes,
     };
     p.transactions = p.transactions || [];
@@ -82,9 +87,18 @@ function addTransaction(personId, { type, amount, date, counterparty = null, not
 function deleteTransaction(personId, txnId) {
     const p = getPerson(personId);
     if (!p) throw new Error("person not found");
-    const before = (p.transactions || []).length;
-    p.transactions = (p.transactions || []).filter((t) => t.id !== txnId);
-    if (p.transactions.length === before) throw new Error("Transaction not found");
+    const idx = (p.transactions || []).findIndex((t) => t.id === txnId);
+    if (idx < 0) throw new Error("Transaction not found");
+    const [removed] = p.transactions.splice(idx, 1);
+    saveDB();
+    return removed;
+}
+
+function restoreTransaction(personId, txn) {
+    const p = getPerson(personId);
+    if (!p || !txn) return;
+    p.transactions = p.transactions || [];
+    p.transactions.push(txn);
     saveDB();
 }
 
@@ -92,53 +106,21 @@ function deleteTransaction(personId, txnId) {
    LEDGER MATH
    ============================================================ */
 function totalsOf(p) {
-    let sent = 0;
-    let received = 0;
+    let given = 0;   // বাকি দিয়েছি
+    let got = 0;     // টাকা পেয়েছি
     (p.transactions || []).forEach((t) => {
         const a = Number(t.amount || 0);
-        if (t.type === "send") sent += a;
-        else received += a;
+        if (t.type === "send") given += a;
+        else got += a;
     });
-    return { sent, received, balance: received - sent };
+    return { given, got, net: given - got };
 }
 
 /* ============================================================
-   ERROR TRANSLATION
-   ============================================================ */
-function translateError(msg) {
-    if (!msg) return "অজানা সমস্যা";
-    const text = String(msg);
-    const map = {
-        "amount must be > 0": "টাকার পরিমাণ লিখুন",
-        "Amount must be more than 0": "টাকার পরিমাণ লিখুন",
-        "type must be send or receive": "ধরন ঠিক নয়",
-        "Invalid transaction type": "ধরন ঠিক নয়",
-        "person not found": "মানুষ খুঁজে পাওয়া যায়নি",
-        "Person not found": "মানুষ খুঁজে পাওয়া যায়নি",
-        "Invalid id": "ভুল আইডি",
-        "Transaction not found": "লেনদেন খুঁজে পাওয়া যায়নি",
-    };
-    for (const k in map) if (text.includes(k)) return map[k];
-    return text;
-}
-
-/* ============================================================
-   SMALL HELPERS
+   HELPERS
    ============================================================ */
 function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-function toast(msg, kind) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className =
-        "toast show" +
-        (kind === "error" ? " error" : kind === "success" ? " success" : "");
-    clearTimeout(t._t);
-    t._t = setTimeout(() => {
-        t.className = "toast";
-    }, 2400);
 }
 
 function money(n) {
@@ -174,18 +156,224 @@ function avatarHTML(person, sizeClass) {
     return `<div class="avatar ${sizeClass}">${esc(initialsOf(person.name))}</div>`;
 }
 
-function balClass(b) {
-    return b > 0 ? "pos" : b < 0 ? "neg" : "zero";
+function balClass(net) {
+    return net > 0 ? "pos" : net < 0 ? "neg" : "zero";
+}
+
+function balLabel(net) {
+    if (net > 0) return "পাব";
+    if (net < 0) return "দেব";
+    return "সমান";
+}
+
+function fmtDate(iso) {
+    const d = new Date(iso);
+    const dateStr = d.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "numeric",
+        year: "2-digit",
+    });
+    const timeStr = d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    });
+    return `${dateStr} · ${timeStr}`;
 }
 
 /* ============================================================
-   PAGE ROUTING
+   TOAST  (with optional action button for undo)
    ============================================================ */
+let toastTimer = null;
+
+function toast(msg, kind, opts = {}) {
+    const t = document.getElementById("toast");
+    t.innerHTML = "";
+
+    const text = document.createElement("span");
+    text.textContent = msg;
+    t.appendChild(text);
+
+    if (opts.actionLabel && typeof opts.onAction === "function") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "toast-action";
+        btn.textContent = opts.actionLabel;
+        btn.onclick = () => {
+            hideToast();
+            opts.onAction();
+        };
+        t.appendChild(btn);
+    }
+
+    t.className =
+        "toast show" +
+        (kind === "error" ? " error" : kind === "success" ? " success" : "");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(
+        hideToast,
+        opts.duration || (opts.actionLabel ? 4500 : 2400)
+    );
+}
+
+function hideToast() {
+    const t = document.getElementById("toast");
+    t.className = "toast";
+    clearTimeout(toastTimer);
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+function confirmModal({
+    title,
+    description = "",
+    submitLabel = "হ্যাঁ",
+    cancelLabel = "না",
+    danger = false,
+}) {
+    return new Promise((resolve) => {
+        const id = "m" + uid();
+        const root = document.getElementById("modalRoot");
+
+        root.innerHTML = `
+            <div class="modal-bg" id="${id}_bg">
+                <div class="modal">
+                    <h3>${esc(title)}</h3>
+                    ${description
+                ? `<div class="modal-sub">${description}</div>`
+                : ""
+            }
+                    <div class="modal-actions">
+                        <button class="btn btn-light" id="${id}_cancel">${esc(
+                cancelLabel
+            )}</button>
+                        <button class="btn ${danger ? "btn-danger" : "btn-primary"
+            }" id="${id}_ok">${esc(submitLabel)}</button>
+                    </div>
+                </div>
+            </div>`;
+
+        const cleanup = (r) => {
+            root.innerHTML = "";
+            resolve(r);
+        };
+
+        document.getElementById(`${id}_bg`).addEventListener("click", (e) => {
+            if (e.target.id === `${id}_bg`) cleanup(false);
+        });
+        document.getElementById(`${id}_cancel`).onclick = () => cleanup(false);
+        document.getElementById(`${id}_ok`).onclick = () => cleanup(true);
+    });
+}
+
+const QUICK_AMOUNTS = [100, 500, 1000, 5000];
+
+function askAmount({ title, description = "" }) {
+    return new Promise((resolve) => {
+        const id = "m" + uid();
+        const root = document.getElementById("modalRoot");
+
+        const chipsHtml = QUICK_AMOUNTS.map(
+            (v) =>
+                `<button type="button" class="amount-chip" data-amount="${v}">${v.toLocaleString(
+                    "en-IN"
+                )}</button>`
+        ).join("");
+
+        root.innerHTML = `
+            <div class="modal-bg" id="${id}_bg">
+                <div class="modal">
+                    <h3>${title}</h3>
+                    ${description
+                ? `<div class="modal-sub">${description}</div>`
+                : ""
+            }
+
+                    <div class="field">
+                        <label for="${id}_amt">টাকার পরিমাণ</label>
+                        <div class="money-input">
+                            <span class="money-prefix">৳</span>
+                            <input id="${id}_amt" type="number" inputmode="numeric"
+                                   min="0" step="1" placeholder="0" autocomplete="off" />
+                        </div>
+                        <div class="chips">${chipsHtml}</div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-light" id="${id}_cancel">বাতিল</button>
+                        <button class="btn btn-primary" id="${id}_ok">যোগ করুন</button>
+                    </div>
+                </div>
+            </div>`;
+
+        const input = document.getElementById(`${id}_amt`);
+        const cleanup = (r) => {
+            root.innerHTML = "";
+            resolve(r);
+        };
+
+        document.getElementById(`${id}_bg`).addEventListener("click", (e) => {
+            if (e.target.id === `${id}_bg`) cleanup(null);
+        });
+        document.getElementById(`${id}_cancel`).onclick = () => cleanup(null);
+
+        root.querySelectorAll(".amount-chip").forEach((btn) => {
+            btn.onclick = () => {
+                input.value = btn.dataset.amount;
+                root.querySelectorAll(".amount-chip").forEach((b) =>
+                    b.classList.remove("selected")
+                );
+                btn.classList.add("selected");
+            };
+        });
+
+        const submit = () => {
+            const v = Number(input.value);
+            if (!v || v <= 0) {
+                input.focus();
+                if (input.animate) {
+                    input.animate(
+                        [
+                            { transform: "translateX(0)" },
+                            { transform: "translateX(-6px)" },
+                            { transform: "translateX(6px)" },
+                            { transform: "translateX(-4px)" },
+                            { transform: "translateX(0)" },
+                        ],
+                        { duration: 250, easing: "ease-in-out" }
+                    );
+                }
+                return;
+            }
+            cleanup(v);
+        };
+
+        document.getElementById(`${id}_ok`).onclick = submit;
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") submit();
+        });
+
+        setTimeout(() => input.focus(), 80);
+    });
+}
+
+/* ============================================================
+   ROUTING
+   ============================================================ */
+const VIEW_TITLES = {
+    viewDashboard: "হিসাব",
+    viewAddPerson: "নতুন মানুষ",
+    viewPerson: "হিসাব",
+};
+
 function show(id) {
     currentView = id;
     ["viewDashboard", "viewAddPerson", "viewPerson"].forEach((v) =>
         document.getElementById(v).classList.toggle("hidden", v !== id)
     );
+    document.getElementById("pageTitle").textContent = VIEW_TITLES[id] || "হিসাব";
     window.scrollTo(0, 0);
 }
 
@@ -196,9 +384,13 @@ function showDashboard() {
 }
 
 function showAddPerson() {
-    const f = document.querySelector("#viewAddPerson form");
+    const f = document.getElementById("addPersonForm");
     if (f) f.reset();
     show("viewAddPerson");
+    setTimeout(() => {
+        const n = document.getElementById("apName");
+        if (n) n.focus();
+    }, 100);
 }
 
 function showPerson(id) {
@@ -210,6 +402,7 @@ function showPerson(id) {
     currentPersonId = id;
     renderPerson(id);
     show("viewPerson");
+    document.getElementById("pageTitle").textContent = p.name;
 }
 
 /* ============================================================
@@ -236,203 +429,140 @@ function renderLogo() {
 }
 
 /* ============================================================
-   MODALS
-   ============================================================ */
-function showModal({
-    title,
-    description = "",
-    fields,
-    submitLabel = "ঠিক আছে",
-    cancelLabel = "বাতিল",
-}) {
-    return new Promise((resolve) => {
-        const modalId = "m" + uid();
-        const fieldsHtml = fields
-            .map(
-                (f) => `
-            <div class="field">
-                <label>${esc(f.label)}</label>
-                <input id="${modalId}_${f.id}"
-                       type="${f.type || "text"}"
-                       value="${esc(f.value ?? "")}"
-                       placeholder="${esc(f.placeholder || "")}"
-                       inputmode="${f.inputmode || "text"}" />
-            </div>`
-            )
-            .join("");
-
-        document.getElementById("modalRoot").innerHTML = `
-            <div class="modal-bg" id="${modalId}_bg">
-                <div class="modal">
-                    <h3>${title}</h3>
-                    ${description ? `<div class="modal-sub">${description}</div>` : ""}
-                    ${fieldsHtml}
-                    <div class="modal-actions">
-                        <button class="btn btn-light" id="${modalId}_cancel">${cancelLabel}</button>
-                        <button class="btn btn-primary" id="${modalId}_ok">${submitLabel}</button>
-                    </div>
-                </div>
-            </div>`;
-
-        const bg = document.getElementById(`${modalId}_bg`);
-        const cleanup = (result) => {
-            document.getElementById("modalRoot").innerHTML = "";
-            resolve(result);
-        };
-
-        bg.addEventListener("click", (e) => {
-            if (e.target === bg) cleanup(null);
-        });
-        document.getElementById(`${modalId}_cancel`).onclick = () => cleanup(null);
-        document.getElementById(`${modalId}_ok`).onclick = () => {
-            const result = {};
-            for (const f of fields) {
-                result[f.id] = document.getElementById(`${modalId}_${f.id}`).value;
-            }
-            cleanup(result);
-        };
-
-        setTimeout(() => {
-            if (fields[0]) document.getElementById(`${modalId}_${fields[0].id}`).focus();
-        }, 60);
-    });
-}
-
-function confirmModal({
-    title,
-    description,
-    submitLabel = "হ্যাঁ",
-    cancelLabel = "না",
-}) {
-    return new Promise((resolve) => {
-        const modalId = "m" + uid();
-        document.getElementById("modalRoot").innerHTML = `
-            <div class="modal-bg" id="${modalId}_bg">
-                <div class="modal">
-                    <h3>${title}</h3>
-                    ${description ? `<div class="modal-sub">${description}</div>` : ""}
-                    <div class="modal-actions">
-                        <button class="btn btn-light" id="${modalId}_cancel">${cancelLabel}</button>
-                        <button class="btn btn-primary" id="${modalId}_ok">${submitLabel}</button>
-                    </div>
-                </div>
-            </div>`;
-
-        const bg = document.getElementById(`${modalId}_bg`);
-        const cleanup = (result) => {
-            document.getElementById("modalRoot").innerHTML = "";
-            resolve(result);
-        };
-        bg.addEventListener("click", (e) => {
-            if (e.target === bg) cleanup(false);
-        });
-        document.getElementById(`${modalId}_cancel`).onclick = () => cleanup(false);
-        document.getElementById(`${modalId}_ok`).onclick = () => cleanup(true);
-    });
-}
-
-/* ============================================================
-   DASHBOARD
+   DASHBOARD  (পাওনা-focused: no quick buttons, cards are clickable)
    ============================================================ */
 function renderDashboard() {
     const grid = document.getElementById("peopleGrid");
     const sb = document.getElementById("searchBar");
-    if (sb) sb.classList.toggle("solo", db.people.length === 0);
+    const summary = document.getElementById("dashSummary");
 
-    if (db.people.length === 0) {
+    const people = db.people;
+
+    /* -------- summary strip (Only "মোট পাওনা") -------- */
+    if (people.length === 0) {
+        summary.hidden = true;
+        summary.innerHTML = "";
+    } else {
+        let receivable = 0; // they owe me
+        people.forEach((p) => {
+            const t = totalsOf(p);
+            if (t.net > 0) receivable += t.net;
+        });
+        summary.hidden = false;
+        summary.innerHTML = `
+            <div class="summary-item in">
+                <span>মোট পাওনা</span>
+                <b>${money(receivable)}</b>
+            </div>`;
+    }
+
+    /* -------- search bar solo mode -------- */
+    if (sb) sb.classList.toggle("solo", people.length === 0);
+
+    /* -------- empty state -------- */
+    if (people.length === 0) {
         grid.innerHTML = `
             <div class="empty" style="grid-column:1/-1">
                 <div class="icon">📋</div>
                 <h3>এখনো কেউ যোগ করা হয়নি</h3>
-                <p>হিসাব শুরু করতে উপরের "যোগ" বাটনে চাপ দিন।</p>
+                <p>হিসাব শুরু করতে "যোগ" বাটনে চাপ দিন।</p>
             </div>`;
         return;
     }
 
+    /* -------- filter -------- */
     const box = document.getElementById("searchBox");
-    const q = box ? box.value.trim().toLowerCase() : "";
+    const q = (box ? box.value : "").trim().toLowerCase();
+
+    const clearBtn = document.getElementById("searchClear");
+    if (clearBtn) clearBtn.hidden = !q;
+
     const list = q
-        ? db.people.filter((p) => (p.name || "").toLowerCase().includes(q))
-        : db.people;
+        ? people.filter(
+            (p) =>
+                (p.name || "").toLowerCase().includes(q) ||
+                (p.bkashNumber || "").includes(q) ||
+                (p.whatsappNumber || "").includes(q)
+        )
+        : people;
 
     if (list.length === 0) {
         grid.innerHTML = `
             <div class="empty" style="grid-column:1/-1">
                 <div class="icon">🔍</div>
                 <h3>কাউকে পাওয়া যায়নি</h3>
-                <p>অন্য নাম লিখে দেখুন।</p>
+                <p>অন্য নাম বা নম্বর দিয়ে খুঁজুন।</p>
             </div>`;
         return;
     }
 
+    /* -------- cards (no quick buttons, whole card clickable) -------- */
     grid.innerHTML = list
         .map((p, i) => {
             const t = totalsOf(p);
+            const count = (p.transactions || []).length;
+            const cls = balClass(t.net);
+            const label = balLabel(t.net);
+            const meta = count === 0 ? "কোনো লেনদেন নেই" : `${count}টি লেনদেন`;
+
             return `
         <div class="person-card" style="animation-delay:${Math.min(i, 8) * 40}ms">
-            <div class="pc-head" onclick="showPerson('${p.id}')">
+            <div class="pc-head" data-open="${p.id}" role="button" tabindex="0">
                 ${avatarHTML(p, "avatar-sm")}
                 <div class="pc-info">
                     <h3>${esc(p.name)}</h3>
-                    <div class="pc-num">${(p.transactions || []).length} টি লেনদেন</div>
+                    <div class="pc-meta">${meta}</div>
                 </div>
-                <div class="pc-bal bal-${balClass(t.balance)}">${money(t.balance)}</div>
-            </div>
-
-            <div class="pc-actions">
-                <button class="pc-btn pc-send" onclick="event.stopPropagation();quickTxn('${p.id}','send')">
-                    <span class="pc-btn-arrow">↓</span> সেন্ড
-                </button>
-                <button class="pc-btn pc-receive" onclick="event.stopPropagation();quickTxn('${p.id}','receive')">
-                    <span class="pc-btn-arrow">↑</span> রিসিভ
-                </button>
+                <div class="pc-bal-wrap">
+                    <div class="pc-bal bal-${cls}">${money(Math.abs(t.net))}</div>
+                    <div class="pc-bal-label">${label}</div>
+                </div>
+                <div class="pc-chevron">›</div>
             </div>
         </div>`;
         })
         .join("");
+
+    /* -------- wire up events -------- */
+    grid.querySelectorAll("[data-open]").forEach((el) => {
+        el.addEventListener("click", () => showPerson(el.dataset.open));
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                showPerson(el.dataset.open);
+            }
+        });
+    });
 }
 
 /* ============================================================
-   ADD SEND / RECEIVE  (dashboard card + person ledger)
+   QUICK TRANSACTION (from person detail)
    ============================================================ */
 async function quickTxn(id, type) {
     const p = getPerson(id);
     if (!p) return;
-    const isSend = type === "send";
+    const isSend = type === "send"; // send = নতুন বাকি দিয়েছি
     const t = totalsOf(p);
+    const balText =
+        t.net === 0 ? "সমান" : `${money(Math.abs(t.net))} ${balLabel(t.net)}`;
 
-    const result = await showModal({
-        title: isSend ? "↓ সেন্ড" : "↑ রিসিভ",
-        description: `<b>${esc(p.name)}</b> · এখন ${money(t.balance)}`,
-        fields: [
-            {
-                id: "amount",
-                label: "কত টাকা?",
-                type: "number",
-                inputmode: "numeric",
-                value: "",
-            },
-        ],
-        submitLabel: "✔ যোগ করুন",
+    const amount = await askAmount({
+        title: isSend ? "নতুন বাকি" : "টাকা পেলাম",
+        description: `<b>${esc(p.name)}</b> · এখন ${balText}`,
     });
-    if (!result) return;
-
-    const amount = Number(result.amount);
-    if (!amount || amount <= 0) return toast("টাকার পরিমাণ লিখুন", "error");
+    if (!amount) return;
 
     try {
         addTransaction(id, {
             type,
             amount,
             date: new Date().toISOString(),
-            counterparty: null,
-            notes: null,
         });
         toast("যোগ হয়েছে ✔", "success");
         if (currentView === "viewPerson") renderPerson(id);
         else renderDashboard();
     } catch (err) {
-        toast(translateError(err.message), "error");
+        toast("কিছু ভুল হয়েছে", "error");
     }
 }
 
@@ -451,36 +581,37 @@ function renderPerson(id) {
         (a, b) => new Date(b.date) - new Date(a.date)
     );
 
+    const cls = balClass(t.net);
+    const label = balLabel(t.net);
+
     const rowsHtml = txns.length
         ? txns
             .map((tx) => {
-                const d = new Date(tx.date);
-                const dateStr = d.toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "numeric",
-                    year: "2-digit",
-                });
-                const timeStr = d.toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                });
                 const isSend = tx.type === "send";
                 return `
             <div class="lg-row">
-                <div class="lg-main">
-                    <div class="lg-note">${isSend ? "সেন্ড" : "রিসিভ"}</div>
-                    <div class="lg-date">${dateStr} · ${timeStr}</div>
+                <div class="lg-icon ${isSend ? "out" : "in"}">
+                    ${isSend ? "↓" : "↑"}
                 </div>
-                <div class="lg-col ${isSend ? "lg-out" : "lg-in"}">${isSend ? "-" : "+"}${money(tx.amount)}</div>
-                <button class="tx-del" onclick="deleteTxn('${p.id}','${tx.id}')" aria-label="মুছুন">✕</button>
+                <div class="lg-main">
+                    <div class="lg-note">${isSend ? "বাকি দিয়েছি" : "টাকা পেয়েছি"}</div>
+                    <div class="lg-date">${fmtDate(tx.date)}</div>
+                </div>
+                <div class="lg-col ${isSend ? "lg-out" : "lg-in"}">
+                    ${isSend ? "−" : "+"}${money(tx.amount)}
+                </div>
+                <button class="tx-del" data-del="${tx.id}" aria-label="মুছুন">✕</button>
             </div>`;
             })
             .join("")
-        : `<div class="empty" style="padding:40px 20px">
+        : `<div class="empty" style="padding:40px 20px;border:0;background:transparent">
                <div class="icon">📭</div>
                <p>এখনো কোনো লেনদেন নেই।</p>
            </div>`;
+
+    const subParts = [];
+    if (p.bkashNumber) subParts.push(`<span>💳 ${esc(p.bkashNumber)}</span>`);
+    if (p.whatsappNumber) subParts.push(`<span>📱 ${esc(p.whatsappNumber)}</span>`);
 
     document.getElementById("personDetail").innerHTML = `
         <div class="panel">
@@ -488,75 +619,125 @@ function renderPerson(id) {
                 ${avatarHTML(p, "avatar-lg")}
                 <div class="person-header-info">
                     <h2 class="person-header-name">${esc(p.name)}</h2>
-                    <div class="lg-big bal-${balClass(t.balance)}">${money(t.balance)}</div>
-                    ${p.bkashNumber
-            ? `<div class="lg-date" style="margin-top:6px">বিকাশ: ${esc(p.bkashNumber)}</div>`
+                    <div class="lg-big bal-${cls}">${money(Math.abs(t.net))}</div>
+                    <div class="lg-big-label">${label}</div>
+                    ${subParts.length
+            ? `<div class="person-header-sub">${subParts.join("")}</div>`
             : ""
         }
                 </div>
             </div>
 
-            <div class="pc-actions" style="margin-top:16px">
-                <button class="pc-btn pc-send" onclick="quickTxn('${p.id}','send')">
-                    <span class="pc-btn-arrow">↓</span>হাসান পেয়েছি 
+            <div class="lg-totals">
+                <div class="lg-total lg-total-out">
+                    <span>মোট বাকি দিয়েছি</span>
+                    <b>${money(t.given)}</b>
+                </div>
+                <div class="lg-total lg-total-in">
+                    <span>মোট পেয়েছি</span>
+                    <b>${money(t.got)}</b>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                <button class="pc-btn pc-send" data-txn="send" data-id="${p.id}">
+                    + নতুন বাকি
                 </button>
-                <button class="pc-btn pc-receive" onclick="quickTxn('${p.id}','receive')">
-                    <span class="pc-btn-arrow">↑</span>হাসান দিয়েছি
+                <button class="pc-btn pc-receive" data-txn="receive" data-id="${p.id}">
+                    ✓ টাকা পেলাম
                 </button>
                 ${p.whatsappNumber
-            ? `<button class="pc-btn pc-wa" onclick="waRequest('${p.id}')">
-                               📱 হোয়াটসঅ্যাপে চান
-                           </button>`
+            ? `<button class="pc-btn pc-wa" data-wa="${p.id}">📱 হোয়াটসঅ্যাপে জানান</button>`
             : ""
         }
             </div>
         </div>
 
         <div class="panel lg-panel">
-            <h3 class="section-label" style="margin-top:0">📜 হিসাব (${txns.length})</h3>
+            <h3 class="section-label">📜 হিসাব (${txns.length})</h3>
             ${rowsHtml}
         </div>
     `;
+
+    /* -------- wire up events -------- */
+    const detail = document.getElementById("personDetail");
+    detail.querySelectorAll("[data-txn]").forEach((el) => {
+        el.addEventListener("click", () => quickTxn(el.dataset.id, el.dataset.txn));
+    });
+    detail.querySelectorAll("[data-wa]").forEach((el) => {
+        el.addEventListener("click", () => waRequest(el.dataset.wa));
+    });
+    detail.querySelectorAll("[data-del]").forEach((el) => {
+        el.addEventListener("click", () => deleteTxn(p.id, el.dataset.del));
+    });
 }
 
 /* ============================================================
-   WHATSAPP REQUEST
+   WHATSAPP REQUEST  (পাওনা-focused message)
    ============================================================ */
 function waRequest(id) {
     const p = getPerson(id);
     if (!p || !p.whatsappNumber) return;
     const t = totalsOf(p);
-    const msg = `আপনার বিকাশ নম্বর (${p.bkashNumber || "-"}) থেকে ${money(
-        Math.abs(t.balance) || 0
-    )} টাকা পাঠান।`;
+
+    let msg;
+    if (t.net > 0) {
+        msg = `আসসালামু আলাইকুম। আমাদের হিসাব অনুযায়ী আপনার কাছে আমার ${money(
+            t.net
+        )} পাওনা আছে।`;
+    } else if (t.net < 0) {
+        msg = `আসসালামু আলাইকুম। আমাদের হিসাব অনুযায়ী আপনার ${money(
+            -t.net
+        )} পাওনা আছে।`;
+    } else {
+        msg = `আসসালামু আলাইকুম। আমাদের হিসাব সমান।`;
+    }
+    if (p.bkashNumber) msg += `\nবিকাশ: ${p.bkashNumber}`;
+
     let num = p.whatsappNumber.replace(/\D/g, "");
     if (num.startsWith("01") && num.length === 11) num = "88" + num;
+    if (num.length === 11 && !num.startsWith("880")) num = "88" + num;
+
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
 }
 
 /* ============================================================
-   DELETE TRANSACTION
+   DELETE TRANSACTION (with undo)
    ============================================================ */
 async function deleteTxn(personId, txnId) {
     const ok = await confirmModal({
         title: "মুছে ফেলবেন?",
-        description: "এই লেনদেনটি চিরতরে মুছে যাবে।",
-        submitLabel: "হ্যাঁ, মুছুন",
+        description:
+            "এই লেনদেনটি মুছে ফেলা হবে। চাইলে সাথে সাথে ফিরিয়ে আনতে পারবেন।",
+        submitLabel: "মুছুন",
+        cancelLabel: "বাতিল",
+        danger: true,
     });
     if (!ok) return;
 
     try {
-        deleteTransaction(personId, txnId);
-        toast("মুছে ফেলা হয়েছে");
+        const removed = deleteTransaction(personId, txnId);
+
         if (currentView === "viewPerson") renderPerson(personId);
         else renderDashboard();
+
+        toast("মুছে ফেলা হয়েছে", "", {
+            actionLabel: "ফিরিয়ে আনুন",
+            onAction: () => {
+                restoreTransaction(personId, removed);
+                if (currentView === "viewPerson") renderPerson(personId);
+                else renderDashboard();
+                toast("ফিরিয়ে আনা হয়েছে", "success");
+            },
+            duration: 4500,
+        });
     } catch (err) {
-        toast(translateError(err.message), "error");
+        toast("মুছতে পারা যায়নি", "error");
     }
 }
 
 /* ============================================================
-   SUBMIT PERSON  (name + optional amount/bKash/WhatsApp)
+   SUBMIT PERSON
    ============================================================ */
 function submitPerson(e) {
     e.preventDefault();
@@ -564,20 +745,26 @@ function submitPerson(e) {
     const name = String(f.get("name") || "").trim();
     const amount = Number(f.get("amount")) || 0;
     const bkashNumber = String(f.get("bkashNumber") || "").replace(/\D/g, "");
-    const whatsappNumber = String(f.get("whatsappNumber") || "").replace(/\D/g, "");
-    if (!name) return toast("নাম লিখুন", "error");
+    const whatsappNumber = String(f.get("whatsappNumber") || "").replace(
+        /\D/g,
+        ""
+    );
+
+    if (!name) {
+        toast("নাম লিখুন", "error");
+        return;
+    }
 
     try {
         const p = createPerson({ name, bkashNumber, whatsappNumber });
 
-        /* Starting amount becomes the first ledger entry (রিসিভ) */
+        /* Starting amount = they owe me → a "send" (I gave them) */
         if (amount > 0) {
             addTransaction(p.id, {
-                type: "receive",
+                type: "send",
                 amount,
                 date: new Date().toISOString(),
-                counterparty: null,
-                notes: null,
+                notes: "শুরুর বাকি",
             });
         }
 
@@ -585,12 +772,12 @@ function submitPerson(e) {
         toast("যোগ হয়েছে ✔", "success");
         showDashboard();
     } catch (err) {
-        toast(translateError(err.message), "error");
+        toast("যোগ করা যায়নি", "error");
     }
 }
 
 /* ============================================================
-   DISABLE ZOOM + COPY
+   ZOOM / COPY / CONTEXT-MENU LOCKDOWN
    ============================================================ */
 document.addEventListener(
     "wheel",
@@ -644,13 +831,44 @@ document.addEventListener(
 /* ============================================================
    INIT
    ============================================================ */
-document.getElementById("backBtn").onclick = () => {
-    if (currentView === "viewAddPerson" || currentView === "viewPerson") {
-        showDashboard();
-        return;
-    }
-    window.location.href = "/";
-};
+function init() {
+    renderLogo();
 
-renderLogo();
-showDashboard();
+    /* back button */
+    document.getElementById("backBtn").addEventListener("click", () => {
+        if (
+            currentView === "viewAddPerson" ||
+            currentView === "viewPerson"
+        ) {
+            showDashboard();
+            return;
+        }
+        window.location.href = "/";
+    });
+
+    /* add person */
+    document
+        .getElementById("addPersonBtn")
+        .addEventListener("click", showAddPerson);
+
+    /* search */
+    const searchBox = document.getElementById("searchBox");
+    const searchClear = document.getElementById("searchClear");
+
+    searchBox.addEventListener("input", renderDashboard);
+    searchClear.addEventListener("click", () => {
+        searchBox.value = "";
+        searchBox.focus();
+        renderDashboard();
+    });
+
+    /* form */
+    document
+        .getElementById("addPersonForm")
+        .addEventListener("submit", submitPerson);
+
+    /* start */
+    showDashboard();
+}
+
+init();
