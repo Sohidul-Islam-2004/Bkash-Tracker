@@ -594,7 +594,7 @@ function renderPerson(id) {
                     ${isSend ? "↓" : "↑"}
                 </div>
                 <div class="lg-main">
-                    <div class="lg-note">${isSend ? "বাকি দিয়েছি" : "টাকা পেয়েছি"}</div>
+                    <div class="lg-note">${isSend ? "হাসান দিয়েছি" : "হাসান পেয়েছি"}</div>
                     <div class="lg-date">${fmtDate(tx.date)}</div>
                 </div>
                 <div class="lg-col ${isSend ? "lg-out" : "lg-in"}">
