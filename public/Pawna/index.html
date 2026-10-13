@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#d12053" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>হিসাব</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- ============ TOPBAR ============ -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-inner">
+        <button class="icon-btn back-btn" id="backBtn" aria-label="ফিরে যান">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg
+              class="brand-mark"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient
+                  id="el-grad"
+                  x1="0"
+                  y1="0"
+                  x2="100"
+                  y2="100"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stop-color="#e8437a" />
+                  <stop offset="55%" stop-color="#d12053" />
+                  <stop offset="100%" stop-color="#a8153f" />
+                </linearGradient>
+              </defs>
+
+              <!-- tile -->
+              <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
+
+              <!-- top-left sheen -->
+              <path
+                d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
+                fill="rgba(255,255,255,0.10)"
+              />
+
+              <!-- ই -->
+              <text
+                x="50"
+                y="74"
+                text-anchor="middle"
+                font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
+                font-size="60"
+                font-weight="800"
+                fill="#ffffff"
+              >
+                ই
+              </text>
+
+              <!-- coin accent -->
+              <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
+              <circle cx="80" cy="22" r="2.2" fill="#d12053" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 id="pageTitle">ইজি লেনদেন</h1>
+            <span class="brand-sub" id="pageSub">পাওনার হিসাব</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ MAIN ============ -->
+    <main class="container">
+      <!-- ============ DASHBOARD ============ -->
+      <section id="viewDashboard" class="view">
+        <div id="dashHero"></div>
+
+        <div class="searchbar" id="searchBar">
+          <div class="search-wrap">
+            <input id="searchBox" type="search" placeholder="নাম খুঁজুন" autocomplete="off" />
+         
+          </div>
+          <button class="add-btn" type="button" id="addPersonBtn" aria-label="নতুন মানুষ যোগ করুন">
+            <span class="add-plus">+</span> যোগ
+          </button>
+        </div>
+
+        <div class="section-head" id="peopleHead">
+          <h2 class="section-title"><span class="title-dot"></span>মানুষ</h2>
+          <span class="section-count" id="peopleCount">০ জন</span>
+        </div>
+
+        <div id="peopleGrid" class="list-stack"></div>
+      </section>
+
+      <!-- ============ ADD PERSON ============ -->
+      <section id="viewAddPerson" class="view hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-head-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" y1="8" x2="19" y2="14" />
+                <line x1="22" y1="11" x2="16" y2="11" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="panel-head-title">নতুন মানুষ</h2>
+              <p class="panel-head-sub">নাম ও শুরুর বাকি লিখুন</p>
+            </div>
+          </div>
+
+          <form id="addPersonForm" autocomplete="off">
+            <div class="field">
+              <label for="apName">নাম <span class="req">*</span></label>
+              <input id="apName" name="name" type="text" required placeholder="যেমন: করিম" />
+            </div>
+
+            <div class="field">
+              <label for="apAmount">শুরুর বাকি <span class="opt">(ঐচ্ছিক)</span></label>
+              <div class="money-input">
+                <span class="money-prefix">৳</span>
+                <input id="apAmount" name="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0" />
+              </div>
+              <p class="hint">এই টাকা আপনি পাবেন।</p>
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              সংরক্ষণ করুন
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ============ PERSON DETAIL ============ -->
+      <section id="viewPerson" class="view hidden">
+        <div id="personDetail"></div>
+      </section>
+    </main>
+
+    <!-- ============ TOAST + MODAL ROOT ============ -->
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <span class="toast-icon" id="toastIcon"></span>
+      <span class="toast-msg" id="toastMsg"></span>
+    </div>
+    <div id="modalRoot"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

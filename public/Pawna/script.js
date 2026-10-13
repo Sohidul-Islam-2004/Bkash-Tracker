@@ -3,11 +3,11 @@
    All data fetched/saved via REST API. No localStorage.
 
    Backend endpoints:
-     GET    /api/people/pawna                              → { people: [...] }
-     POST   /api/people/pawna                              → { person: {...} }
-     POST   /api/people/pawna/:id/transactions             → { transaction, summary }
-     DELETE /api/people/pawna/:id/transactions/:txnId      → { ok, summary }
-     DELETE /api/people/pawna/:id                          → { ok }
+     GET    /api/pawna/people                              → { people: [...] }
+     POST   /api/pawna/people                              → { person: {...} }
+     POST   /api/pawna/people/:id/transactions             → { transaction, summary }
+     DELETE /api/pawna/people/:id/transactions/:txnId      → { ok, summary }
+     DELETE /api/pawna/people/:id                          → { ok }
 
    Person shape:
      { id, name, createdAt, summary, transactions: [...] }
@@ -102,7 +102,7 @@ async function apiDeleteTransaction(personId, txnId) {
     );
 }
 
-/* ---- NEW: delete whole person ---- */
+/* ---- delete whole person ---- */
 async function apiDeletePerson(personId) {
     return api(`${API_ROOT}/${encodeURIComponent(personId)}`, {
         method: "DELETE",
@@ -181,20 +181,6 @@ function esc(s) {
         .replace(/'/g, "&#039;");
 }
 
-function initialsOf(n) {
-    return (n || "?")
-        .trim()
-        .split(/\s+/)
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase();
-}
-
-function avatarHTML(person, sizeClass) {
-    return `<div class="avatar ${sizeClass}">${esc(initialsOf(person.name))}</div>`;
-}
-
 function balClass(net) {
     return net > 0 ? "pos" : net < 0 ? "neg" : "zero";
 }
@@ -223,16 +209,34 @@ function fmtDate(iso) {
 /* ============================================================
    TOAST
    ============================================================ */
+const toastEl = document.getElementById("toast");
+const toastIconEl = document.getElementById("toastIcon");
+const toastMsgEl = document.getElementById("toastMsg");
 let toastTimer = null;
 
 function toast(msg, kind, opts = {}) {
-    const t = document.getElementById("toast");
-    t.innerHTML = "";
+    if (!toastEl || !toastMsgEl) return;
+    toastMsgEl.textContent = msg;
 
-    const text = document.createElement("span");
-    text.textContent = msg;
-    t.appendChild(text);
+    /* icon */
+    if (toastIconEl) {
+        if (kind === "success") {
+            toastIconEl.textContent = "✓";
+            toastIconEl.style.display = "grid";
+        } else if (kind === "error") {
+            toastIconEl.textContent = "!";
+            toastIconEl.style.display = "grid";
+        } else {
+            toastIconEl.style.display = "none";
+            toastIconEl.textContent = "";
+        }
+    }
 
+    /* remove any previous action button */
+    const oldBtn = toastEl.querySelector(".toast-action");
+    if (oldBtn) oldBtn.remove();
+
+    /* action button (undo) */
     if (opts.actionLabel && typeof opts.onAction === "function") {
         const btn = document.createElement("button");
         btn.type = "button";
@@ -242,10 +246,10 @@ function toast(msg, kind, opts = {}) {
             hideToast();
             opts.onAction();
         };
-        t.appendChild(btn);
+        toastEl.appendChild(btn);
     }
 
-    t.className =
+    toastEl.className =
         "toast show" +
         (kind === "error" ? " error" : kind === "success" ? " success" : "");
 
@@ -257,8 +261,8 @@ function toast(msg, kind, opts = {}) {
 }
 
 function hideToast() {
-    const t = document.getElementById("toast");
-    t.className = "toast";
+    if (!toastEl) return;
+    toastEl.className = "toast";
     clearTimeout(toastTimer);
 }
 
@@ -402,9 +406,9 @@ function askAmount({ title, description = "" }) {
    ROUTING
    ============================================================ */
 const VIEW_TITLES = {
-    viewDashboard: "হিসাব",
+    viewDashboard: "ইজি লেনদেন",
     viewAddPerson: "নতুন মানুষ",
-    viewPerson: "হিসাব",
+    viewPerson: "ইজি লেনদেন",
 };
 
 function show(id) {
@@ -412,7 +416,19 @@ function show(id) {
     ["viewDashboard", "viewAddPerson", "viewPerson"].forEach((v) =>
         document.getElementById(v).classList.toggle("hidden", v !== id)
     );
-    document.getElementById("pageTitle").textContent = VIEW_TITLES[id] || "হিসাব";
+
+    const title = document.getElementById("pageTitle");
+    const sub = document.getElementById("pageSub");
+
+    if (title) title.textContent = VIEW_TITLES[id] || "ইজি লেনদেন";
+    if (sub) {
+        sub.textContent =
+            id === "viewAddPerson"
+                ? "নতুন ব্যক্তি যোগ করুন"
+                : id === "viewPerson"
+                    ? "লেনদেনের বিস্তারিত"
+                    : "পাওনার হিসাব";
+    }
     window.scrollTo(0, 0);
 }
 
@@ -441,7 +457,8 @@ function showPerson(id) {
     currentPersonId = id;
     renderPerson(id);
     show("viewPerson");
-    document.getElementById("pageTitle").textContent = p.name;
+    const title = document.getElementById("pageTitle");
+    if (title) title.textContent = p.name;
 }
 
 /* ============================================================
@@ -464,7 +481,8 @@ const DEFAULT_LOGO =
     );
 
 function renderLogo() {
-    document.getElementById("brandLogo").src = DEFAULT_LOGO;
+    const el = document.getElementById("brandLogo");
+    if (el) el.src = DEFAULT_LOGO;
 }
 
 /* ============================================================
@@ -473,60 +491,86 @@ function renderLogo() {
 function renderDashboard() {
     const grid = document.getElementById("peopleGrid");
     const sb = document.getElementById("searchBar");
-    const summary = document.getElementById("dashSummary");
+    const hero = document.getElementById("dashHero");
+    const head = document.getElementById("peopleHead");
+    const countEl = document.getElementById("peopleCount");
 
     const people = db.people;
 
-    /* -------- loading state -------- */
+    /* -------- loading -------- */
     if (loading) {
-        summary.hidden = true;
-        summary.innerHTML = "";
+        if (hero) hero.innerHTML = "";
+        if (head) head.style.display = "none";
         if (sb) sb.classList.add("solo");
-        grid.innerHTML = `
-            <div class="empty" style="grid-column:1/-1">
-                <div class="icon">⏳</div>
-                <h3>লোড হচ্ছে…</h3>
-                <p>ডেটা আনা হচ্ছে, একটু অপেক্ষা করুন।</p>
-            </div>`;
+        if (grid) {
+            grid.innerHTML = `
+                <div class="empty">
+                    <div class="icon">⏳</div>
+                    <h3>লোড হচ্ছে…</h3>
+                    <p>ডেটা আনা হচ্ছে, একটু অপেক্ষা করুন।</p>
+                </div>`;
+        }
         return;
     }
 
-    /* -------- summary strip -------- */
+    /* -------- empty -------- */
     if (people.length === 0) {
-        summary.hidden = true;
-        summary.innerHTML = "";
-    } else {
-        let receivable = 0;
-        people.forEach((p) => {
-            const t = totalsOf(p);
-            if (t.net > 0) receivable += t.net;
-        });
-        summary.hidden = false;
-        summary.innerHTML = `
-            <div class="summary-item in">
-                <span>মোট পাওনা</span>
-                <b>${money(receivable)}</b>
-            </div>`;
-    }
-
-    /* -------- search bar solo mode -------- */
-    if (sb) sb.classList.toggle("solo", people.length === 0);
-
-    /* -------- empty state -------- */
-    if (people.length === 0) {
-        grid.innerHTML = `
-            <div class="empty" style="grid-column:1/-1">
-                <div class="icon">📋</div>
-                <h3>এখনো কেউ যোগ করা হয়নি</h3>
-                <p>হিসাব শুরু করতে "যোগ" বাটনে চাপ দিন।</p>
-            </div>`;
+        if (hero) {
+            hero.innerHTML = `
+                <div class="home-hero">
+                    <div class="home-hero-top">
+                        <span class="home-hero-label">
+                            <span class="home-hero-ico">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                            </span>
+                            মোট পাওনা
+                        </span>
+                    </div>
+                    <b class="home-hero-value">৳ 0</b>
+                </div>`;
+        }
+        if (head) head.style.display = "none";
+        if (sb) sb.classList.add("solo");
+        if (grid) {
+            grid.innerHTML = `
+                <div class="empty">
+                    <div class="icon">📋</div>
+                    <h3>এখনো কেউ যোগ করা হয়নি</h3>
+                    <p>হিসাব শুরু করতে "যোগ" বাটনে চাপ দিন।</p>
+                </div>`;
+        }
         return;
     }
+
+    /* -------- মোট পাওনা (only sum of positive nets — unchanged) -------- */
+    let receivable = 0;
+    people.forEach((p) => {
+        const t = totalsOf(p);
+        if (t.net > 0) receivable += t.net;
+    });
+
+    /* -------- hero -------- */
+    if (hero) {
+        hero.innerHTML = `
+            <div class="home-hero">
+                <div class="home-hero-top">
+                    <span class="home-hero-label">
+                        <span class="home-hero-ico">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                        </span>
+                        মোট পাওনা
+                    </span>
+                </div>
+                <b class="home-hero-value">${money(receivable)}</b>
+            </div>`;
+    }
+
+    /* -------- search bar -------- */
+    if (sb) sb.classList.remove("solo");
 
     /* -------- filter -------- */
     const box = document.getElementById("searchBox");
     const q = (box ? box.value : "").trim().toLowerCase();
-
     const clearBtn = document.getElementById("searchClear");
     if (clearBtn) clearBtn.hidden = !q;
 
@@ -534,9 +578,13 @@ function renderDashboard() {
         ? people.filter((p) => (p.name || "").toLowerCase().includes(q))
         : people;
 
+    /* -------- section head -------- */
+    if (head) head.style.display = "";
+    if (countEl) countEl.textContent = `${list.length} জন`;
+
     if (list.length === 0) {
         grid.innerHTML = `
-            <div class="empty" style="grid-column:1/-1">
+            <div class="empty">
                 <div class="icon">🔍</div>
                 <h3>কাউকে পাওয়া যায়নি</h3>
                 <p>অন্য নাম দিয়ে খুঁজুন।</p>
@@ -544,19 +592,19 @@ function renderDashboard() {
         return;
     }
 
-    /* -------- cards -------- */
+    /* -------- cards (no avatar) -------- */
     grid.innerHTML = list
         .map((p, i) => {
             const t = totalsOf(p);
             const count = (p.transactions || []).length;
             const cls = balClass(t.net);
             const label = balLabel(t.net);
-            const meta = count === 0 ? "কোনো লেনদেন নেই" : `${count}টি লেনদেন`;
+            const meta =
+                count === 0 ? "কোনো লেনদেন নেই" : `${count}টি লেনদেন`;
 
             return `
-        <div class="person-card" style="animation-delay:${Math.min(i, 8) * 40}ms">
-            <div class="pc-head" data-open="${p.id}" role="button" tabindex="0">
-                ${avatarHTML(p, "avatar-sm")}
+        <article class="person-card" style="animation-delay:${Math.min(i, 8) * 40}ms">
+            <button class="pc-head" data-open="${p.id}" type="button">
                 <div class="pc-info">
                     <h3>${esc(p.name)}</h3>
                     <div class="pc-meta">${meta}</div>
@@ -565,21 +613,14 @@ function renderDashboard() {
                     <div class="pc-bal bal-${cls}">${money(Math.abs(t.net))}</div>
                     <div class="pc-bal-label">${label}</div>
                 </div>
-                <div class="pc-chevron">›</div>
-            </div>
-        </div>`;
+                <span class="pc-chevron">›</span>
+            </button>
+        </article>`;
         })
         .join("");
 
-    /* -------- wire up events -------- */
     grid.querySelectorAll("[data-open]").forEach((el) => {
         el.addEventListener("click", () => showPerson(el.dataset.open));
-        el.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                showPerson(el.dataset.open);
-            }
-        });
     });
 }
 
@@ -643,7 +684,7 @@ async function quickTxn(id, type) {
 }
 
 /* ============================================================
-   PERSON DETAIL — LEDGER  (with মুছুন option)
+   PERSON DETAIL — LEDGER (no avatar, with মুছুন option)
    ============================================================ */
 function renderPerson(id) {
     const p = getPerson(id);
@@ -659,6 +700,7 @@ function renderPerson(id) {
 
     const cls = balClass(t.net);
     const label = balLabel(t.net);
+    const state = t.net > 0 ? "due" : t.net < 0 ? "advance" : "settled";
 
     const rowsHtml = txns.length
         ? txns
@@ -670,7 +712,7 @@ function renderPerson(id) {
                     ${isSend ? "↓" : "↑"}
                 </div>
                 <div class="lg-main">
-                    <div class="lg-note">${isSend ? "বাকি দিয়েছি" : "টাকা পেয়েছি"}</div>
+                    <div class="lg-note">${isSend ? "হাসান দিয়েছি" : "হাসান পেয়েছি"}</div>
                     <div class="lg-date">${fmtDate(tx.date)}</div>
                 </div>
                 <div class="lg-col ${isSend ? "lg-out" : "lg-in"}">
@@ -680,27 +722,20 @@ function renderPerson(id) {
             </div>`;
             })
             .join("")
-        : `<div class="empty" style="padding:40px 20px;border:0;background:transparent">
+        : `<div class="empty" style="padding:40px 20px;border:0;background:transparent;box-shadow:none">
                <div class="icon">📭</div>
                <p>এখনো কোনো লেনদেন নেই।</p>
            </div>`;
 
     document.getElementById("personDetail").innerHTML = `
-        <div class="panel">
-            <div class="person-header">
-                ${avatarHTML(p, "avatar-lg")}
-                <div class="person-header-info">
-                    <h2 class="person-header-name">${esc(p.name)}</h2>
-                    <div class="lg-big bal-${cls}">${money(Math.abs(t.net))}</div>
-                    <div class="lg-big-label">${label}</div>
+        <div class="person-hero">
+            <div class="person-hero-top">
+                <div class="person-hero-info">
+                    <h2>${esc(p.name)}</h2>
+                    <p>${txns.length}টি লেনদেন</p>
                 </div>
-                <button
-                    class="person-del"
-                    type="button"
-                    data-del-person="${p.id}"
-                    aria-label="ব্যক্তিকে মুছুন"
-                    title="মুছুন"
-                >
+                <button class="person-del" type="button" data-del-person="${p.id}"
+                        aria-label="ব্যক্তিকে মুছুন" title="মুছুন">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -712,29 +747,42 @@ function renderPerson(id) {
                 </button>
             </div>
 
-            <div class="lg-totals">
-                <div class="lg-total lg-total-out">
-                    <span>মোট বাকি দিয়েছি</span>
-                    <b>${money(t.given)}</b>
+            <div class="person-hero-bal">
+            
+                <b class="ph-bal">${money(Math.abs(t.net))}</b>
+                <span class="ph-state">${label}</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="sum-grid">
+                <div class="sum-item sum-item--out">
+                    <span class="sum-label">মোট দিয়েছি</span>
+                    <span class="sum-value">${money(t.given)}</span>
                 </div>
-                <div class="lg-total lg-total-in">
-                    <span>মোট পেয়েছি</span>
-                    <b>${money(t.got)}</b>
+                <div class="sum-item sum-item--in">
+                    <span class="sum-label">মোট পেয়েছি</span>
+                    <span class="sum-value">${money(t.got)}</span>
                 </div>
             </div>
 
+            
+
             <div class="detail-actions">
                 <button class="pc-btn pc-send" data-txn="send" data-id="${p.id}">
-                    ↓ বাকি দিয়েছি
+                    ↓ হাসান  দিয়েছি
                 </button>
                 <button class="pc-btn pc-receive" data-txn="receive" data-id="${p.id}">
-                    ↑ টাকা পেয়েছি
+                    ↑ হাসান  পেয়েছি
                 </button>
             </div>
         </div>
 
         <div class="panel lg-panel">
-            <h3 class="section-label">📜 হিসাব (${txns.length})</h3>
+            <div class="section-head" style="margin:0 0 12px">
+                <h2 class="section-title"><span class="title-dot"></span>হিসাব</h2>
+                <span class="section-count">${txns.length}</span>
+            </div>
             ${rowsHtml}
         </div>
     `;
@@ -750,16 +798,13 @@ function renderPerson(id) {
         el.addEventListener("click", () => deleteTxn(p.id, el.dataset.del));
     });
 
-    /* NEW: whole-person delete */
     detail.querySelectorAll("[data-del-person]").forEach((el) => {
-        el.addEventListener("click", () =>
-            deletePerson(el.dataset.delPerson)
-        );
+        el.addEventListener("click", () => deletePerson(el.dataset.delPerson));
     });
 }
 
 /* ============================================================
-   DELETE PERSON (whole record)  ← NEW
+   DELETE PERSON (whole record)
    ============================================================ */
 async function deletePerson(personId) {
     const p = getPerson(personId);
@@ -784,7 +829,6 @@ async function deletePerson(personId) {
     });
     if (!ok) return;
 
-    /* disable button(s) while request is in-flight */
     const btns = document.querySelectorAll(
         `[data-del-person="${CSS.escape(String(personId))}"]`
     );
@@ -793,7 +837,6 @@ async function deletePerson(personId) {
     try {
         await apiDeletePerson(personId);
 
-        /* remove from local state */
         db.people = db.people.filter((x) => x.id !== personId);
         currentPersonId = null;
 
@@ -971,37 +1014,52 @@ async function init() {
     renderLogo();
 
     /* back button */
-    document.getElementById("backBtn").addEventListener("click", () => {
-        if (
-            currentView === "viewAddPerson" ||
-            currentView === "viewPerson"
-        ) {
-            showDashboard();
-            return;
-        }
-        window.location.href = "/";
-    });
+    const backBtn = document.getElementById("backBtn");
+    if (backBtn) {
+        backBtn.addEventListener("click", () => {
+            if (
+                currentView === "viewAddPerson" ||
+                currentView === "viewPerson"
+            ) {
+                showDashboard();
+                return;
+            }
+            window.location.href = "/";
+        });
+    }
 
     /* add person */
-    document
-        .getElementById("addPersonBtn")
-        .addEventListener("click", showAddPerson);
+    const addBtn = document.getElementById("addPersonBtn");
+    if (addBtn) addBtn.addEventListener("click", showAddPerson);
 
     /* search */
     const searchBox = document.getElementById("searchBox");
     const searchClear = document.getElementById("searchClear");
 
-    searchBox.addEventListener("input", renderDashboard);
-    searchClear.addEventListener("click", () => {
-        searchBox.value = "";
-        searchBox.focus();
-        renderDashboard();
-    });
+    if (searchBox) searchBox.addEventListener("input", renderDashboard);
+    if (searchClear) {
+        searchClear.addEventListener("click", () => {
+            if (searchBox) searchBox.value = "";
+            if (searchBox) searchBox.focus();
+            renderDashboard();
+        });
+    }
 
     /* form */
-    document
-        .getElementById("addPersonForm")
-        .addEventListener("submit", submitPerson);
+    const form = document.getElementById("addPersonForm");
+    if (form) form.addEventListener("submit", submitPerson);
+
+    /* topbar shadow on scroll */
+    const topbar = document.getElementById("topbar");
+    if (topbar) {
+        window.addEventListener(
+            "scroll",
+            () => {
+                topbar.classList.toggle("scrolled", window.scrollY > 8);
+            },
+            { passive: true }
+        );
+    }
 
     /* start — show loading then fetch from backend */
     loading = true;
