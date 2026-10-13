@@ -10,7 +10,7 @@ const MONTHLY_LIMIT = 300000;
 let db = { people: [] };
 let historyOpen = false;
 let pendingPhotoDataUrl = null;
-let currentView = "viewDashboard";   /* ← tracks which view is on screen */
+let currentView = "viewDashboard";
 
 /* ============================================================
    API HELPERS
@@ -145,7 +145,6 @@ function monthKey(d = new Date()) {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
 }
 
-/* Keep the local 01XXXXXXXXX format — no 88 prefix */
 function normalizeWa(num) {
     return String(num || "").replace(/\D/g, "");
 }
@@ -154,6 +153,14 @@ function localNow() {
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().slice(0, 16);
+}
+
+/* format a Date / ISO string into YYYY-MM-DD for <input type="date"> */
+function toDateInputValue(v) {
+    if (!v) return "";
+    const d = new Date(v);
+    if (isNaN(d)) return "";
+    return d.toISOString().slice(0, 10);
 }
 
 /* ============================================================
@@ -218,7 +225,7 @@ function checkSend(p, amount, when = new Date()) {
    PAGE ROUTING
    ============================================================ */
 function show(id) {
-    currentView = id;   /* ← remember which view is showing */
+    currentView = id;
     ["viewDashboard", "viewAddPerson", "viewPerson"].forEach((v) =>
         document.getElementById(v).classList.toggle("hidden", v !== id),
     );
@@ -256,10 +263,7 @@ async function showPerson(id) {
    ============================================================ */
 function openWhatsApp(waNumber, message) {
     let num = String(waNumber || "").replace(/\D/g, "");
-
-    // Add Bangladesh country code only for the wa.me link
     if (num.startsWith("01") && num.length === 11) num = "88" + num;
-
     const text = encodeURIComponent(message);
     window.open(`https://wa.me/${num}?text=${text}`, "_blank");
 }
@@ -575,7 +579,7 @@ function bundleSubText(p) {
 }
 
 /* ============================================================
-   BUNDLE — edit modal (add count)
+   BUNDLE — quick-add modal (add count)
    ============================================================ */
 async function editBundle(id) {
     const p = db.people.find((x) => x.id === id);
@@ -608,9 +612,7 @@ async function editBundle(id) {
     try {
         await api("/api/people/bandle/" + id, {
             method: "PATCH",
-            body: {
-                bundleCount: have + add,
-            },
+            body: { bundleCount: have + add },
         });
         await refreshPerson(id);
         toast("বান্ডেল যোগ করা হয়েছে ✔", "success");
@@ -618,6 +620,170 @@ async function editBundle(id) {
     } catch (err) {
         toast(translateError(err.message), "error");
     }
+}
+
+/* ============================================================
+   EDIT ALL  —  comprehensive edit modal
+   ============================================================ */
+function editAll(id) {
+    const p = db.people.find((x) => x.id === id);
+    if (!p) return;
+
+    const modalId = "edit" + uid();
+    const prevBundleCount = Number(p.bundleCount || 0);
+
+    document.getElementById("modalRoot").innerHTML = `
+        <div class="modal-bg" id="${modalId}_bg">
+            <div class="modal modal-edit">
+                <h3>✏️ সব তথ্য ঠিক করুন</h3>
+                <div class="modal-sub">যেকোনো তথ্য পরিবর্তন করে নিচে সেভ চাপুন</div>
+
+                <h3 class="section-label" style="margin-top:8px">👤 ব্যক্তির তথ্য</h3>
+
+                <div class="field">
+                    <label>নাম</label>
+                    <input id="${modalId}_name" type="text" value="${esc(p.name)}" />
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label>বিকাশ নম্বর</label>
+                        <input id="${modalId}_bkash" type="tel"
+                               value="${esc(p.bkashNumber || '')}"
+                               maxlength="11" inputmode="numeric" />
+                    </div>
+                    <div class="field">
+                        <label>হোয়াটসঅ্যাপ <span class="opt">(ঐচ্ছিক)</span></label>
+                        <input id="${modalId}_wa" type="tel"
+                               value="${esc(p.whatsappNumber || '')}"
+                               inputmode="numeric" />
+                    </div>
+                </div>
+
+                <h3 class="section-label" style="margin-top:20px">💰 ব্যালেন্স ও সীমা</h3>
+
+                <div class="row">
+                    <div class="field">
+                        <label>বর্তমান ব্যালেন্স</label>
+                        <input id="${modalId}_balance" type="number"
+                               value="${Number(p.initialBalance || 0)}"
+                               inputmode="numeric" />
+                    </div>
+                    <div class="field">
+                        <label>আজ পাঠানো হয়েছে</label>
+                        <input id="${modalId}_du" type="number"
+                               value="${Number(p.dailyUsedBase || 0)}"
+                               inputmode="numeric" />
+                    </div>
+                    <div class="field">
+                        <label>এই মাসে পাঠানো হয়েছে</label>
+                        <input id="${modalId}_mu" type="number"
+                               value="${Number(p.monthlyUsedBase || 0)}"
+                               inputmode="numeric" />
+                    </div>
+                </div>
+
+                <h3 class="section-label" style="margin-top:20px">📦 সেন্ড মানি বান্ডেল</h3>
+
+                <div class="row">
+                    <div class="field">
+                        <label>বান্ডেল সংখ্যা</label>
+                        <input id="${modalId}_bc" type="number" min="0"
+                               value="${prevBundleCount}"
+                               inputmode="numeric" />
+                    </div>
+                    <div class="field">
+                        <label>মেয়াদ শেষের তারিখ</label>
+                        <input id="${modalId}_be" type="date"
+                               value="${toDateInputValue(p.bundleExpiry)}" />
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-light" id="${modalId}_cancel">বাতিল</button>
+                    <button class="btn btn-primary" id="${modalId}_ok">✔ সংরক্ষণ করুন</button>
+                </div>
+            </div>
+        </div>`;
+
+    const bg = document.getElementById(`${modalId}_bg`);
+    const okBtn = document.getElementById(`${modalId}_ok`);
+    const cleanup = () => {
+        document.getElementById("modalRoot").innerHTML = "";
+    };
+
+    bg.addEventListener("click", (e) => {
+        if (e.target === bg) cleanup();
+    });
+    document.getElementById(`${modalId}_cancel`).onclick = cleanup;
+
+    okBtn.onclick = async () => {
+        const name = document.getElementById(`${modalId}_name`).value.trim();
+        const bkash = document.getElementById(`${modalId}_bkash`).value.trim();
+        const wa = document
+            .getElementById(`${modalId}_wa`)
+            .value.replace(/\D/g, "");
+        const balance = Number(document.getElementById(`${modalId}_balance`).value) || 0;
+        const du = Number(document.getElementById(`${modalId}_du`).value) || 0;
+        const mu = Number(document.getElementById(`${modalId}_mu`).value) || 0;
+        const bc = Number(document.getElementById(`${modalId}_bc`).value) || 0;
+        const be = document.getElementById(`${modalId}_be`).value;
+
+        if (!name) {
+            toast("নাম লিখুন", "error");
+            return;
+        }
+        if (!/^01[0-9]{9}$/.test(bkash)) {
+            toast("বিকাশ নম্বর ১১ ডিজিট, 01 দিয়ে শুরু হতে হবে", "error");
+            return;
+        }
+
+        okBtn.disabled = true;
+        const original = okBtn.textContent;
+        okBtn.textContent = "সংরক্ষণ হচ্ছে…";
+
+        try {
+            /* 1. General fields */
+            await api("/api/people/" + id, {
+                method: "PATCH",
+                body: {
+                    name,
+                    whatsappNumber: wa,
+                    initialBalance: balance,
+                    dailyUsedBase: du,
+                    monthlyUsedBase: mu,
+                    baseDayKey: dayKey(),
+                    baseMonthKey: monthKey(),
+                },
+            });
+
+            /* 2. Bundle count — only if changed (server auto-resets expiry to +30 days) */
+            const countChanged = bc !== prevBundleCount;
+            if (countChanged) {
+                await api("/api/people/bandle/" + id, {
+                    method: "PATCH",
+                    body: { bundleCount: bc },
+                });
+            }
+
+            /* 3. Bundle expiry — override to keep user's value */
+            if (be) {
+                await api("/api/people/bandle/" + id, {
+                    method: "PATCH",
+                    body: { bundleExpiry: new Date(be).toISOString() },
+                });
+            }
+
+            await refreshPerson(id);
+            cleanup();
+            toast("সংরক্ষণ হয়েছে ✔", "success");
+            renderPerson(id);
+        } catch (err) {
+            okBtn.disabled = false;
+            okBtn.textContent = original;
+            toast(translateError(err.message), "error");
+        }
+    };
 }
 
 /* ============================================================
@@ -712,16 +878,16 @@ function renderPerson(id, all) {
                     ${msgBlocked ? "🚫 মেসেজ পাঠানো বন্ধ" : "📱 ম্যাসাজ পাঠান"}
                 </button>
 
+                <button class="btn btn-light" onclick="editAll('${p.id}')">
+                    ✏️ সব এডিট
+                </button>
+
                 <button class="btn btn-light" onclick="editBundle('${p.id}')">
                     📦 বান্ডেল
                 </button>
 
                 <button class="btn btn-light" onclick="changePersonPhoto('${p.id}')">
                     📷 ছবি পরিবর্তন
-                </button>
-
-                <button class="btn btn-light" onclick="editUsed('${p.id}')">
-                    ✏️ লিমিট ঠিক করুন
                 </button>
 
                 <button class="btn btn-danger" onclick="deletePerson('${p.id}')">
@@ -838,9 +1004,7 @@ function renderTxList(personId, txns, hasMore, remaining) {
    WHATSAPP MODAL
    ============================================================ */
 function buildWaMessage(p, amount, dest, waNumber) {
-    let msg = `আপনার বিকাশ নম্বর (${p.bkashNumber}) থেকে \n\nএই ${dest} নম্বরে ${money(amount)} টাকা বিকাশ সেন্ড মানি করুন।`;
-
-    return msg;
+    return `আপনার বিকাশ নম্বর (${p.bkashNumber}) থেকে \n\nএই ${dest} নম্বরে ${money(amount)} টাকা বিকাশ সেন্ড মানি করুন।`;
 }
 
 function openWaModal(personId) {
@@ -862,7 +1026,7 @@ function openWaModal(personId) {
         return;
     }
     if (!p.whatsappNumber) {
-        toast("হোয়াটস্যাপ নম্বর নেই — মেসেজ পাঠানো যাবে না", "error");
+        toast("হোয়াটস্যাপ নম্বর নেই — মেসেজ পাঠানো যাবে না", "error");
         return;
     }
 
@@ -1000,8 +1164,29 @@ async function submitPerson(e) {
     fd.append("baseMonthKey", monthKey());
     if (photoFile) fd.append("photo", photoFile);
 
+    const bundleCount = num("bundleCount");
+    const bundleExpiry = (f.get("bundleExpiry") || "").trim();
+
     try {
-        await apiForm("/api/people", { formData: fd });
+        const created = await apiForm("/api/people", { formData: fd });
+        const personId = created._id || created.id;
+
+        /* Apply bundle count — server auto-resets expiry to +30 days */
+        if (bundleCount > 0) {
+            await api("/api/people/bandle/" + personId, {
+                method: "PATCH",
+                body: { bundleCount },
+            });
+        }
+
+        /* Override expiry with the user's custom date (if given) */
+        if (bundleExpiry) {
+            await api("/api/people/bandle/" + personId, {
+                method: "PATCH",
+                body: { bundleExpiry: new Date(bundleExpiry).toISOString() },
+            });
+        }
+
         e.target.reset();
         resetPhotoPicker();
         toast("যোগ হয়েছে ✔", "success");
@@ -1101,61 +1286,6 @@ async function deletePerson(id) {
 }
 
 /* ============================================================
-   EDIT USED AMOUNTS
-   ============================================================ */
-async function editUsed(id) {
-    const p = db.people.find((x) => x.id === id);
-    if (!p) return;
-
-    const result = await showModal({
-        title: "খরচ ঠিক করুন",
-        description: "এখন পর্যন্ত কত টাকা পাঠানো হয়েছে সেটা লিখুন।",
-        fields: [
-            {
-                id: "du",
-                label: "আজ পাঠানো হয়েছে",
-                type: "number",
-                inputmode: "numeric",
-                value: null,
-            },
-            {
-                id: "mu",
-                label: "এই মাসে পাঠানো হয়েছে",
-                type: "number",
-                inputmode: "numeric",
-                value: null,
-            },
-        ],
-        submitLabel: "✔ সংরক্ষণ",
-    });
-    if (!result) return;
-
-    const du = Number(result.du);
-    const mu = Number(result.mu);
-    if (isNaN(du) || du < 0 || isNaN(mu) || mu < 0) {
-        toast("সঠিক সংখ্যা লিখুন", "error");
-        return;
-    }
-
-    try {
-        await api("/api/people/" + id, {
-            method: "PATCH",
-            body: {
-                dailyUsedBase: du,
-                monthlyUsedBase: mu,
-                baseDayKey: dayKey(),
-                baseMonthKey: monthKey(),
-            },
-        });
-        await refreshPerson(id);
-        toast("সংরক্ষণ হয়েছে ✔", "success");
-        renderPerson(id);
-    } catch (err) {
-        toast(translateError(err.message), "error");
-    }
-}
-
-/* ============================================================
    CHANGE PERSON PHOTO
    ============================================================ */
 function changePersonPhoto(id) {
@@ -1185,70 +1315,16 @@ function changePersonPhoto(id) {
 }
 
 /* ============================================================
-   EXPORT CSV
-   ============================================================ */
-async function exportCSV() {
-    toast("তৈরি হচ্ছে...");
-    const rows = [
-        ["নাম", "বিকাশ নম্বর", "ধরন", "টাকা", "তারিখ", "কার সাথে", "নোট"],
-    ];
-
-    try {
-        for (const person of db.people) {
-            const full = await api("/api/people/" + person.id);
-            (full.transactions || []).forEach((t) => {
-                rows.push([
-                    person.name,
-                    person.bkashNumber,
-                    t.type === "send" ? "পাঠানো" : "পাওয়া",
-                    t.amount,
-                    new Date(t.date).toLocaleString("bn-BD"),
-                    t.counterparty || "",
-                    t.notes || "",
-                ]);
-            });
-        }
-    } catch (err) {
-        toast("এক্সপোর্ট ব্যর্থ", "error");
-        return;
-    }
-
-    if (rows.length === 1) {
-        toast("এক্সপোর্ট করার মতো কিছু নেই", "error");
-        return;
-    }
-
-    const csv = rows
-        .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-        .join("\n");
-
-    const blob = new Blob(["\uFEFF" + csv], {
-        type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `বিকাশ-হিসাব-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast("ডাউনলোড হয়েছে ✔", "success");
-}
-
-/* ============================================================
    DISABLE ZOOM + COPY
    ============================================================ */
-
-/* Block Ctrl/Cmd + wheel zoom */
 document.addEventListener("wheel", (e) => {
     if (e.ctrlKey || e.metaKey) e.preventDefault();
 }, { passive: false });
 
-/* Block pinch zoom on iOS Safari */
 document.addEventListener("gesturestart", (e) => e.preventDefault());
 document.addEventListener("gesturechange", (e) => e.preventDefault());
 document.addEventListener("gestureend", (e) => e.preventDefault());
 
-/* Block multi-touch pinch zoom */
 document.addEventListener("touchstart", (e) => {
     if (e.touches.length > 1) e.preventDefault();
 }, { passive: false });
@@ -1256,11 +1332,9 @@ document.addEventListener("touchmove", (e) => {
     if (e.touches.length > 1) e.preventDefault();
 }, { passive: false });
 
-/* Block Ctrl+C / Ctrl+A / Ctrl+X — but allow inside inputs */
 document.addEventListener("keydown", (e) => {
     const tag = (e.target.tagName || "").toLowerCase();
     const isEditable = tag === "input" || tag === "textarea" || e.target.isContentEditable;
-
     if ((e.ctrlKey || e.metaKey) && !isEditable) {
         const k = e.key.toLowerCase();
         if (k === "c" || k === "a" || k === "x" || k === "s" || k === "u") {
@@ -1269,16 +1343,14 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-/* Block right-click context menu */
 document.addEventListener("contextmenu", (e) => {
     const tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "textarea") return; // allow in fields
+    if (tag === "input" || tag === "textarea") return;
     e.preventDefault();
 });
 
-/* Block double-tap zoom on mobile */
 let lastTouchEnd = 0;
-document.addEventListener("touchend", (e) => {
+document.addEventListener("touchend", () => {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) e.preventDefault();
     lastTouchEnd = now;
@@ -1288,12 +1360,10 @@ document.addEventListener("touchend", (e) => {
    INIT
    ============================================================ */
 document.getElementById("backBtn").onclick = () => {
-    // add-person / person-detail → back to dashboard
     if (currentView === "viewAddPerson" || currentView === "viewPerson") {
         showDashboard();
         return;
     }
-    // we're on the dashboard → go to the parent app
     window.location.href = "/";
 };
 

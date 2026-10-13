@@ -97,7 +97,7 @@
             নতুন মানুষের হিসাব
           </h2>
 
-          <form onsubmit="submitPerson(event)">
+                  <form onsubmit="submitPerson(event)">
             <!-- Photo -->
             <div class="field photo-field">
               <div class="photo-picker">
@@ -191,6 +191,30 @@
                   value=""
                   inputmode="numeric"
                 />
+              </div>
+            </div>
+
+            <!-- Bundle -->
+            <h3 class="section-label">📦 সেন্ড মানি বান্ডেল (ঐচ্ছিক)</h3>
+
+            <div class="row">
+              <div class="field">
+                <label>বান্ডেল সংখ্যা</label>
+                <input
+                  name="bundleCount"
+                  type="number"
+                  min="0"
+                  value=""
+                  inputmode="numeric"
+                  placeholder="0"
+                />
+              </div>
+              <div class="field">
+                <label
+                  >মেয়াদ শেষের তারিখ
+                  <span class="opt">(না দিলে ৩০ দিন)</span></label
+                >
+                <input name="bundleExpiry" type="date" />
               </div>
             </div>
 
