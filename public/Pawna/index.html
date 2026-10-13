@@ -2,7 +2,10 @@
 <html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#d12053" />
     <meta name="format-detection" content="telephone=no" />
     <title>হিসাব</title>
@@ -20,7 +23,14 @@
     <header class="topbar" id="topbar">
       <div class="topbar-inner">
         <button class="icon-btn back-btn" id="backBtn" aria-label="ফিরে যান">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
@@ -90,11 +100,20 @@
 
         <div class="searchbar" id="searchBar">
           <div class="search-wrap">
-            <input id="searchBox" type="search" placeholder="নাম খুঁজুন" autocomplete="off" />
-         
+            <input
+              id="searchBox"
+              type="search"
+              placeholder="নাম খুঁজুন"
+              autocomplete="off"
+            />
           </div>
-          <button class="add-btn" type="button" id="addPersonBtn" aria-label="নতুন মানুষ যোগ করুন">
-            <span class="add-plus">+</span> যোগ
+          <button
+            class="add-btn"
+            type="button"
+            id="addPersonBtn"
+            aria-label="নতুন মানুষ যোগ করুন"
+          >
+            <span class="add-plus">+</span> মানুষ যোগ করুন
           </button>
         </div>
 
@@ -111,7 +130,14 @@
         <div class="panel">
           <div class="panel-head">
             <div class="panel-head-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
                 <line x1="19" y1="8" x2="19" y2="14" />
@@ -127,20 +153,43 @@
           <form id="addPersonForm" autocomplete="off">
             <div class="field">
               <label for="apName">নাম <span class="req">*</span></label>
-              <input id="apName" name="name" type="text" required placeholder="যেমন: করিম" />
+              <input
+                id="apName"
+                name="name"
+                type="text"
+                required
+                placeholder="যেমন: করিম"
+              />
             </div>
 
             <div class="field">
-              <label for="apAmount">শুরুর বাকি <span class="opt">(ঐচ্ছিক)</span></label>
+              <label for="apAmount"
+                >শুরুর বাকি <span class="opt">(ঐচ্ছিক)</span></label
+              >
               <div class="money-input">
                 <span class="money-prefix">৳</span>
-                <input id="apAmount" name="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="0" />
+                <input
+                  id="apAmount"
+                  name="amount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  placeholder="0"
+                />
               </div>
               <p class="hint">এই টাকা আপনি পাবেন।</p>
             </div>
 
             <button class="btn btn-primary btn-block" type="submit">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
               সংরক্ষণ করুন
