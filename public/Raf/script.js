@@ -188,35 +188,30 @@ function render() {
 }
 
 function renderCard(e, no) {
-    const noteBlock = e.note
-        ? `<div class="card-note">
-             <span class="note-label">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                 <path d="M12 20h9" />
-                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-               </svg>
-               নোট
-             </span>
-             <span class="note-text">${escapeHtml(e.note)}</span>
-           </div>`
+    /* compact note chip shown in the header */
+    const noteChip = e.note
+        ? `<span class="card-note-chip" title="${escapeHtml(e.note)}">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M12 20h9" />
+               <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+             </svg>
+             <span class="card-note-text">${escapeHtml(e.note)}</span>
+           </span>`
         : '';
 
     return `
         <article class="card" data-id="${e.id}">
             <div class="card-head">
                 <div class="card-meta">
-                <span class="card-no">#${no}</span>
-                <div class="card-date">
-                    <span class="date-ico">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="9" />
-                            <polyline points="12 7 12 12 15 14" />
-                        </svg>
-                    </span>
-                    ${fmtDateTime(e.createdAt)}
-                </div>
+                    <span class="card-no">#${no}</span>
+                    ${noteChip}
                 </div>
                 <div class="card-actions">
+                    <span class="card-chevron" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                    </span>
                     <button class="card-copy" data-copy="${e.id}" type="button" aria-label="হিসাব কপি" title="হিসাব কপি">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" />
@@ -233,16 +228,16 @@ function renderCard(e, no) {
                 </div>
             </div>
 
-            ${noteBlock}
-
-            <div class="num-list">
-                ${e.entries.map((en, i) => `
-                    <div class="num-row">
-                        <span class="num-idx">${i + 1}</span>
-                        <span class="num">${fmtNum(en.number)}</span>
-                        <span class="amt">৳ ${bn(en.amount)}</span>
-                    </div>
-                `).join('')}
+            <div class="card-body">
+                <div class="num-list">
+                    ${e.entries.map((en, i) => `
+                        <div class="num-row">
+                            <span class="num-idx">${i + 1}</span>
+                            <span class="num">${fmtNum(en.number)}</span>
+                            <span class="amt">৳ ${bn(en.amount)}</span>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
 
             <div class="card-foot">
@@ -413,3 +408,144 @@ document.addEventListener('click', async ev => {
    ============================================================ */
 load();
 render();
+
+/* ============================================================
+   SMOOTH COLLAPSE / EXPAND
+   ------------------------------------------------------------
+   • drag the sheet handle down to dismiss
+   • click a card head to fold / unfold its body
+   • fold state is remembered per entry
+   ============================================================ */
+
+/* ---------- 1. DRAG-TO-CLOSE the bottom sheet ---------- */
+(function enableSheetDrag() {
+    const handle = document.querySelector('.sheet-handle');
+    const sheetEl = document.getElementById('sheet');
+    if (!handle || !sheetEl) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let dragging = false;
+    let startTime = 0;
+
+    const start = (y) => {
+        startY = currentY = y;
+        startTime = Date.now();
+        dragging = true;
+        sheetEl.classList.add('dragging');
+    };
+
+    const move = (y) => {
+        if (!dragging) return;
+        currentY = y;
+        const dy = Math.max(0, y - startY);
+
+        // rubber-band: past 50% of height, dampen heavily
+        const h = sheetEl.offsetHeight;
+        const eased = dy < h * 0.5
+            ? dy
+            : h * 0.5 + (dy - h * 0.5) * 0.35;
+
+        sheetEl.style.transform = `translate3d(0, ${eased}px, 0)`;
+    };
+
+    const end = () => {
+        if (!dragging) return;
+        dragging = false;
+        sheetEl.classList.remove('dragging');
+        sheetEl.style.transform = '';
+
+        const dy = currentY - startY;
+        const dt = Math.max(1, Date.now() - startTime);
+        const velocity = dy / dt; // px per ms
+
+        // dismiss if dragged far enough, or fast-flicked down
+        if (dy > 120 || velocity > 0.6) closeSheet();
+    };
+
+    /* --- touch --- */
+    handle.addEventListener('touchstart', (e) => {
+        start(e.touches[0].clientY);
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        move(e.touches[0].clientY);
+        if (e.cancelable) e.preventDefault();   // stop page scroll
+    }, { passive: false });
+
+    handle.addEventListener('touchend', end);
+    handle.addEventListener('touchcancel', end);
+
+    /* --- mouse --- */
+    handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        start(e.clientY);
+
+        const onMove = (ev) => move(ev.clientY);
+        const onUp = () => {
+            end();
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    });
+
+    /* --- safety: reset transform if a drag is somehow interrupted --- */
+    window.addEventListener('blur', () => {
+        if (!dragging) return;
+        dragging = false;
+        sheetEl.classList.remove('dragging');
+        sheetEl.style.transform = '';
+    });
+})();
+
+/* ---------- 2. CARD FOLD: click the head to collapse ---------- */
+(function enableCardFold() {
+    const STORE = 'raf_hisab_collapsed_v1';
+
+    // read saved state
+    window.applyCollapsedState = function applyCollapsedState() {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { }
+
+        document.querySelectorAll('.card').forEach(card => {
+            const id = card.dataset.id;
+            if (saved[id]) card.classList.add('collapsed');
+        });
+    };
+
+    // persist current state
+    function persistCollapsedState() {
+        const state = {};
+        document.querySelectorAll('.card').forEach(card => {
+            state[card.dataset.id] = card.classList.contains('collapsed');
+        });
+        try { localStorage.setItem(STORE, JSON.stringify(state)); } catch { }
+    }
+
+    // delegated click — toggle fold, unless the user hit copy/delete
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.card-copy, .card-del')) return;
+
+        const head = e.target.closest('.card-head');
+        if (!head) return;
+
+        const card = head.closest('.card');
+        if (!card) return;
+
+        card.classList.toggle('collapsed');
+        persistCollapsedState();
+    });
+
+    // run once on boot in case anything is already rendered
+    applyCollapsedState();
+})();
+
+/* ---------- 3. ESC closes the sheet ---------- */
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const s = document.getElementById('sheet');
+    if (s && s.classList.contains('show')) closeSheet();
+});
