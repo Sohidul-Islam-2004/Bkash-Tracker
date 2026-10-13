@@ -183,6 +183,67 @@ const PawnaPersonSchema = new mongoose.Schema(
 
 
 
+/* ---- sub-schema for a single transaction ---- */
+const txnSubSchema = new mongoose.Schema(
+    {
+        type: {
+            type: String,
+            enum: ["deposit", "withdraw"],
+            required: true,
+        },
+        amount: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        date: {
+            type: Date,
+            default: Date.now,
+        },
+        name: {
+            type: String,
+            default: null,
+            trim: true,
+        },
+        notes: {
+            type: String,
+            default: null,
+            trim: true,
+        },
+    },
+    {
+        _id: true,          // gives each txn its own ObjectId → used as txn.id
+        timestamps: true,
+    }
+);
+
+/* ---- main bank schema ---- */
+const BankSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        accountNumber: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+        transactions: {
+            type: [txnSubSchema],
+            default: [],
+        },
+    },
+    {
+        timestamps: true,   // createdAt, updatedAt on the bank
+    }
+);
+
+
+
+
+
 
 
 
@@ -232,6 +293,7 @@ module.exports = {
     EntriesSchema,
     GilaPersonSchema,
     PawnaSchema,
-    PawnaPersonSchema
+    PawnaPersonSchema,
+    BankSchema
 
 };

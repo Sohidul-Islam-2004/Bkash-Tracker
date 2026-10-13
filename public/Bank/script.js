@@ -1,109 +1,153 @@
 /* ============================================================
-   ব্যাংক হিসাব — personal bank ledger
-   Storage: localStorage. No backend.
+   ব্যাংক হিসাব — bank ledger (backend-driven)
+   All data fetched/saved via REST API. No localStorage.
 
-   Bank     = { id, name, accountNumber, transactions[] }
-   Txn type = "deposit"  → জমা (money in)
-              "withdraw" → উত্তোলন (money out)
-   Txn also has: name (who deposited / who received)
-   Balance  = totalDeposits − totalWithdrawals
+   Backend endpoints:
+     GET    /api/banks                              → { banks: [...] }
+     POST   /api/banks                              → { bank: {...} }
+     POST   /api/banks/:id/transactions             → { transaction, summary }
+     DELETE /api/banks/:id/transactions/:txnId      → { ok, summary }
+     DELETE /api/banks/:id                          → { ok }
+
+   Bank shape:
+     { id, name, accountNumber, createdAt, summary, transactions: [...] }
+
+   Summary shape:
+     { totalDeposit, totalWithdraw, balance }
+
+   Txn type:
+     "deposit"  → জমা (money in)
+     "withdraw" → উত্তোলন (money out)
    ============================================================ */
 
-const STORAGE_KEY = "bank_hisab_v1";
+/* ------------------------------------------------------------
+   CONFIG
+------------------------------------------------------------ */
+const API_BASE = "";
+const API_ROOT = "/api/banks";
 
 /* ============================================================
-   STORAGE
+   API LAYER
    ============================================================ */
-function loadDB() {
+async function api(path, options = {}) {
+    const url = API_BASE + path;
+    const { headers, ...rest } = options;
+
+    let res;
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return { banks: [] };
-        const parsed = JSON.parse(raw);
-        if (!parsed || !Array.isArray(parsed.banks)) return { banks: [] };
-        return parsed;
-    } catch (_) {
-        return { banks: [] };
+        res = await fetch(url, {
+            ...rest,
+            headers: {
+                "Content-Type": "application/json",
+                ...(headers || {}),
+            },
+        });
+    } catch (netErr) {
+        console.error("Network error:", netErr);
+        throw new Error("সার্ভারের সাথে সংযোগ করা যায়নি");
     }
+
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+            const body = await res.json();
+            if (body && body.message) msg = body.message;
+            else if (body && body.error) msg = body.error;
+        } catch (_) { /* ignore */ }
+        throw new Error(msg);
+    }
+
+    if (res.status === 204) return null;
+    return res.json().catch(() => null);
 }
 
-function saveDB() {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-    } catch (e) {
-        toast("সেভ করা যায়নি (স্টোরেজ পূর্ণ?)", "error");
-    }
+/* ---- normalize a bank from the server ---- */
+function normalizeBank(b) {
+    if (!b) return null;
+    return {
+        id: b.id || b._id,
+        name: b.name,
+        accountNumber: b.accountNumber || "",
+        createdAt: b.createdAt || new Date().toISOString(),
+        summary: b.summary || null,
+        transactions: Array.isArray(b.transactions) ? b.transactions : [],
+    };
+}
+
+async function fetchBanks() {
+    const data = await api(API_ROOT);
+    const list = data && Array.isArray(data.banks) ? data.banks : [];
+    return list.map(normalizeBank).filter(Boolean);
+}
+
+async function apiCreateBank({ name, accountNumber }) {
+    const data = await api(API_ROOT, {
+        method: "POST",
+        body: JSON.stringify({ name, accountNumber }),
+    });
+    if (!data || !data.bank) throw new Error("Invalid response");
+    return normalizeBank(data.bank);
+}
+
+async function apiAddTransaction(bankId, txn) {
+    const data = await api(
+        `${API_ROOT}/${encodeURIComponent(bankId)}/transactions`,
+        {
+            method: "POST",
+            body: JSON.stringify(txn),
+        }
+    );
+    if (!data || !data.transaction) throw new Error("Invalid response");
+    return data;
+}
+
+async function apiDeleteTransaction(bankId, txnId) {
+    return api(
+        `${API_ROOT}/${encodeURIComponent(
+            bankId
+        )}/transactions/${encodeURIComponent(txnId)}`,
+        { method: "DELETE" }
+    );
+}
+
+async function apiDeleteBank(bankId) {
+    return api(`${API_ROOT}/${encodeURIComponent(bankId)}`, {
+        method: "DELETE",
+    });
 }
 
 /* ============================================================
    STATE
    ============================================================ */
-let db = loadDB();
+let db = { banks: [] };
 let currentView = "viewDashboard";
 let currentBankId = null;
+let loading = false;
 
 /* ============================================================
    DATA LAYER
    ============================================================ */
-function getAllBanks() {
-    return db.banks;
-}
-
 function getBank(id) {
     return db.banks.find((b) => b.id === id) || null;
-}
-
-function createBank({ name, accountNumber = "" }) {
-    const bank = {
-        id: uid(),
-        name,
-        accountNumber,
-        transactions: [],
-        createdAt: new Date().toISOString(),
-    };
-    db.banks.push(bank);
-    saveDB();
-    return bank;
-}
-
-function addTransaction(bankId, { type, amount, date, name = null, notes = null }) {
-    const b = getBank(bankId);
-    if (!b) throw new Error("bank not found");
-    const txn = {
-        id: uid(),
-        type,
-        amount: Number(amount),
-        date: date || new Date().toISOString(),
-        name: name || null,       // ← who deposited / who received
-        notes,
-    };
-    b.transactions = b.transactions || [];
-    b.transactions.push(txn);
-    saveDB();
-    return txn;
-}
-
-function deleteTransaction(bankId, txnId) {
-    const b = getBank(bankId);
-    if (!b) throw new Error("bank not found");
-    const idx = (b.transactions || []).findIndex((t) => t.id === txnId);
-    if (idx < 0) throw new Error("Transaction not found");
-    const [removed] = b.transactions.splice(idx, 1);
-    saveDB();
-    return removed;
-}
-
-function restoreTransaction(bankId, txn) {
-    const b = getBank(bankId);
-    if (!b || !txn) return;
-    b.transactions = b.transactions || [];
-    b.transactions.push(txn);
-    saveDB();
 }
 
 /* ============================================================
    LEDGER MATH
    ============================================================ */
 function totalsOf(bank) {
+    if (bank.summary) {
+        const deposited = Number(
+            bank.summary.totalDeposit ?? bank.summary.totalIn ?? 0
+        );
+        const withdrawn = Number(
+            bank.summary.totalWithdraw ?? bank.summary.totalOut ?? 0
+        );
+        const balance = Number(
+            bank.summary.balance ?? (deposited - withdrawn)
+        );
+        return { deposited, withdrawn, balance };
+    }
+
     let deposited = 0;
     let withdrawn = 0;
     (bank.transactions || []).forEach((t) => {
@@ -112,6 +156,19 @@ function totalsOf(bank) {
         else deposited += a;
     });
     return { deposited, withdrawn, balance: deposited - withdrawn };
+}
+
+function applySummary(b, summary) {
+    if (!summary) return;
+    b.summary = {
+        totalDeposit: Number(
+            summary.totalDeposit ?? summary.totalIn ?? 0
+        ),
+        totalWithdraw: Number(
+            summary.totalWithdraw ?? summary.totalOut ?? 0
+        ),
+        balance: Number(summary.balance || 0),
+    };
 }
 
 function grandTotal() {
@@ -142,18 +199,6 @@ function esc(s) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-}
-
-/* Bank initials — use first letters of each word, up to 2 chars */
-function initialsOf(name) {
-    const parts = (name || "?").trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "?";
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
-function avatarHTML(bank, sizeClass) {
-    return `<div class="avatar ${sizeClass}">${esc(initialsOf(bank.name))}</div>`;
 }
 
 function fmtDate(iso) {
@@ -235,16 +280,10 @@ function confirmModal({
             <div class="modal-bg" id="${id}_bg">
                 <div class="modal">
                     <h3>${esc(title)}</h3>
-                    ${description
-                ? `<div class="modal-sub">${description}</div>`
-                : ""
-            }
+                    ${description ? `<div class="modal-sub">${description}</div>` : ""}
                     <div class="modal-actions">
-                        <button class="btn btn-light" id="${id}_cancel">${esc(
-                cancelLabel
-            )}</button>
-                        <button class="btn ${danger ? "btn-danger" : "btn-primary"
-            }" id="${id}_ok">${esc(submitLabel)}</button>
+                        <button class="btn btn-light" id="${id}_cancel">${esc(cancelLabel)}</button>
+                        <button class="btn ${danger ? "btn-danger" : "btn-primary"}" id="${id}_ok">${esc(submitLabel)}</button>
                     </div>
                 </div>
             </div>`;
@@ -264,7 +303,6 @@ function confirmModal({
 
 const QUICK_AMOUNTS = [500, 1000, 5000, 10000];
 
-/* ---------- Amount modal with optional NAME field ---------- */
 function askAmount({ title, description = "", namePlaceholder = "নাম লিখুন" }) {
     return new Promise((resolve) => {
         const id = "m" + uid();
@@ -272,33 +310,25 @@ function askAmount({ title, description = "", namePlaceholder = "নাম ল�
 
         const chipsHtml = QUICK_AMOUNTS.map(
             (v) =>
-                `<button type="button" class="amount-chip" data-amount="${v}">${v.toLocaleString(
-                    "en-IN"
-                )}</button>`
+                `<button type="button" class="amount-chip" data-amount="${v}">${v.toLocaleString("en-IN")}</button>`
         ).join("");
 
         root.innerHTML = `
             <div class="modal-bg" id="${id}_bg">
                 <div class="modal">
                     <h3>${title}</h3>
-                    ${description
-                ? `<div class="modal-sub">${description}</div>`
-                : ""
-            }
+                    ${description ? `<div class="modal-sub">${description}</div>` : ""}
 
                     <div class="field">
-                        <label for="${id}_name">নাম <span class="opt">(না দিলেও চলবে)</span></label>
-                        <input id="${id}_name" type="text"
-                               placeholder="${esc(namePlaceholder)}"
-                               autocomplete="off" />
+                        <label for="${id}_name">নাম <span class="opt">(ঐচ্ছিক)</span></label>
+                        <input id="${id}_name" type="text" placeholder="${esc(namePlaceholder)}" autocomplete="off" />
                     </div>
 
                     <div class="field">
                         <label for="${id}_amt">টাকার পরিমাণ</label>
                         <div class="money-input">
                             <span class="money-prefix">৳</span>
-                            <input id="${id}_amt" type="number" inputmode="numeric"
-                                   min="0" step="1" placeholder="0" autocomplete="off" />
+                            <input id="${id}_amt" type="number" inputmode="numeric" min="0" step="1" placeholder="0" autocomplete="off" />
                         </div>
                         <div class="chips">${chipsHtml}</div>
                     </div>
@@ -326,9 +356,7 @@ function askAmount({ title, description = "", namePlaceholder = "নাম ল�
         root.querySelectorAll(".amount-chip").forEach((btn) => {
             btn.onclick = () => {
                 input.value = btn.dataset.amount;
-                root.querySelectorAll(".amount-chip").forEach((b) =>
-                    b.classList.remove("selected")
-                );
+                root.querySelectorAll(".amount-chip").forEach((b) => b.classList.remove("selected"));
                 btn.classList.add("selected");
             };
         });
@@ -384,8 +412,19 @@ function show(id) {
     ["viewDashboard", "viewAddBank", "viewBank"].forEach((v) =>
         document.getElementById(v).classList.toggle("hidden", v !== id)
     );
-    document.getElementById("pageTitle").textContent =
-        VIEW_TITLES[id] || "ব্যাংক হিসাব";
+
+    const title = document.getElementById("pageTitle");
+    const sub = document.getElementById("pageSub");
+
+    if (title) title.textContent = VIEW_TITLES[id] || "ব্যাংক হিসাব";
+    if (sub) {
+        sub.textContent =
+            id === "viewAddBank"
+                ? "নতুন ব্যাংক যোগ করুন"
+                : id === "viewBank"
+                    ? "লেনদেনের বিস্তারিত"
+                    : "সব ব্যাংকের হিসাব";
+    }
     window.scrollTo(0, 0);
 }
 
@@ -414,11 +453,12 @@ function showBank(id) {
     currentBankId = id;
     renderBank(id);
     show("viewBank");
-    document.getElementById("pageTitle").textContent = b.name;
+    const title = document.getElementById("pageTitle");
+    if (title) title.textContent = b.name;
 }
 
 /* ============================================================
-   LOGO (bank-styled)
+   LOGO
    ============================================================ */
 const DEFAULT_LOGO =
     "data:image/svg+xml;utf8," +
@@ -426,8 +466,8 @@ const DEFAULT_LOGO =
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f8055"/>
-      <stop offset="1" stop-color="#063d29"/>
+      <stop offset="0" stop-color="#e8437a"/>
+      <stop offset="1" stop-color="#a8153f"/>
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="18" fill="url(#g)"/>
@@ -441,46 +481,95 @@ const DEFAULT_LOGO =
     );
 
 function renderLogo() {
-    document.getElementById("brandLogo").src = DEFAULT_LOGO;
+    const el = document.getElementById("brandLogo");
+    if (el) el.src = DEFAULT_LOGO;
 }
 
 /* ============================================================
    DASHBOARD
    ============================================================ */
 function renderDashboard() {
-    const list = document.getElementById("banksList");
+    const grid = document.getElementById("banksList");
     const sb = document.getElementById("searchBar");
-    const heroAmount = document.getElementById("heroAmount");
-    const heroSub = document.getElementById("heroSub");
+    const hero = document.getElementById("dashHero");
+    const head = document.getElementById("banksHead");
+    const countEl = document.getElementById("banksCount");
 
     const banks = db.banks;
 
-    /* -------- hero total -------- */
-    const total = grandTotal();
-    heroAmount.textContent = money(total);
-    heroSub.textContent =
-        banks.length === 0
-            ? "কোনো ব্যাংক নেই"
-            : `${bnNumber(banks.length)}টি ব্যাংক`;
-
-    /* -------- search solo -------- */
-    if (sb) sb.classList.toggle("solo", banks.length === 0);
+    /* -------- loading -------- */
+    if (loading) {
+        if (hero) hero.innerHTML = "";
+        if (head) head.style.display = "none";
+        if (sb) sb.classList.add("solo");
+        if (grid) {
+            grid.innerHTML = `
+                <div class="empty">
+                    <div class="icon">⏳</div>
+                    <h3>লোড হচ্ছে…</h3>
+                    <p>ডেটা আনা হচ্ছে, একটু অপেক্ষা করুন।</p>
+                </div>`;
+        }
+        return;
+    }
 
     /* -------- empty -------- */
     if (banks.length === 0) {
-        list.innerHTML = `
-            <div class="empty" style="grid-column:1/-1">
-                <div class="icon">🏦</div>
-                <h3>এখনো কোনো ব্যাংক যোগ করা হয়নি</h3>
-                <p>শুরু করতে "যোগ" বাটনে চাপ দিন।</p>
-            </div>`;
+        if (hero) {
+            hero.innerHTML = `
+                <div class="home-hero">
+                    <div class="home-hero-top">
+                        <span class="home-hero-label">
+                            <span class="home-hero-ico">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 21h18"/>
+                                    <path d="M5 21V10l7-5 7 5v11"/>
+                                </svg>
+                            </span>
+                            মোট ব্যালেন্স
+                        </span>
+                    </div>
+                    <b class="home-hero-value">৳ 0</b>
+                </div>`;
+        }
+        if (head) head.style.display = "none";
+        if (sb) sb.classList.add("solo");
+        if (grid) {
+            grid.innerHTML = `
+                <div class="empty">
+                    <div class="icon">🏦</div>
+                    <h3>এখনো কোনো ব্যাংক যোগ করা হয়নি</h3>
+                    <p>শুরু করতে "যোগ" বাটনে চাপ দিন।</p>
+                </div>`;
+        }
         return;
     }
+
+    /* -------- hero -------- */
+    const total = grandTotal();
+    if (hero) {
+        hero.innerHTML = `
+            <div class="home-hero">
+                <div class="home-hero-top">
+                    <span class="home-hero-label">
+                        <span class="home-hero-ico">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 21h18"/>
+                                <path d="M5 21V10l7-5 7 5v11"/>
+                            </svg>
+                        </span>
+                        মোট ব্যালেন্স
+                    </span>
+                </div>
+                <b class="home-hero-value">${money(total)}</b>
+            </div>`;
+    }
+
+    if (sb) sb.classList.remove("solo");
 
     /* -------- filter -------- */
     const box = document.getElementById("searchBox");
     const q = (box ? box.value : "").trim().toLowerCase();
-
     const clearBtn = document.getElementById("searchClear");
     if (clearBtn) clearBtn.hidden = !q;
 
@@ -492,9 +581,13 @@ function renderDashboard() {
         )
         : banks;
 
+    /* -------- section head -------- */
+    if (head) head.style.display = "";
+    if (countEl) countEl.textContent = `${bnNumber(filtered.length)} টি`;
+
     if (filtered.length === 0) {
-        list.innerHTML = `
-            <div class="empty" style="grid-column:1/-1">
+        grid.innerHTML = `
+            <div class="empty">
                 <div class="icon">🔍</div>
                 <h3>কিছু পাওয়া যায়নি</h3>
                 <p>অন্য নাম বা নম্বর দিয়ে খুঁজুন।</p>
@@ -503,21 +596,19 @@ function renderDashboard() {
     }
 
     /* -------- cards -------- */
-    list.innerHTML = filtered
+    grid.innerHTML = filtered
         .map((b, i) => {
             const t = totalsOf(b);
             const count = (b.transactions || []).length;
             const meta = b.accountNumber
-                ? `•••• ${esc(b.accountNumber.slice(-4))}`
+                ? `অ্যাকাউন্ট •••• ${esc(b.accountNumber.slice(-4))}`
                 : count === 0
                     ? "কোনো লেনদেন নেই"
                     : `${bnNumber(count)}টি লেনদেন`;
 
             return `
-        <div class="bank-card" style="animation-delay:${Math.min(i, 8) * 40}ms"
-             data-open="${b.id}" role="button" tabindex="0">
-            <div class="bc-head">
-                ${avatarHTML(b, "avatar-sm")}
+        <article class="bank-card" style="animation-delay:${Math.min(i, 8) * 40}ms">
+            <button class="bc-head" data-open="${b.id}" type="button">
                 <div class="bc-info">
                     <h3>${esc(b.name)}</h3>
                     <div class="bc-meta">${meta}</div>
@@ -526,22 +617,38 @@ function renderDashboard() {
                     <div class="bc-bal">${money(t.balance)}</div>
                     <div class="bc-bal-label">ব্যালেন্স</div>
                 </div>
-                <div class="bc-chevron">›</div>
-            </div>
-        </div>`;
+                <span class="bc-chevron">›</span>
+            </button>
+        </article>`;
         })
         .join("");
 
-    /* -------- wire up -------- */
-    list.querySelectorAll("[data-open]").forEach((el) => {
+    grid.querySelectorAll("[data-open]").forEach((el) => {
         el.addEventListener("click", () => showBank(el.dataset.open));
-        el.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                showBank(el.dataset.open);
-            }
-        });
     });
+}
+
+/* ============================================================
+   RELOAD FROM SERVER
+   ============================================================ */
+async function reload({ silent = false } = {}) {
+    if (!silent) {
+        loading = true;
+        renderDashboard();
+    }
+    try {
+        db.banks = await fetchBanks();
+        loading = false;
+        if (currentView === "viewBank" && currentBankId) {
+            renderBank(currentBankId);
+        } else {
+            renderDashboard();
+        }
+    } catch (err) {
+        loading = false;
+        renderDashboard();
+        if (!silent) toast("ডেটা আনতে ব্যর্থ: " + err.message, "error");
+    }
 }
 
 /* ============================================================
@@ -555,24 +662,30 @@ async function quickTxn(bankId, type) {
     const t = totalsOf(b);
 
     const result = await askAmount({
-        title: isDeposit ? "↓ জমা" : "↑ উত্তোলন",
+        title: isDeposit ? "জমা" : "উত্তোলন",
         description: `<b>${esc(b.name)}</b> · ব্যালেন্স ${money(t.balance)}`,
         namePlaceholder: isDeposit ? "যিনি জমা দিলেন" : "যিনি নিলেন",
     });
     if (!result) return;
 
     try {
-        addTransaction(bankId, {
+        const data = await apiAddTransaction(bankId, {
             type,
             amount: result.amount,
             name: result.name,
             date: new Date().toISOString(),
         });
+
+        /* update local mirror */
+        b.transactions = b.transactions || [];
+        b.transactions.push(data.transaction);
+        applySummary(b, data.summary);
+
         toast(isDeposit ? "জমা হয়েছে ✔" : "উত্তোলন হয়েছে ✔", "success");
         if (currentView === "viewBank") renderBank(bankId);
         else renderDashboard();
     } catch (err) {
-        toast("কিছু ভুল হয়েছে", "error");
+        toast("সেভ করা যায়নি: " + err.message, "error");
     }
 }
 
@@ -603,10 +716,7 @@ function renderBank(id) {
                 </div>
                 <div class="lg-main">
                     <div class="lg-note">${isDeposit ? "জমা" : "উত্তোলন"}</div>
-                    ${personName
-                        ? `<div class="lg-person">👤 ${personName}</div>`
-                        : ""
-                    }
+                    ${personName ? `<div class="lg-person">👤 ${personName}</div>` : ""}
                     <div class="lg-date">${fmtDate(tx.date)}</div>
                 </div>
                 <div class="lg-col ${isDeposit ? "lg-in" : "lg-out"}">
@@ -616,36 +726,49 @@ function renderBank(id) {
             </div>`;
             })
             .join("")
-        : `<div class="empty" style="padding:40px 20px;border:0;background:transparent">
+        : `<div class="empty" style="padding:40px 20px;border:0;background:transparent;box-shadow:none">
                <div class="icon">📭</div>
                <p>এখনো কোনো লেনদেন নেই।</p>
            </div>`;
 
     document.getElementById("bankDetail").innerHTML = `
-        <div class="panel">
-            <div class="bank-header">
-                ${avatarHTML(b, "avatar-lg")}
-                <div class="bank-header-info">
-                    <h2 class="bank-header-name">${esc(b.name)}</h2>
+        <div class="bank-hero">
+            <div class="bank-hero-top">
+                <div class="bank-hero-info">
+                    <h2>${esc(b.name)}</h2>
                     ${b.accountNumber
-            ? `<div class="bank-header-sub">অ্যাকাউন্ট: ${esc(
-                b.accountNumber
-            )}</div>`
-            : ""
+            ? `<p>অ্যাকাউন্ট: ${esc(b.accountNumber)}</p>`
+            : `<p>${bnNumber(txns.length)}টি লেনদেন</p>`
         }
-                    <div class="lg-big">${money(t.balance)}</div>
-                    <div class="lg-big-label">বর্তমান ব্যালেন্স</div>
                 </div>
+                <button class="bank-del" type="button" data-del-bank="${b.id}"
+                        aria-label="ব্যাংক মুছুন" title="মুছুন">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                        <path d="M10 11v6M14 11v6"></path>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                    </svg>
+                    <span>মুছুন</span>
+                </button>
             </div>
 
-            <div class="lg-totals">
-                <div class="lg-total lg-total-in">
-                    <span>মোট জমা</span>
-                    <b>${money(t.deposited)}</b>
+            <div class="bank-hero-bal">
+                <b class="ph-bal">${money(t.balance)}</b>
+                <span class="ph-state">বর্তমান ব্যালেন্স</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="sum-grid">
+                <div class="sum-item sum-item--in">
+                    <span class="sum-label">মোট জমা</span>
+                    <span class="sum-value">${money(t.deposited)}</span>
                 </div>
-                <div class="lg-total lg-total-out">
-                    <span>মোট উত্তোলন</span>
-                    <b>${money(t.withdrawn)}</b>
+                <div class="sum-item sum-item--out">
+                    <span class="sum-label">মোট উত্তোলন</span>
+                    <span class="sum-value">${money(t.withdrawn)}</span>
                 </div>
             </div>
 
@@ -660,21 +783,69 @@ function renderBank(id) {
         </div>
 
         <div class="panel lg-panel">
-            <h3 class="section-label">📜 লেনদেন (${bnNumber(txns.length)})</h3>
+            <div class="section-head" style="margin:0 0 12px">
+                <h2 class="section-title"><span class="title-dot"></span>লেনদেন</h2>
+                <span class="section-count">${bnNumber(txns.length)}</span>
+            </div>
             ${rowsHtml}
         </div>
     `;
 
-    /* -------- wire up -------- */
     const detail = document.getElementById("bankDetail");
     detail.querySelectorAll("[data-txn]").forEach((el) => {
-        el.addEventListener("click", () =>
-            quickTxn(el.dataset.id, el.dataset.txn)
-        );
+        el.addEventListener("click", () => quickTxn(el.dataset.id, el.dataset.txn));
     });
     detail.querySelectorAll("[data-del]").forEach((el) => {
         el.addEventListener("click", () => deleteTxn(b.id, el.dataset.del));
     });
+    detail.querySelectorAll("[data-del-bank]").forEach((el) => {
+        el.addEventListener("click", () => removeBank(el.dataset.delBank));
+    });
+}
+
+/* ============================================================
+   DELETE BANK
+   ============================================================ */
+async function removeBank(bankId) {
+    const b = getBank(bankId);
+    if (!b) return;
+
+    const count = (b.transactions || []).length;
+    const t = totalsOf(b);
+
+    const ok = await confirmModal({
+        title: "ব্যাংক মুছে ফেলবেন?",
+        description:
+            `<b>${esc(b.name)}</b> সম্পূর্ণভাবে মুছে ফেলা হবে।` +
+            (count
+                ? ` এর <b>${bnNumber(count)}টি</b> লেনদেনের হিসাবও (বর্তমান ব্যালেন্স <b>${money(
+                    t.balance
+                )}</b>) মুছে যাবে।`
+                : "") +
+            `<br><br>এই কাজটি ফিরিয়ে আনা যাবে না।`,
+        submitLabel: "মুছুন",
+        cancelLabel: "বাতিল",
+        danger: true,
+    });
+    if (!ok) return;
+
+    const btns = document.querySelectorAll(
+        `[data-del-bank="${CSS.escape(String(bankId))}"]`
+    );
+    btns.forEach((btn) => (btn.disabled = true));
+
+    try {
+        await apiDeleteBank(bankId);
+
+        db.banks = db.banks.filter((x) => x.id !== bankId);
+        currentBankId = null;
+
+        toast(`${b.name} মুছে ফেলা হয়েছে`, "success");
+        showDashboard();
+    } catch (err) {
+        btns.forEach((btn) => (btn.disabled = false));
+        toast("মুছতে পারা যায়নি: " + err.message, "error");
+    }
 }
 
 /* ============================================================
@@ -683,39 +854,61 @@ function renderBank(id) {
 async function deleteTxn(bankId, txnId) {
     const ok = await confirmModal({
         title: "লেনদেন মুছে ফেলবেন?",
-        description:
-            "চাইলে সাথে সাথে ফিরিয়ে আনতে পারবেন।",
+        description: "চাইলে সাথে সাথে ফিরিয়ে আনতে পারবেন।",
         submitLabel: "মুছুন",
         cancelLabel: "বাতিল",
         danger: true,
     });
     if (!ok) return;
 
+    const b = getBank(bankId);
+    if (!b) return;
+
+    const idx = (b.transactions || []).findIndex((t) => t.id === txnId);
+    if (idx < 0) return;
+    const removed = b.transactions[idx];
+
     try {
-        const removed = deleteTransaction(bankId, txnId);
+        const data = await apiDeleteTransaction(bankId, txnId);
+
+        b.transactions.splice(idx, 1);
+        if (data && data.summary) applySummary(b, data.summary);
+        else b.summary = null;
 
         if (currentView === "viewBank") renderBank(bankId);
         else renderDashboard();
 
         toast("মুছে ফেলা হয়েছে", "", {
             actionLabel: "ফিরিয়ে আনুন",
-            onAction: () => {
-                restoreTransaction(bankId, removed);
-                if (currentView === "viewBank") renderBank(bankId);
-                else renderDashboard();
-                toast("ফিরিয়ে আনা হয়েছে", "success");
+            onAction: async () => {
+                try {
+                    const restored = await apiAddTransaction(bankId, {
+                        type: removed.type,
+                        amount: removed.amount,
+                        date: removed.date,
+                        name: removed.name || null,
+                        notes: removed.notes || null,
+                    });
+                    b.transactions.push(restored.transaction);
+                    applySummary(b, restored.summary);
+                    if (currentView === "viewBank") renderBank(bankId);
+                    else renderDashboard();
+                    toast("ফিরিয়ে আনা হয়েছে", "success");
+                } catch (err) {
+                    toast("ফিরিয়ে আনা যায়নি: " + err.message, "error");
+                }
             },
             duration: 4500,
         });
     } catch (err) {
-        toast("মুছতে পারা যায়নি", "error");
+        toast("মুছতে পারা যায়নি: " + err.message, "error");
     }
 }
 
 /* ============================================================
    SUBMIT BANK
    ============================================================ */
-function submitBank(e) {
+async function submitBank(e) {
     e.preventDefault();
     const f = new FormData(e.target);
     const name = String(f.get("name") || "").trim();
@@ -727,24 +920,39 @@ function submitBank(e) {
         return;
     }
 
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : "";
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "সেভ হচ্ছে…";
+    }
+
     try {
-        const b = createBank({ name, accountNumber });
+        const b = await apiCreateBank({ name, accountNumber });
+        db.banks.push(b);
 
         /* Starting balance = first deposit */
         if (balance > 0) {
-            addTransaction(b.id, {
+            const data = await apiAddTransaction(b.id, {
                 type: "deposit",
                 amount: balance,
                 date: new Date().toISOString(),
                 notes: "শুরুর ব্যালেন্স",
             });
+            b.transactions.push(data.transaction);
+            applySummary(b, data.summary);
         }
 
         e.target.reset();
         toast("যোগ হয়েছে ✔", "success");
         showDashboard();
     } catch (err) {
-        toast("যোগ করা যায়নি", "error");
+        toast("যোগ করা যায়নি: " + err.message, "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
     }
 }
 
@@ -803,36 +1011,53 @@ document.addEventListener(
 /* ============================================================
    INIT
    ============================================================ */
-function init() {
+async function init() {
     renderLogo();
 
-    document.getElementById("backBtn").addEventListener("click", () => {
-        if (currentView === "viewAddBank" || currentView === "viewBank") {
-            showDashboard();
-            return;
-        }
-        window.location.href = "/";
-    });
+    const backBtn = document.getElementById("backBtn");
+    if (backBtn) {
+        backBtn.addEventListener("click", () => {
+            if (currentView === "viewAddBank" || currentView === "viewBank") {
+                showDashboard();
+                return;
+            }
+            window.location.href = "/";
+        });
+    }
 
-    document
-        .getElementById("addBankBtn")
-        .addEventListener("click", showAddBank);
+    const addBtn = document.getElementById("addBankBtn");
+    if (addBtn) addBtn.addEventListener("click", showAddBank);
 
     const searchBox = document.getElementById("searchBox");
     const searchClear = document.getElementById("searchClear");
 
-    searchBox.addEventListener("input", renderDashboard);
-    searchClear.addEventListener("click", () => {
-        searchBox.value = "";
-        searchBox.focus();
-        renderDashboard();
-    });
+    if (searchBox) searchBox.addEventListener("input", renderDashboard);
+    if (searchClear) {
+        searchClear.addEventListener("click", () => {
+            if (searchBox) searchBox.value = "";
+            if (searchBox) searchBox.focus();
+            renderDashboard();
+        });
+    }
 
-    document
-        .getElementById("addBankForm")
-        .addEventListener("submit", submitBank);
+    const form = document.getElementById("addBankForm");
+    if (form) form.addEventListener("submit", submitBank);
 
+    const topbar = document.getElementById("topbar");
+    if (topbar) {
+        window.addEventListener(
+            "scroll",
+            () => {
+                topbar.classList.toggle("scrolled", window.scrollY > 8);
+            },
+            { passive: true }
+        );
+    }
+
+    /* start — show loading then fetch from backend */
+    loading = true;
     showDashboard();
+    await reload();
 }
 
 init();

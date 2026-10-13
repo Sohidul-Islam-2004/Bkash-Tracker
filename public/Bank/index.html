@@ -2,165 +2,134 @@
 <html lang="bn">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-    />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0a5c3e" />
+    <meta name="format-detection" content="telephone=no" />
     <title>ব্যাংক হিসাব</title>
-
-    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="style.css" />
   </head>
 
   <body>
-    <header class="topbar">
-      <div class="topbar-left">
-        <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+    <!-- ============ TOPBAR ============ -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-inner">
+        <button class="icon-btn back-btn" id="backBtn" aria-label="ফিরে যান">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
-        <img id="brandLogo" alt="" />
-        <div class="topbar-titles">
-          <h1 id="pageTitle">ব্যাংক হিসাব</h1>
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="el-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#0f8055" />
+                  <stop offset="55%" stop-color="#0a5c3e" />
+                  <stop offset="100%" stop-color="#063d29" />
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
+              <path d="M50 18 L82 36 L82 43 L18 43 L18 36 Z" fill="#ffffff" />
+              <rect x="24" y="48" width="7" height="26" fill="#ffffff" />
+              <rect x="41" y="48" width="7" height="26" fill="#ffffff" />
+              <rect x="59" y="48" width="7" height="26" fill="#ffffff" />
+              <rect x="76" y="48" width="7" height="26" fill="#ffffff" />
+              <rect x="18" y="78" width="64" height="7" fill="#ffffff" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 id="pageTitle">ব্যাংক হিসাব</h1>
+            <span class="brand-sub" id="pageSub">সব ব্যাংকের হিসাব</span>
+          </div>
         </div>
       </div>
     </header>
 
+    <!-- ============ MAIN ============ -->
     <main class="container">
-      <!-- ========================================================
-           VIEW: DASHBOARD
-      ========================================================= -->
+      <!-- ============ DASHBOARD ============ -->
       <section id="viewDashboard" class="view">
-        <!-- HERO TOTAL BALANCE -->
-        <div class="hero">
-          <div class="hero-label">মোট ব্যালেন্স</div>
-          <div class="hero-amount" id="heroAmount">৳০</div>
-          <div class="hero-sub" id="heroSub">০টি ব্যাংক</div>
-        </div>
+        <div id="dashHero"></div>
 
-        <!-- SEARCH + ADD -->
         <div class="searchbar" id="searchBar">
           <div class="search-wrap">
-            <input
-              id="searchBox"
-              type="search"
-              placeholder="ব্যাংক খুঁজুন"
-              autocomplete="off"
-            />
-            <button
-              type="button"
-              class="search-clear"
-              id="searchClear"
-              aria-label="মুছুন"
-              hidden
-            >
-              ✕
-            </button>
+            <input id="searchBox" type="search" placeholder="ব্যাংক খুঁজুন" autocomplete="off" />
+            <button type="button" class="search-clear" id="searchClear" aria-label="মুছুন" hidden>✕</button>
           </div>
-          <button
-            class="add-btn"
-            type="button"
-            id="addBankBtn"
-            aria-label="নতুন ব্যাংক যোগ করুন"
-          >
+          <button class="add-btn" type="button" id="addBankBtn" aria-label="নতুন ব্যাংক যোগ করুন">
             <span class="add-plus">+</span> যোগ
           </button>
         </div>
 
-        <div id="banksList" class="banks-list"></div>
+        <div class="section-head" id="banksHead">
+          <h2 class="section-title"><span class="title-dot"></span>ব্যাংক</h2>
+          <span class="section-count" id="banksCount">০ টি</span>
+        </div>
+
+        <div id="banksList" class="list-stack"></div>
       </section>
 
-      <!-- ========================================================
-           VIEW: ADD BANK
-      ========================================================= -->
+      <!-- ============ ADD BANK ============ -->
       <section id="viewAddBank" class="view hidden">
         <div class="panel">
-          <h2 class="panel-title">
-            <span class="panel-title-icon">🏦</span>
-            নতুন ব্যাংক
-          </h2>
+          <div class="panel-head">
+            <div class="panel-head-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18" />
+                <path d="M5 21V10l7-5 7 5v11" />
+                <path d="M9 21v-6h6v6" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="panel-head-title">নতুন ব্যাংক</h2>
+              <p class="panel-head-sub">নাম ও শুরুর ব্যালেন্স লিখুন</p>
+            </div>
+          </div>
 
           <form id="addBankForm" autocomplete="off">
             <div class="field">
-              <label for="abName"
-                >ব্যাংকের নাম <span class="req">*</span></label
-              >
-              <input
-                id="abName"
-                name="name"
-                type="text"
-                required
-                placeholder="যেমন: ডাচ-বাংলা ব্যাংক"
-                autocomplete="off"
-              />
+              <label for="abName">ব্যাংকের নাম <span class="req">*</span></label>
+              <input id="abName" name="name" type="text" required placeholder="যেমন: ডাচ-বাংলা ব্যাংক" autocomplete="off" />
             </div>
 
             <div class="field">
-              <label for="abAcc"
-                >অ্যাকাউন্ট নম্বর
-                <span class="opt">(না দিলেও চলবে)</span></label
-              >
-              <input
-                id="abAcc"
-                name="accountNumber"
-                type="text"
-                inputmode="numeric"
-                placeholder="XXXXXXXXXXXX"
-                autocomplete="off"
-              />
+              <label for="abAcc">অ্যাকাউন্ট নম্বর <span class="opt">(ঐচ্ছিক)</span></label>
+              <input id="abAcc" name="accountNumber" type="text" inputmode="numeric" placeholder="XXXXXXXXXXXX" autocomplete="off" />
             </div>
 
             <div class="field">
-              <label for="abBalance"
-                >বর্তমান ব্যালেন্স
-                <span class="opt">(না দিলেও চলবে)</span></label
-              >
+              <label for="abBalance">বর্তমান ব্যালেন্স <span class="opt">(ঐচ্ছিক)</span></label>
               <div class="money-input">
                 <span class="money-prefix">৳</span>
-                <input
-                  id="abBalance"
-                  name="balance"
-                  type="number"
-                  min="0"
-                  step="1"
-                  inputmode="numeric"
-                  placeholder="0"
-                />
+                <input id="abBalance" name="balance" type="number" min="0" step="1" inputmode="numeric" placeholder="0" />
               </div>
               <p class="hint">এই টাকা শুরুর জমা হিসেবে যোগ হবে।</p>
             </div>
 
-            <button class="btn btn-primary btn-block btn-xl" type="submit">
+            <button class="btn btn-primary btn-block" type="submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
               সংরক্ষণ করুন
             </button>
           </form>
         </div>
       </section>
 
-      <!-- ========================================================
-           VIEW: BANK DETAIL
-      ========================================================= -->
+      <!-- ============ BANK DETAIL ============ -->
       <section id="viewBank" class="view hidden">
         <div id="bankDetail"></div>
       </section>
     </main>
 
+    <!-- ============ TOAST + MODAL ROOT ============ -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div id="modalRoot"></div>
 
