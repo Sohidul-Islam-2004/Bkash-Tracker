@@ -536,7 +536,7 @@ function renderDashboard() {
                 <div class="empty">
                     <div class="icon">📋</div>
                     <h3>এখনো কেউ যোগ করা হয়নি</h3>
-                    <p>হিসাব শুরু করতে "যোগ" বাটনে চাপ দিন।</p>
+                    <p>হিসাব শুরু করতে উপরে "মানুষ যোগ করুন" বাটনে চাপ দিন।</p>
                 </div>`;
         }
         return;

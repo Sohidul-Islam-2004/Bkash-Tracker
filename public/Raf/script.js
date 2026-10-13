@@ -45,85 +45,166 @@ function fmtDateTime(ts) {
 }
 
 /* ============================================================
-   PARSE ENTRY TEXT
+   PARSE  (rule: 11-digit phone  →  first number after it = amount)
    ============================================================ */
-function normalizePhone(raw) {
-    let d = raw.replace(/\D/g, '');
-    if (d.startsWith('00')) d = d.slice(2);
-    if (d.startsWith('880')) d = d.slice(3);
-    else if (d.startsWith('88')) d = d.slice(2);
-    if (!d.startsWith('0')) d = '0' + d;
-    if (d.length === 11 && d.startsWith('01')) return d;
-    if (d.length > 11) {
-        for (let i = 0; i + 11 <= d.length; i++) {
-            const sub = d.slice(i, i + 11);
-            if (sub.startsWith('01')) return sub;
-        }
+
+/* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
+function cleanText(s) {
+    return fromBn(String(s || ''))
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '')
+        .replace(/[\u00A0\u202F]/g, ' ');
+}
+
+/* BD mobile: 01[3-9] + 8 digits = 11 digits.
+   Tolerates "880"/"+88" prefix and single space / dot / dash between digits
+   (e.g. "0 1985-521016").  Any digits glued straight onto the 11 digits
+   (typo like 017858528333) are swallowed so they never become the amount. */
+const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
+
+/* first positive number in text: 40,000 · 10200 · 1,02,000 · 3060 */
+function extractAmount(str) {
+    if (!str) return null;
+    const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
+    const re = /\d{1,3}(?:,\d{2,3})+(?!\d)|\d+/g;
+    let m;
+    while ((m = re.exec(cleaned))) {
+        const n = Number(m[0].replace(/,/g, ''));
+        if (Number.isFinite(n) && n > 0) return n;
     }
     return null;
 }
 
-function extractPhone(line) {
-    const re = /(?:(?:\+|00)?88[\s\-]?)?0[\s\-]?1[\s\-]?\d{3}[\s\-]?\d{6}/;
-    const m = line.match(re);
-    if (!m) return null;
-    const number = normalizePhone(m[0]);
-    if (!number) return null;
-    return { number, index: m.index, length: m[0].length };
+/* every phone in a line, with the text that follows it (up to the next phone) */
+function splitByPhone(body) {
+    const hits = [];
+    let m;
+    PHONE_RE.lastIndex = 0;
+    while ((m = PHONE_RE.exec(body))) {
+        hits.push({
+            number: m[1].replace(/\D/g, ''),
+            start: m.index,
+            end: m.index + m[0].length,
+            glued: m[2]            // extra digits stuck to the phone (typo)
+        });
+    }
+    return hits.map((h, i) => ({
+        number: h.number,
+        glued: h.glued,
+        start: h.start,
+        end: h.end,
+        after: body.slice(h.end, i + 1 < hits.length ? hits[i + 1].start : body.length)
+    }));
 }
 
-function extractAmount(str) {
-    if (!str) return null;
-    const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
-    const m = cleaned.match(/\d+(?:,\d{3})*/);
-    if (!m) return null;
-    const n = Number(m[0].replace(/,/g, ''));
-    return Number.isFinite(n) && n > 0 ? n : null;
+/* digit runs that look like a phone number but are NOT a valid 11-digit one.
+   (amounts never have 10+ digits, and never start with 0 and run 8+ digits) */
+function findBadNumbers(body, parts) {
+    const bad = [];
+    const re = /\d+/g;
+    let m;
+    while ((m = re.exec(body))) {
+        const s0 = m.index, e0 = s0 + m[0].length;
+        if (parts.some(p => s0 < p.end && e0 > p.start)) continue;   // part of a valid phone
+        const len = m[0].length;
+        if (len >= 10 || (m[0][0] === '0' && len >= 8)) bad.push({ digits: len });
+    }
+    /* spaced / dashed number such as "0 1985-52101" with the wrong digit count */
+    if (!bad.length && !parts.length && /^(?:\+?88[ .\-]?)?0[ .\-]?1[ .\-]?\d/.test(body)) {
+        bad.push({ digits: null });
+    }
+    return bad;
 }
+
+const HEADER_RES = [
+    /^\[[^\]]*\]\s*[^:]*:\s*/,                                   // [10/13, 9:37 AM] Name:
+    /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s*\d{1,2}:\d{2}(?::\d{2})?\s*(?:[AaPp]\.?[Mm]\.?)?\s*-\s*[^:]*:\s*/ // 10/13/25, 9:37 AM - Name:
+];
 
 function parseEntries(text) {
     const out = [];
-    const lines = fromBn(String(text || '')).split(/\r?\n/);
+    const warnings = [];
+    const errors = [];
     let pending = null;
+    const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message)$/i;
+    const badReason = n => n
+        ? `নম্বর ভুল: ${n} ডিজিট (১১ ডিজিট হতে হবে)`
+        : 'নম্বর ভুল: ১১ ডিজিট নয়';
 
-    for (const raw of lines) {
-        const line = raw.trim();
-        if (!line) continue;
-
-        let body = line;
-        // WhatsApp style: "12/01/2026, 10:30 AM - Name: message"
-        let m = line.match(
-            /^\d{1,2}\/\d{1,2}\/\d{2,4},\s*\d{1,2}:\d{2}\s*(?:AM|PM)?\s*-\s*[^:]+:\s*([\s\S]*)$/i
-        );
-        if (m) body = m[1];
-        else {
-            m = line.match(
-                /^\[\d{1,2}\/\d{1,2},\s*\d{1,2}:\d{2}\s*(?:AM|PM)\]\s*[^:]+:\s*([\s\S]*)$/i
-            );
-            if (m) body = m[1];
-        }
-        body = body.trim();
+    for (const raw of cleanText(text).split(/\r?\n/)) {
+        let body = raw.trim();
         if (!body) continue;
 
-        const phone = extractPhone(body);
-        if (phone) {
-            const after = body.slice(phone.index + phone.length);
-            const amount = extractAmount(after);
-            if (amount != null) {
-                out.push({ number: phone.number, amount });
+        let isNewMsg = false;
+        for (const re of HEADER_RES) {
+            if (re.test(body)) { body = body.replace(re, ''); isNewMsg = true; break; }
+        }
+        body = body.trim();
+        if (!body || skipRe.test(body)) { if (isNewMsg) pending = null; continue; }
+
+        const parts = splitByPhone(body);
+
+        /* wrong numbers (too short / too long) */
+        const bad = findBadNumbers(body, parts);
+        bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
+
+        if (parts.length) {
+            if (pending) {
+                warnings.push(`amount missing for ${pending.number}`);
                 pending = null;
-            } else {
-                pending = { number: phone.number };
             }
+            for (const p of parts) {
+                if (p.glued) {
+                    /* 12+ digits glued together → wrong number, do not guess */
+                    errors.push({ line: body, reason: badReason(11 + p.glued.length) });
+                    pending = null;
+                    continue;
+                }
+                const amount = extractAmount(p.after);
+                if (amount != null) out.push({ number: p.number, amount });
+                else pending = { number: p.number };
+            }
+        } else if (bad.length) {
+            pending = null;
         } else if (pending) {
+            /* continuation line (e.g. "40,000/=" under the phone) */
             const amount = extractAmount(body);
             if (amount != null) {
                 out.push({ number: pending.number, amount });
                 pending = null;
+            } else if (isNewMsg) {
+                pending = null;    // a different message with no number: drop it
             }
         }
     }
+    if (pending) warnings.push(`amount missing for ${pending.number}`);
+    out.warnings = warnings;
+    out.errors = errors;
     return out;
+}
+
+/* ============================================================
+   WRONG-NUMBER BOX  (shown under the text area)
+   ============================================================ */
+function showEntryErrors(errs) {
+    let box = document.getElementById('entryErrors');
+    if (!errs || !errs.length) {
+        if (box) box.remove();
+        return;
+    }
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'entryErrors';
+        document.getElementById('entryInput').insertAdjacentElement('afterend', box);
+    }
+    box.style.cssText =
+        'margin:8px 0;padding:10px;border:1px solid #e5484d;border-radius:10px;' +
+        'background:rgba(229,72,77,.08);color:#e5484d;font-size:13px;line-height:1.5;';
+    box.innerHTML =
+        `<b>⚠ ${errs.length} টি ভুল এন্ট্রি</b>` +
+        errs.map(x =>
+            `<div style="margin-top:6px"><span dir="ltr" style="word-break:break-all">${escapeHtml(x.line)}</span>` +
+            `<br><small>${x.reason}</small></div>`
+        ).join('');
 }
 
 /* ============================================================
@@ -261,6 +342,7 @@ const sheetBg = document.getElementById('sheetBg');
 function openSheet() {
     document.getElementById('entryInput').value = '';
     document.getElementById('noteInput').value = '';
+    showEntryErrors([]);
     sheet.classList.add('show');
     sheetBg.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -277,6 +359,9 @@ document.getElementById('addBtn').onclick = openSheet;
 document.getElementById('closeBtn').onclick = closeSheet;
 sheetBg.onclick = closeSheet;
 
+/* clear the red box as soon as the text is edited */
+document.getElementById('entryInput').addEventListener('input', () => showEntryErrors([]));
+
 /* Paste button */
 document.getElementById('pasteBtn').onclick = async () => {
     try {
@@ -284,6 +369,7 @@ document.getElementById('pasteBtn').onclick = async () => {
         if (txt) {
             const ta = document.getElementById('entryInput');
             ta.value = ta.value ? ta.value + '\n' + txt : txt;
+            showEntryErrors([]);
             toast('পেস্ট হয়েছে', 'ok');
         }
     } catch {
@@ -301,6 +387,14 @@ document.getElementById('saveBtn').onclick = () => {
     if (!raw) return toast('এন্ট্রি পেস্ট করুন', 'err');
 
     const parsed = parseEntries(raw);
+
+    /* wrong number (not 11 digits) → show it and do NOT save */
+    if (parsed.errors && parsed.errors.length) {
+        showEntryErrors(parsed.errors);
+        return toast(parsed.errors.length + ' টি নম্বর ভুল — ঠিক করে আবার সেভ করুন', 'err');
+    }
+    showEntryErrors([]);
+
     if (!parsed.length) return toast('বৈধ কোনো এন্ট্রি পাওয়া যায়নি', 'err');
 
     const total = parsed.reduce((s, e) => s + e.amount, 0);
@@ -309,7 +403,7 @@ document.getElementById('saveBtn').onclick = () => {
         id: Date.now() + Math.random().toString(36).slice(2, 7),
         createdAt: Date.now(),
         note,
-        entries: parsed,
+        entries: parsed.map(p => ({ number: p.number, amount: p.amount })),
         total
     });
 
