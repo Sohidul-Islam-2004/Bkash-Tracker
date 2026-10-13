@@ -3589,3 +3589,63 @@ body {
         max-width: 560px;
     }
 }
+.person {
+    border: 2px solid rgba(209, 32, 83, 0.25) !important;
+    box-shadow:
+        0 1px 2px rgba(20, 22, 34, 0.03),
+        0 4px 12px rgba(209, 32, 83, 0.06);
+}
+
+.person:hover {
+    border-color: var(--pink) !important;
+    box-shadow: 0 10px 22px rgba(209, 32, 83, 0.14);
+}
+/* ============================================================
+   DASHBOARD PERSON CARD — POP / ELEVATED
+   ============================================================ */
+.person {
+    background: var(--card);
+    border: 2px solid rgba(209, 32, 83, 0.18) !important;
+    border-radius: 18px;
+    padding: 16px 16px 14px;
+    box-shadow:
+        0 1px 2px rgba(20, 22, 34, 0.04),
+        0 6px 14px rgba(20, 22, 34, 0.06),
+        0 16px 32px rgba(209, 32, 83, 0.08),
+        0 0 0 4px rgba(209, 32, 83, 0.04);
+    transition:
+        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s;
+    will-change: transform;
+}
+
+/* kill any leftover decorative pseudos */
+.person::before,
+.person::after {
+    display: none !important;
+}
+
+.person:hover {
+    transform: translateY(-4px);
+    border-color: var(--pink) !important;
+    box-shadow:
+        0 2px 4px rgba(20, 22, 34, 0.05),
+        0 12px 24px rgba(20, 22, 34, 0.10),
+        0 24px 48px rgba(209, 32, 83, 0.18),
+        0 0 0 6px rgba(209, 32, 83, 0.08);
+}
+
+.person:active {
+    transform: translateY(-1px) scale(0.995);
+    box-shadow:
+        0 2px 6px rgba(20, 22, 34, 0.06),
+        0 8px 20px rgba(209, 32, 83, 0.12);
+}
+
+/* slightly denser grid so the pop shows */
+@media (min-width: 620px) {
+    .people-grid {
+        gap: 16px;
+    }
+}
