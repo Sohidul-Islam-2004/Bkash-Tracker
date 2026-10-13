@@ -172,11 +172,15 @@ const PawnaSchema = new mongoose.Schema(
 const PawnaPersonSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true },
+
+
+        totalSend: { type: Number, default: 0 },
+        totalReceive: { type: Number, default: 0 },
+
         transactions: { type: [PawnaSchema], default: [] },
     },
     { timestamps: true }
 );
-
 
 
 

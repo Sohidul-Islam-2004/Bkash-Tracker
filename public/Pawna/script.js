@@ -89,6 +89,7 @@ async function apiAddTransaction(personId, txn) {
             body: JSON.stringify(txn),
         }
     );
+
     if (!data || !data.transaction) throw new Error("Invalid response");
     return data;
 }
@@ -879,27 +880,7 @@ async function deleteTxn(personId, txnId) {
         if (currentView === "viewPerson") renderPerson(personId);
         else renderDashboard();
 
-        toast("মুছে ফেলা হয়েছে", "", {
-            actionLabel: "ফিরিয়ে আনুন",
-            onAction: async () => {
-                try {
-                    const restored = await apiAddTransaction(personId, {
-                        type: removed.type,
-                        amount: removed.amount,
-                        date: removed.date,
-                        notes: removed.notes || null,
-                    });
-                    p.transactions.push(restored.transaction);
-                    applySummary(p, restored.summary);
-                    if (currentView === "viewPerson") renderPerson(personId);
-                    else renderDashboard();
-                    toast("ফিরিয়ে আনা হয়েছে", "success");
-                } catch (err) {
-                    toast("ফিরিয়ে আনা যায়নি: " + err.message, "error");
-                }
-            },
-            duration: 4500,
-        });
+      
     } catch (err) {
         toast("মুছতে পারা যায়নি: " + err.message, "error");
     }
@@ -999,7 +980,7 @@ document.addEventListener("contextmenu", (e) => {
 let lastTouchEnd = 0;
 document.addEventListener(
     "touchend",
-    () => {
+    (e) => {
         const now = Date.now();
         if (now - lastTouchEnd <= 300) e.preventDefault();
         lastTouchEnd = now;
@@ -1034,16 +1015,10 @@ async function init() {
 
     /* search */
     const searchBox = document.getElementById("searchBox");
-    const searchClear = document.getElementById("searchClear");
+
 
     if (searchBox) searchBox.addEventListener("input", renderDashboard);
-    if (searchClear) {
-        searchClear.addEventListener("click", () => {
-            if (searchBox) searchBox.value = "";
-            if (searchBox) searchBox.focus();
-            renderDashboard();
-        });
-    }
+   
 
     /* form */
     const form = document.getElementById("addPersonForm");
