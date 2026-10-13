@@ -1227,3 +1227,56 @@ textarea:focus {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ------------------------------------------------------------
+   PERSON DELETE BUTTON (inside person view)
+------------------------------------------------------------ */
+.person-del {
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 34px;
+    padding: 0 11px;
+    margin-top: 2px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--red-soft);
+    color: var(--red-ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s, opacity 0.15s;
+}
+
+.person-del:hover {
+    background: #fbd8de;
+}
+
+.person-del:active {
+    transform: scale(0.94);
+}
+
+.person-del:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.person-del svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* icon-only on very small screens */
+@media (max-width: 380px) {
+    .person-del {
+        padding: 0 9px;
+    }
+
+    .person-del span {
+        display: none;
+    }
+}

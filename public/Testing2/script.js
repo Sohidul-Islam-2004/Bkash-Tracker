@@ -7,30 +7,15 @@
      POST   /api/people/pawna                              → { person: {...} }
      POST   /api/people/pawna/:id/transactions             → { transaction, summary }
      DELETE /api/people/pawna/:id/transactions/:txnId      → { ok, summary }
+     DELETE /api/people/pawna/:id                          → { ok }
 
    Person shape:
      { id, name, createdAt, summary, transactions: [...] }
-
-   Summary shape (from server):
-     { totalSend, totalReceive, net, status }
-
-   Transaction shape:
-     { id, type: "send"|"receive", amount, date, notes }
-
-   Convention:
-     "send"    = আমি বাকি দিয়েছি (I gave / they owe me)
-     "receive" = আমি টাকা পেয়েছি (I received money back)
-     net = totalSend − totalReceive
-     net > 0  → "পাব"   (they owe me)   → green
-     net < 0  → "দেব"   (I owe them)    → red
-     net = 0  → "সমান"
    ============================================================ */
 
 /* ------------------------------------------------------------
    CONFIG
 ------------------------------------------------------------ */
-// "" = same origin (Express serves the HTML too)
-// "http://localhost:3000" = Live Server / different origin
 const API_BASE = "";
 const API_ROOT = "/api/pawna/people";
 
@@ -44,10 +29,10 @@ async function api(path, options = {}) {
     let res;
     try {
         res = await fetch(url, {
-            ...rest,                       // method, body, etc.
+            ...rest,
             headers: {
                 "Content-Type": "application/json",
-                ...(headers || {}),        // caller's headers merge in
+                ...(headers || {}),
             },
         });
     } catch (netErr) {
@@ -117,6 +102,13 @@ async function apiDeleteTransaction(personId, txnId) {
     );
 }
 
+/* ---- NEW: delete whole person ---- */
+async function apiDeletePerson(personId) {
+    return api(`${API_ROOT}/${encodeURIComponent(personId)}`, {
+        method: "DELETE",
+    });
+}
+
 /* ============================================================
    STATE
    ============================================================ */
@@ -137,24 +129,14 @@ function getPerson(id) {
    ============================================================ */
 function totalsOf(p) {
     if (p.summary) {
-        // Server may return totalSend/totalReceive OR totalPawna/totalPaid.
-        // Support both so it keeps working regardless of backend naming.
-        const given = Number(
-            p.summary.totalSend ??
-            p.summary.totalPawna ??
-            0
-        );
-        const got = Number(
-            p.summary.totalReceive ??
-            p.summary.totalPaid ??
-            0
-        );
+        const given = Number(p.summary.totalSend ?? p.summary.totalPawna ?? 0);
+        const got = Number(p.summary.totalReceive ?? p.summary.totalPaid ?? 0);
         const net = Number(p.summary.net ?? (given - got));
         return { given, got, net };
     }
 
-    let given = 0;   // বাকি দিয়েছি
-    let got = 0;     // টাকা পেয়েছি
+    let given = 0;
+    let got = 0;
     (p.transactions || []).forEach((t) => {
         const a = Number(t.amount || 0);
         if (t.type === "send" || t.type === "pawna") given += a;
@@ -648,7 +630,6 @@ async function quickTxn(id, type) {
             date: new Date().toISOString(),
         });
 
-        // Update local mirror
         p.transactions = p.transactions || [];
         p.transactions.push(data.transaction);
         applySummary(p, data.summary);
@@ -662,7 +643,7 @@ async function quickTxn(id, type) {
 }
 
 /* ============================================================
-   PERSON DETAIL — LEDGER
+   PERSON DETAIL — LEDGER  (with মুছুন option)
    ============================================================ */
 function renderPerson(id) {
     const p = getPerson(id);
@@ -713,6 +694,22 @@ function renderPerson(id) {
                     <div class="lg-big bal-${cls}">${money(Math.abs(t.net))}</div>
                     <div class="lg-big-label">${label}</div>
                 </div>
+                <button
+                    class="person-del"
+                    type="button"
+                    data-del-person="${p.id}"
+                    aria-label="ব্যক্তিকে মুছুন"
+                    title="মুছুন"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                        <path d="M10 11v6M14 11v6"></path>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                    </svg>
+                    <span>মুছুন</span>
+                </button>
             </div>
 
             <div class="lg-totals">
@@ -744,12 +741,68 @@ function renderPerson(id) {
 
     /* -------- wire up events -------- */
     const detail = document.getElementById("personDetail");
+
     detail.querySelectorAll("[data-txn]").forEach((el) => {
         el.addEventListener("click", () => quickTxn(el.dataset.id, el.dataset.txn));
     });
+
     detail.querySelectorAll("[data-del]").forEach((el) => {
         el.addEventListener("click", () => deleteTxn(p.id, el.dataset.del));
     });
+
+    /* NEW: whole-person delete */
+    detail.querySelectorAll("[data-del-person]").forEach((el) => {
+        el.addEventListener("click", () =>
+            deletePerson(el.dataset.delPerson)
+        );
+    });
+}
+
+/* ============================================================
+   DELETE PERSON (whole record)  ← NEW
+   ============================================================ */
+async function deletePerson(personId) {
+    const p = getPerson(personId);
+    if (!p) return;
+
+    const count = (p.transactions || []).length;
+    const t = totalsOf(p);
+    const balText =
+        t.net === 0 ? "সমান" : `${money(Math.abs(t.net))} ${balLabel(t.net)}`;
+
+    const ok = await confirmModal({
+        title: "মুছে ফেলবেন?",
+        description:
+            `<b>${esc(p.name)}</b> কে সম্পূর্ণভাবে মুছে ফেলা হবে।` +
+            (count
+                ? ` তার <b>${count}টি</b> লেনদেনের হিসাবও (বর্তমান ব্যালেন্স <b>${balText}</b>) মুছে যাবে।`
+                : "") +
+            `<br><br>এই কাজটি ফিরিয়ে আনা যাবে না।`,
+        submitLabel: "মুছুন",
+        cancelLabel: "বাতিল",
+        danger: true,
+    });
+    if (!ok) return;
+
+    /* disable button(s) while request is in-flight */
+    const btns = document.querySelectorAll(
+        `[data-del-person="${CSS.escape(String(personId))}"]`
+    );
+    btns.forEach((b) => (b.disabled = true));
+
+    try {
+        await apiDeletePerson(personId);
+
+        /* remove from local state */
+        db.people = db.people.filter((x) => x.id !== personId);
+        currentPersonId = null;
+
+        toast(`${p.name} মুছে ফেলা হয়েছে`, "success");
+        showDashboard();
+    } catch (err) {
+        btns.forEach((b) => (b.disabled = false));
+        toast("মুছতে পারা যায়নি: " + err.message, "error");
+    }
 }
 
 /* ============================================================
@@ -776,10 +829,9 @@ async function deleteTxn(personId, txnId) {
     try {
         const data = await apiDeleteTransaction(personId, txnId);
 
-        // Update local mirror
         p.transactions.splice(idx, 1);
         if (data && data.summary) applySummary(p, data.summary);
-        else p.summary = null; // force local recalc
+        else p.summary = null;
 
         if (currentView === "viewPerson") renderPerson(personId);
         else renderDashboard();

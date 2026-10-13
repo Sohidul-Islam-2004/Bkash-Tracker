@@ -813,7 +813,34 @@ app.delete("/api/pawna/people/:id/transactions/:txnId", async (req, res) => {
         res.status(500).json({ message: "সার্ভার ত্রুটি" });
     }
 });
+/* ============================================================
+   DELETE /api/pawna/people/:id
+   Removes a person and ALL of their transactions.
+   ============================================================ */
+app.delete("/api/pawna/people/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
 
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+
+        const person = await PawnaPerson.findById(id);
+        if (!person) {
+            return res.status(404).json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
+        }
+
+
+
+
+        await PawnaPerson.deleteOne({ _id: person._id });
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "মুছতে পারা যায়নি" });
+    }
+});
 /* ============================================================
    HELPER — build summary once, use everywhere
    ============================================================ */
