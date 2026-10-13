@@ -3578,3 +3578,14 @@ body {
     font-weight: 700;
     font-size: 15px;
 }
+
+/* Slightly wider edit modal on larger screens */
+.modal.modal-edit {
+    max-width: 520px;
+}
+
+@media (min-width: 720px) {
+    .modal.modal-edit {
+        max-width: 560px;
+    }
+}
