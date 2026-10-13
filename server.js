@@ -7,7 +7,7 @@ process.env.TZ = "Asia/Dhaka";
    IMPORTS
    ============================================================ */
 require("dotenv").config();
-const cron = require('node-cron');
+const cron = require("node-cron");
 const path = require("path");
 const dns = require("node:dns");
 const express = require("express");
@@ -15,7 +15,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const multer = require("multer");
 const { createClient } = require("@supabase/supabase-js");
-const { PersonSchema, TransactionSchema, EntriesSchema, GilaPersonSchema, PawnaPersonSchema } = require("./schema");
+const {
+    PersonSchema,
+    TransactionSchema,
+    EntriesSchema,
+    GilaPersonSchema,
+    PawnaPersonSchema,
+    BankSchema,
+} = require("./schema");
 
 /* DNS — helps MongoDB Atlas connect on some hosts */
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
@@ -43,6 +50,8 @@ const Transaction = mongoose.model("Transaction", TransactionSchema);
 const Entries = mongoose.model("Entries", EntriesSchema);
 const Gila = mongoose.model("Gila", GilaPersonSchema);
 const PawnaPerson = mongoose.model("Pawna", PawnaPersonSchema);
+const Bank = mongoose.model("Bank", BankSchema);
+
 mongoose
     .connect(process.env.DB_URL)
     .then(() => console.log("Cloud Database connected successfully!"))
@@ -53,7 +62,7 @@ mongoose
    ============================================================ */
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 /* ============================================================
@@ -112,7 +121,7 @@ async function uploadPhoto(file) {
         .from(BUCKET)
         .upload(storagePath, file.buffer, {
             contentType: file.mimetype,
-            upsert: false
+            upsert: false,
         });
 
     if (error) {
@@ -144,7 +153,6 @@ async function deletePhoto(url) {
 
 /* ============================================================
    USAGE — reads directly from the person's stored counters
-   (with day/month reset applied)
    ============================================================ */
 function getUsage(person) {
     const now = new Date();
@@ -160,7 +168,7 @@ function getUsage(person) {
         dailyUsed,
         monthlyUsed,
         remDaily: DAILY_LIMIT - dailyUsed,
-        remMonthly: MONTHLY_LIMIT - monthlyUsed
+        remMonthly: MONTHLY_LIMIT - monthlyUsed,
     };
 }
 
@@ -181,7 +189,7 @@ app.post(
             dailyUsedBase,
             monthlyUsedBase,
             baseDayKey,
-            baseMonthKey
+            baseMonthKey,
         } = req.body;
 
         const photo = req.file ? await uploadPhoto(req.file) : null;
@@ -196,7 +204,7 @@ app.post(
             dailyUsedBase: toNumber(dailyUsedBase),
             monthlyUsedBase: toNumber(monthlyUsedBase),
             baseDayKey: baseDayKey || dayKey(now),
-            baseMonthKey: baseMonthKey || monthKey(now)
+            baseMonthKey: baseMonthKey || monthKey(now),
         });
 
         res.status(201).json(person);
@@ -221,7 +229,9 @@ app.get(
     wrap(async (req, res) => {
         if (!isId(req.params.id)) throw new HttpError(400, "Invalid id");
 
-        const person = await Person.findById(req.params.id).populate("transactions");
+        const person = await Person.findById(req.params.id).populate(
+            "transactions"
+        );
         if (!person) throw new HttpError(404, "Person not found");
 
         res.json(person);
@@ -244,7 +254,7 @@ app.get(
             monthlyLimit: MONTHLY_LIMIT,
             ...u,
             dailyBlocked: u.remDaily <= 0,
-            monthlyBlocked: u.remMonthly <= 0
+            monthlyBlocked: u.remMonthly <= 0,
         });
     })
 );
@@ -260,23 +270,29 @@ app.patch(
         const b = req.body || {};
 
         if (b.name !== undefined) update.name = b.name;
-        if (b.whatsappNumber !== undefined) update.whatsappNumber = b.whatsappNumber;
-        if (b.initialBalance !== undefined) update.initialBalance = toNumber(b.initialBalance);
-        if (b.dailyUsedBase !== undefined) update.dailyUsedBase = toNumber(b.dailyUsedBase);
-        if (b.monthlyUsedBase !== undefined) update.monthlyUsedBase = toNumber(b.monthlyUsedBase);
+        if (b.whatsappNumber !== undefined)
+            update.whatsappNumber = b.whatsappNumber;
+        if (b.initialBalance !== undefined)
+            update.initialBalance = toNumber(b.initialBalance);
+        if (b.dailyUsedBase !== undefined)
+            update.dailyUsedBase = toNumber(b.dailyUsedBase);
+        if (b.monthlyUsedBase !== undefined)
+            update.monthlyUsedBase = toNumber(b.monthlyUsedBase);
         if (b.baseDayKey !== undefined) update.baseDayKey = b.baseDayKey;
         if (b.baseMonthKey !== undefined) update.baseMonthKey = b.baseMonthKey;
 
         let oldPhoto = null;
         if (req.file) {
-            const existing = await Person.findById(req.params.id).select("photo");
+            const existing = await Person.findById(req.params.id).select(
+                "photo"
+            );
             oldPhoto = existing && existing.photo;
             update.photo = await uploadPhoto(req.file);
         }
 
         const person = await Person.findByIdAndUpdate(req.params.id, update, {
             new: true,
-            runValidators: true
+            runValidators: true,
         }).populate("transactions");
 
         if (!person) throw new HttpError(404, "Person not found");
@@ -306,7 +322,6 @@ app.delete(
    ROUTES — TRANSACTIONS
    ============================================================ */
 
-/* Create transaction — MUTATES the person's balance and limits */
 async function createTransaction(req, res) {
     const personId = req.params.id;
     if (!isId(personId)) throw new HttpError(400, "Invalid id");
@@ -328,13 +343,11 @@ async function createTransaction(req, res) {
     const tKey = dayKey(now);
     const mKey = monthKey(now);
 
-    /* Current effective usage (with reset logic applied) */
     const curDaily =
         person.baseDayKey === tKey ? Number(person.dailyUsedBase) || 0 : 0;
     const curMonthly =
         person.baseMonthKey === mKey ? Number(person.monthlyUsedBase) || 0 : 0;
 
-    /* Server-side checks for send */
     if (type === "send") {
         if (curDaily >= DAILY_LIMIT) {
             throw new HttpError(400, "exceeds daily limit");
@@ -353,17 +366,15 @@ async function createTransaction(req, res) {
         }
     }
 
-    /* Duplicate TrxID check */
     const cleanTrx = trxId ? String(trxId).toUpperCase().trim() : null;
     if (cleanTrx) {
         const dup = await Transaction.findOne({
             person: personId,
-            trxId: cleanTrx
+            trxId: cleanTrx,
         });
         if (dup) throw new HttpError(400, "TrxID already exists");
     }
 
-    /* Create the transaction record */
     const transaction = await Transaction.create({
         person: personId,
         type,
@@ -372,15 +383,9 @@ async function createTransaction(req, res) {
         counterparty: counterparty || undefined,
         trxId: cleanTrx || undefined,
         verified: Boolean(cleanTrx),
-        notes: notes || undefined
+        notes: notes || undefined,
     });
 
-    /* ----------------------------------------------------------
-       MUTATE THE PERSON
-       — Reset day counter if a new day has started
-       — Reset month counter if a new month has started
-       — Apply the transaction effect
-       ---------------------------------------------------------- */
     if (person.baseDayKey !== tKey) {
         person.dailyUsedBase = 0;
         person.baseDayKey = tKey;
@@ -405,25 +410,23 @@ async function createTransaction(req, res) {
     res.status(201).json(transaction);
 }
 
-/* Both URLs are used by the frontend */
 app.post("/api/transactions/:id", wrap(createTransaction));
 app.post("/api/people/:id/transactions", wrap(createTransaction));
 
-/* ----------------------------------------------------------
-   Delete transaction — removes ONLY the record.
-   Balance and limits stay unchanged (frozen snapshot).
-   ---------------------------------------------------------- */
+/* Delete transaction — removes ONLY the record */
 app.delete(
     "/api/transactions/:id",
     wrap(async (req, res) => {
         if (!isId(req.params.id)) throw new HttpError(400, "Invalid id");
 
-        const transaction = await Transaction.findByIdAndDelete(req.params.id);
-        if (!transaction) throw new HttpError(404, "Transaction not found");
+        const transaction = await Transaction.findByIdAndDelete(
+            req.params.id
+        );
+        if (!transaction)
+            throw new HttpError(404, "Transaction not found");
 
-        /* Only remove the reference — do NOT touch balance or counters */
         await Person.findByIdAndUpdate(transaction.person, {
-            $pull: { transactions: transaction._id }
+            $pull: { transactions: transaction._id },
         });
 
         res.json({ msg: "ok" });
@@ -435,16 +438,20 @@ app.delete(
    ============================================================ */
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
-        return res.status(400).json({ error: `Upload error: ${err.message}` });
+        return res
+            .status(400)
+            .json({ error: `Upload error: ${err.message}` });
     }
     if (err.code === 11000) {
-        return res.status(400).json({ error: "This bKash number is already added" });
+        return res
+            .status(400)
+            .json({ error: "This bKash number is already added" });
     }
     if (err.name === "ValidationError") {
         return res.status(400).json({
             error: Object.values(err.errors)
                 .map((e) => e.message)
-                .join(", ")
+                .join(", "),
         });
     }
 
@@ -452,10 +459,13 @@ app.use((err, req, res, next) => {
     if (status === 500) console.error(err);
 
     res.status(status).json({
-        error: status === 500 ? "Internal server error" : err.message
+        error: status === 500 ? "Internal server error" : err.message,
     });
 });
 
+/* ============================================================
+   BUNDLE UPDATE
+   ============================================================ */
 app.patch(
     "/api/people/bandle/:id",
     wrap(async (req, res) => {
@@ -468,13 +478,13 @@ app.patch(
         if (bundleCount !== undefined) {
             update.bundleCount = toNumber(bundleCount);
 
-            // whenever bundleCount is edited, push expiry to today + 30 days
             const expiry = new Date();
             expiry.setDate(expiry.getDate() + 30);
             update.bundleExpiry = expiry;
         } else if (bundleExpiry !== undefined) {
-            // allow a manual expiry override when bundleCount isn't touched
-            update.bundleExpiry = bundleExpiry ? new Date(bundleExpiry) : null;
+            update.bundleExpiry = bundleExpiry
+                ? new Date(bundleExpiry)
+                : null;
         }
 
         const person = await Person.findByIdAndUpdate(
@@ -488,46 +498,37 @@ app.patch(
         res.json(person);
     })
 );
+
 /* ============================================================
-   START
+   ENTRIES (bKash)
    ============================================================ */
-
-
-
-
-
-
-
-
-
 app.post("/entries", async (req, res) => {
     try {
         const { date, entries, total, count, raw, deposit } = req.body;
 
-        // 1. validate
         if (!date || !Array.isArray(entries) || entries.length === 0) {
-            return res.status(400).json({ message: "date and entries required" });
+            return res
+                .status(400)
+                .json({ message: "date and entries required" });
         }
 
-        // 2. compute fallbacks if the client didn't send them
-        const safeTotal = Number(total) || entries.reduce((s, e) => s + (+e.amount || 0), 0);
+        const safeTotal =
+            Number(total) ||
+            entries.reduce((s, e) => s + (+e.amount || 0), 0);
         const safeCount = Number(count) || entries.length;
 
-        // 3. create
         const saved = await Entries.create({
             date,
             raw: raw || "",
             entries,
             total: safeTotal,
             deposit,
-            count: safeCount
+            count: safeCount,
         });
 
         console.log("saved:", saved._id, saved.date, saved.total);
 
-        // 4. return the created doc so the frontend can push it into `records[]`
         res.status(201).json(saved);
-
     } catch (err) {
         console.error("POST /api/entries failed:", err);
         res.status(500).json({ message: err.message });
@@ -544,17 +545,16 @@ app.get("/entries", async (req, res) => {
     }
 });
 
-
-
-
 app.delete("/entries/by-date/:date", async (req, res) => {
     try {
-        const del = await Entries.findOneAndDelete({ date: req.params.date });
+        const del = await Entries.findOneAndDelete({
+            date: req.params.date,
+        });
 
         if (!del) {
             return res.status(404).json({
                 ok: false,
-                message: "এই তারিখে কোনো এন্ট্রি পাওয়া যায়নি"
+                message: "এই তারিখে কোনো এন্ট্রি পাওয়া যায়নি",
             });
         }
 
@@ -564,24 +564,28 @@ app.delete("/entries/by-date/:date", async (req, res) => {
         console.error("delete error:", err);
         return res.status(500).json({
             ok: false,
-            message: err.message || "সার্ভার ত্রুটি"
+            message: err.message || "সার্ভার ত্রুটি",
         });
     }
 });
 
 /* ============================================================
-   PERSONS
+   GILA — PERSONS
    ============================================================ */
-
 app.get("/Gila/persons", async (req, res) => {
     const data = await Gila.find();
-    res.json(data.map(p => ({
-        id: p._id,
-        name: p.name,
-        advance: p.advance,
-        price: p.price,
-        totalPieces: (p.entries || []).reduce((s, e) => s + (e.pieces || 0), 0),
-    })));
+    res.json(
+        data.map((p) => ({
+            id: p._id,
+            name: p.name,
+            advance: p.advance,
+            price: p.price,
+            totalPieces: (p.entries || []).reduce(
+                (s, e) => s + (e.pieces || 0),
+                0
+            ),
+        }))
+    );
 });
 
 app.post("/Gila/persons", async (req, res) => {
@@ -603,29 +607,34 @@ app.put("/Gila/persons/:id", async (req, res) => {
         { name, advance, price },
         { new: true }
     );
-    if (!data) return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
+    if (!data)
+        return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
     res.json({
         id: data._id,
         name: data.name,
         advance: data.advance,
         price: data.price,
-        totalPieces: (data.entries || []).reduce((s, e) => s + (e.pieces || 0), 0),
+        totalPieces: (data.entries || []).reduce(
+            (s, e) => s + (e.pieces || 0),
+            0
+        ),
     });
 });
 
 app.delete("/Gila/persons/:id", async (req, res) => {
     const data = await Gila.findByIdAndDelete(req.params.id);
-    if (!data) return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
+    if (!data)
+        return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
     res.status(204).end();
 });
 
 /* ============================================================
-   ENTRIES
+   GILA — ENTRIES
    ============================================================ */
-
 app.get("/Gila/persons/:id/entries", async (req, res) => {
     const person = await Gila.findById(req.params.id);
-    if (!person) return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
+    if (!person)
+        return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
     res.json(person.entries);
 });
 
@@ -634,36 +643,40 @@ app.put("/Gila/persons/:id/entries/:date", async (req, res) => {
     const { id, date } = req.params;
 
     const person = await Gila.findById(id);
-    if (!person) return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
+    if (!person)
+        return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
 
-    const existing = person.entries.find(e => e.date === date);
+    const existing = person.entries.find((e) => e.date === date);
     if (existing) existing.pieces = pieces;
     else person.entries.push({ date, pieces });
 
     await person.save();
 
-    const saved = person.entries.find(e => e.date === date);
-    res.json({ id: saved._id, personId: person._id, date: saved.date, pieces: saved.pieces });
+    const saved = person.entries.find((e) => e.date === date);
+    res.json({
+        id: saved._id,
+        personId: person._id,
+        date: saved.date,
+        pieces: saved.pieces,
+    });
 });
 
 app.delete("/Gila/persons/:id/entries/:date", async (req, res) => {
     const { id, date } = req.params;
     const person = await Gila.findById(id);
-    if (!person) return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
+    if (!person)
+        return res.status(404).json({ message: "ব্যক্তি পাওয়া যায়নি" });
 
-    person.entries = person.entries.filter(e => e.date !== date);
+    person.entries = person.entries.filter((e) => e.date !== date);
     await person.save();
     res.status(204).end();
 });
 
-
-
-
-
-
 /* ============================================================
-   GET /api/pawna/people  →  { people: [ {...person, summary} ] }
+   PAWNA — PEOPLE
    ============================================================ */
+
+/* GET all */
 app.get("/api/pawna/people", async (req, res) => {
     try {
         const people = await PawnaPerson.find().sort({ createdAt: -1 });
@@ -678,7 +691,7 @@ app.get("/api/pawna/people", async (req, res) => {
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map((t) => ({
                     id: t._id.toString(),
-                    type: t.type,                 // "send" | "receive"
+                    type: t.type,
                     amount: t.amount,
                     date: t.date,
                     notes: t.notes ?? null,
@@ -692,16 +705,17 @@ app.get("/api/pawna/people", async (req, res) => {
     }
 });
 
-/* ============================================================
-   POST /api/pawna/people  →  { person: {...} }
-   body: { name }
-   ============================================================ */
+/* POST create person */
 app.post("/api/pawna/people", async (req, res) => {
     try {
         const name = String((req.body && req.body.name) || "").trim();
-        if (!name) return res.status(400).json({ message: "নাম দিতে হবে" });
+        if (!name)
+            return res.status(400).json({ message: "নাম দিতে হবে" });
 
-        const person = await PawnaPerson.create({ name, transactions: [] });
+        const person = await PawnaPerson.create({
+            name,
+            transactions: [],
+        });
 
         res.status(201).json({
             person: {
@@ -718,18 +732,13 @@ app.post("/api/pawna/people", async (req, res) => {
     }
 });
 
-/* ============================================================
-   POST /api/pawna/people/:id/transactions
-   →  { transaction, summary }
-   body: { type: "send"|"receive", amount, date?, notes? }
-   ============================================================ */
+/* POST transaction */
 app.post("/api/pawna/people/:id/transactions", async (req, res) => {
     try {
         const body = req.body || {};
         const { type } = body;
         const amount = Number(body.amount);
 
-        /* ---- validation ---- */
         if (type !== "send" && type !== "receive") {
             return res
                 .status(400)
@@ -748,7 +757,6 @@ app.post("/api/pawna/people/:id/transactions", async (req, res) => {
                 .json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
         }
 
-        /* ---- push + save ---- */
         person.transactions.push({
             type,
             amount,
@@ -757,9 +765,9 @@ app.post("/api/pawna/people/:id/transactions", async (req, res) => {
         });
         await person.save();
 
-        const created = person.transactions[person.transactions.length - 1];
+        const created =
+            person.transactions[person.transactions.length - 1];
 
-        /* ---- respond ---- */
         res.status(201).json({
             transaction: {
                 id: created._id.toString(),
@@ -779,44 +787,42 @@ app.post("/api/pawna/people/:id/transactions", async (req, res) => {
     }
 });
 
-/* ============================================================
-   DELETE /api/pawna/people/:id/transactions/:txnId
-   →  { ok: true, summary }
-   ============================================================ */
-app.delete("/api/pawna/people/:id/transactions/:txnId", async (req, res) => {
-    try {
-        const { id, txnId } = req.params;
+/* DELETE transaction */
+app.delete(
+    "/api/pawna/people/:id/transactions/:txnId",
+    async (req, res) => {
+        try {
+            const { id, txnId } = req.params;
 
-        const result = await PawnaPerson.updateOne(
-            { _id: id },
-            { $pull: { transactions: { _id: txnId } } }
-        );
+            const result = await PawnaPerson.updateOne(
+                { _id: id },
+                { $pull: { transactions: { _id: txnId } } }
+            );
 
-        if (result.matchedCount === 0) {
-            return res
-                .status(404)
-                .json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
-        }
-        if (result.modifiedCount === 0) {
-            return res
-                .status(404)
-                .json({ message: "লেনদেন খুঁজে পাওয়া যায়নি" });
-        }
+            if (result.matchedCount === 0) {
+                return res
+                    .status(404)
+                    .json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
+            }
+            if (result.modifiedCount === 0) {
+                return res
+                    .status(404)
+                    .json({ message: "লেনদেন খুঁজে পাওয়া যায়নি" });
+            }
 
-        const person = await PawnaPerson.findById(id);
-        res.json({ ok: true, summary: summarize(person) });
-    } catch (err) {
-        console.error(err);
-        if (err.name === "CastError") {
-            return res.status(400).json({ message: "ভুল আইডি" });
+            const person = await PawnaPerson.findById(id);
+            res.json({ ok: true, summary: summarize(person) });
+        } catch (err) {
+            console.error(err);
+            if (err.name === "CastError") {
+                return res.status(400).json({ message: "ভুল আইডি" });
+            }
+            res.status(500).json({ message: "সার্ভার ত্রুটি" });
         }
-        res.status(500).json({ message: "সার্ভার ত্রুটি" });
     }
-});
-/* ============================================================
-   DELETE /api/pawna/people/:id
-   Removes a person and ALL of their transactions.
-   ============================================================ */
+);
+
+/* DELETE person */
 app.delete("/api/pawna/people/:id", async (req, res) => {
     try {
         const { id } = req.params;
@@ -827,11 +833,10 @@ app.delete("/api/pawna/people/:id", async (req, res) => {
 
         const person = await PawnaPerson.findById(id);
         if (!person) {
-            return res.status(404).json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
+            return res
+                .status(404)
+                .json({ message: "মানুষ খুঁজে পাওয়া যায়নি" });
         }
-
-
-
 
         await PawnaPerson.deleteOne({ _id: person._id });
 
@@ -841,12 +846,11 @@ app.delete("/api/pawna/people/:id", async (req, res) => {
         res.status(500).json({ message: "মুছতে পারা যায়নি" });
     }
 });
-/* ============================================================
-   HELPER — build summary once, use everywhere
-   ============================================================ */
+
+/* ---------- pawna summarize helper ---------- */
 function summarize(person) {
-    let totalSend = 0;      // মোট বাকি দিয়েছি
-    let totalReceive = 0;   // মোট পেয়েছি
+    let totalSend = 0;
+    let totalReceive = 0;
 
     (person.transactions || []).forEach((t) => {
         const a = Number(t.amount || 0);
@@ -863,132 +867,238 @@ function summarize(person) {
     };
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* ============================================================
+   BANK — BANK HISAB (single collection)
+   ============================================================ */
+
+/* helper: build summary from embedded transactions */
+function bankSummary(bank) {
+    let totalDeposit = 0;
+    let totalWithdraw = 0;
+
+    (bank.transactions || []).forEach((t) => {
+        const a = Number(t.amount || 0);
+        if (t.type === "withdraw") totalWithdraw += a;
+        else totalDeposit += a;
+    });
+
+    return {
+        totalDeposit,
+        totalWithdraw,
+        balance: totalDeposit - totalWithdraw,
+    };
+}
+
+/* helper: shape a bank for the frontend */
+function shapeBank(b) {
+    const txns = (b.transactions || [])
+        .slice()
+        .sort((a, c) => new Date(a.date) - new Date(c.date));
+
+    return {
+        id: b._id.toString(),
+        name: b.name,
+        accountNumber: b.accountNumber || "",
+        createdAt: b.createdAt,
+        summary: bankSummary(b),
+        transactions: txns.map((t) => ({
+            id: t._id.toString(),
+            type: t.type,
+            amount: t.amount,
+            date: t.date,
+            name: t.name ?? null,
+            notes: t.notes ?? null,
+        })),
+    };
+}
+
+/* ------------------------------------------------------------
+   GET /api/banks  →  { banks: [...] }
+   ------------------------------------------------------------ */
+app.get("/api/banks", async (req, res) => {
+    try {
+        const banks = await Bank.find().sort({ createdAt: 1 });
+        res.json({ banks: banks.map(shapeBank) });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ------------------------------------------------------------
+   POST /api/banks  →  { bank: {...} }
+   body: { name, accountNumber? }
+   ------------------------------------------------------------ */
+app.post("/api/banks", async (req, res) => {
+    try {
+        const name = String((req.body && req.body.name) || "").trim();
+        const accountNumber = String(
+            (req.body && req.body.accountNumber) || ""
+        ).trim();
+
+        if (!name)
+            return res.status(400).json({ message: "নাম দিতে হবে" });
+
+        const bank = await Bank.create({ name, accountNumber });
+
+        res.status(201).json({ bank: shapeBank(bank) });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ------------------------------------------------------------
+   DELETE /api/banks/:id  →  { ok: true }
+   (single-collection: delete the document, txns go with it)
+   ------------------------------------------------------------ */
+app.delete("/api/banks/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+
+        const bank = await Bank.findById(id);
+        if (!bank) {
+            return res
+                .status(404)
+                .json({ message: "ব্যাংক খুঁজে পাওয়া যায়নি" });
+        }
+
+        await Bank.deleteOne({ _id: bank._id });
+
+        res.json({ ok: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "মুছতে পারা যায়নি" });
+    }
+});
+
+/* ------------------------------------------------------------
+   POST /api/banks/:id/transactions  →  { transaction, summary }
+   body: { type: "deposit"|"withdraw", amount, date?, name?, notes? }
+   ------------------------------------------------------------ */
+app.post("/api/banks/:id/transactions", async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+
+        const bank = await Bank.findById(id);
+        if (!bank) {
+            return res
+                .status(404)
+                .json({ message: "ব্যাংক খুঁজে পাওয়া যায়নি" });
+        }
+
+        const body = req.body || {};
+        const { type } = body;
+        const amount = Number(body.amount);
+
+        if (type !== "deposit" && type !== "withdraw") {
+            return res
+                .status(400)
+                .json({ message: "type অবশ্যই deposit অথবা withdraw" });
+        }
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return res
+                .status(400)
+                .json({ message: "amount ধনাত্মক হতে হবে" });
+        }
+
+        bank.transactions.push({
+            type,
+            amount,
+            date: body.date ? new Date(body.date) : new Date(),
+            name: body.name ? String(body.name).trim() : null,
+            notes: body.notes ? String(body.notes).trim() : null,
+        });
+
+        await bank.save();
+
+        const created =
+            bank.transactions[bank.transactions.length - 1];
+
+        res.status(201).json({
+            transaction: {
+                id: created._id.toString(),
+                type: created.type,
+                amount: created.amount,
+                date: created.date,
+                name: created.name ?? null,
+                notes: created.notes ?? null,
+            },
+            summary: bankSummary(bank),
+        });
+    } catch (err) {
+        console.error(err);
+        if (err.name === "CastError") {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ------------------------------------------------------------
+   DELETE /api/banks/:id/transactions/:txnId  →  { ok, summary }
+   ------------------------------------------------------------ */
+app.delete("/api/banks/:id/transactions/:txnId", async (req, res) => {
+    try {
+        const { id, txnId } = req.params;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(id) ||
+            !mongoose.Types.ObjectId.isValid(txnId)
+        ) {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+
+        const result = await Bank.updateOne(
+            { _id: id },
+            { $pull: { transactions: { _id: txnId } } }
+        );
+
+        if (result.matchedCount === 0) {
+            return res
+                .status(404)
+                .json({ message: "ব্যাংক খুঁজে পাওয়া যায়নি" });
+        }
+        if (result.modifiedCount === 0) {
+            return res
+                .status(404)
+                .json({ message: "লেনদেন খুঁজে পাওয়া যায়নি" });
+        }
+
+        const bank = await Bank.findById(id);
+        res.json({ ok: true, summary: bankSummary(bank) });
+    } catch (err) {
+        console.error(err);
+        if (err.name === "CastError") {
+            return res.status(400).json({ message: "ভুল আইডি" });
+        }
+        res.status(500).json({ message: "সার্ভার ত্রুটি" });
+    }
+});
+
+/* ============================================================
+   START
+   ============================================================ */
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
-    console.log(`Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+    console.log(
+        `Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`
+    );
     console.log(`Today: ${dayKey(new Date())}`);
 });
 
-
-
-
-// Schedule task to run every day at 12:00 AM (Midnight)
-cron.schedule('0 0 * * *', async () => {
-
+/* Schedule task — runs every day at 12:00 AM (Midnight) */
+cron.schedule("0 0 * * *", async () => {
     try {
         const result = await Person.updateMany(
             { bundleExpiry: { $gt: 0 } },
@@ -997,78 +1107,11 @@ cron.schedule('0 0 * * *', async () => {
 
         console.log(`Updated ${result.modifiedCount} active bundles.`);
     } catch (error) {
-        console.error('Error updating bundle expiry in MongoDB:', error);
+        console.error(
+            "Error updating bundle expiry in MongoDB:",
+            error
+        );
     }
 });
 
-
-
 module.exports = app;
-
-
-// const TOPAJOL_ENTRIES = [
-//     { date: "2026-08-29", pieces: 3 },
-//     { date: "2026-08-30", pieces: 2 },
-//     { date: "2026-08-31", pieces: 2 },
-
-//     { date: "2026-09-01", pieces: 2 },
-//     { date: "2026-09-02", pieces: 3 },
-//     { date: "2026-09-03", pieces: 3 },
-//     { date: "2026-09-04", pieces: 6 },
-//     { date: "2026-09-05", pieces: 4 },
-//     { date: "2026-09-06", pieces: 3 },
-//     { date: "2026-09-07", pieces: 0 },
-//     { date: "2026-09-08", pieces: 5 },
-//     { date: "2026-09-09", pieces: 2 },
-//     { date: "2026-09-10", pieces: 2 },
-//     { date: "2026-09-11", pieces: 5 },
-//     { date: "2026-09-12", pieces: 2 },
-//     { date: "2026-09-13", pieces: 3 },
-//     { date: "2026-09-14", pieces: 2 },
-//     { date: "2026-09-15", pieces: 2 },
-//     { date: "2026-09-16", pieces: 2 },
-//     { date: "2026-09-17", pieces: 4 },
-//     { date: "2026-09-18", pieces: 4 },
-//     { date: "2026-09-19", pieces: 3 },
-//     { date: "2026-09-20", pieces: 2 },
-//     { date: "2026-09-21", pieces: 2 },
-//     { date: "2026-09-22", pieces: 2 },
-//     { date: "2026-09-23", pieces: 2 },
-//     { date: "2026-09-24", pieces: 1 },
-//     { date: "2026-09-25", pieces: 4 },
-//     { date: "2026-09-26", pieces: 3 },
-//     { date: "2026-09-27", pieces: 2 },
-//     { date: "2026-09-28", pieces: 2 },
-//     { date: "2026-09-29", pieces: 0 },
-//     { date: "2026-09-30", pieces: 1 },
-
-//     { date: "2026-10-01", pieces: 2 },
-//     { date: "2026-10-02", pieces: 4 },
-//     { date: "2026-10-03", pieces: 2 },
-//     { date: "2026-10-04", pieces: 2 },
-//     { date: "2026-10-05", pieces: 2 },
-//     { date: "2026-10-06", pieces: 1 },
-//     { date: "2026-10-07", pieces: 2 },
-//     { date: "2026-10-08", pieces: 2 },
-//     { date: "2026-10-09", pieces: 4 }
-// ];
-
-
-// (async () => {
-
-//     const result = await Gila.updateOne(
-//         { name: 'তোপাজল' },
-//         { $set: { entries: TOPAJOL_ENTRIES } }
-//     );
-//     console.log(result);  // { matchedCount: 1, modifiedCount: 1 }
-//     await mongoose.disconnect();
-// })();
-
-
-
-
-
-
-
-
-
