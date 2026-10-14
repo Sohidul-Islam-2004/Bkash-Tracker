@@ -649,23 +649,10 @@ select,
     transform: translateY(-2px);
 }
 
-/* ---- debt variant (দেব) — solid purple tint + left accent ---- */
+/* ---- debt variant (দেব) — solid purple tint ---- */
 .person-card[data-state="debt"] {
     background: linear-gradient(180deg, #fbf3fc 0%, #f7ecf9 100%);
     border-color: #e8cdec;
-    position: relative;
-}
-
-.person-card[data-state="debt"]::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, var(--debt-2), var(--debt-press));
-    border-radius: 4px 0 0 4px;
-    z-index: 1;
 }
 
 .person-card[data-state="debt"]:hover {
