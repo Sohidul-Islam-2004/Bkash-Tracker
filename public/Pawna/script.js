@@ -312,19 +312,12 @@ function confirmModal({
     });
 }
 
-const QUICK_AMOUNTS = [100, 500, 1000, 5000];
+
 
 function askAmount({ title, description = "" }) {
     return new Promise((resolve) => {
         const id = "m" + uid();
         const root = document.getElementById("modalRoot");
-
-        const chipsHtml = QUICK_AMOUNTS.map(
-            (v) =>
-                `<button type="button" class="amount-chip" data-amount="${v}">${v.toLocaleString(
-                    "en-IN"
-                )}</button>`
-        ).join("");
 
         root.innerHTML = `
             <div class="modal-bg" id="${id}_bg">
@@ -342,7 +335,6 @@ function askAmount({ title, description = "" }) {
                             <input id="${id}_amt" type="number" inputmode="numeric"
                                    min="0" step="1" placeholder="0" autocomplete="off" />
                         </div>
-                        <div class="chips">${chipsHtml}</div>
                     </div>
 
                     <div class="modal-actions">
@@ -362,16 +354,6 @@ function askAmount({ title, description = "" }) {
             if (e.target.id === `${id}_bg`) cleanup(null);
         });
         document.getElementById(`${id}_cancel`).onclick = () => cleanup(null);
-
-        root.querySelectorAll(".amount-chip").forEach((btn) => {
-            btn.onclick = () => {
-                input.value = btn.dataset.amount;
-                root.querySelectorAll(".amount-chip").forEach((b) =>
-                    b.classList.remove("selected")
-                );
-                btn.classList.add("selected");
-            };
-        });
 
         const submit = () => {
             const v = Number(input.value);
@@ -880,7 +862,7 @@ async function deleteTxn(personId, txnId) {
         if (currentView === "viewPerson") renderPerson(personId);
         else renderDashboard();
 
-      
+
     } catch (err) {
         toast("মুছতে পারা যায়নি: " + err.message, "error");
     }
@@ -1018,7 +1000,7 @@ async function init() {
 
 
     if (searchBox) searchBox.addEventListener("input", renderDashboard);
-   
+
 
     /* form */
     const form = document.getElementById("addPersonForm");
