@@ -2472,7 +2472,7 @@ select {
     background:
         radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.14) 0%, transparent 45%),
         radial-gradient(circle at 5% 100%, rgba(255, 255, 255, 0.08) 0%, transparent 40%),
-        linear-gradient(140deg, #e8437a 0%, #d12053 45%, #9c1038 100%);
+        linear-gradient(140deg, #a70f42 0%, #ab0f3b 45%, #a50f39 100%);
     box-shadow:
         0 20px 44px rgba(209, 32, 83, 0.32),
         0 2px 6px rgba(209, 32, 83, 0.12),
