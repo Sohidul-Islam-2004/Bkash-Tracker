@@ -501,15 +501,26 @@ function renderDashboard() {
         if (hero) {
             hero.innerHTML = `
                 <div class="home-hero">
-                    <div class="home-hero-top">
-                        <span class="home-hero-label">
-                            <span class="home-hero-ico">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                    <div class="home-hero-pair">
+                        <div class="home-hero-item">
+                            <span class="home-hero-label">
+                                <span class="home-hero-ico">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                                </span>
+                                মোট পাওনা
                             </span>
-                            মোট পাওনা
-                        </span>
+                            <b class="home-hero-value">৳ 0</b>
+                        </div>
+                        <div class="home-hero-item home-hero-item--debt">
+                            <span class="home-hero-label">
+                                <span class="home-hero-ico">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                                </span>
+                                মোট দেনা
+                            </span>
+                            <b class="home-hero-value">৳ 0</b>
+                        </div>
                     </div>
-                    <b class="home-hero-value">৳ 0</b>
                 </div>`;
         }
         if (head) head.style.display = "none";
@@ -525,26 +536,39 @@ function renderDashboard() {
         return;
     }
 
-    /* -------- মোট পাওনা (only sum of positive nets — unchanged) -------- */
-    let receivable = 0;
+    /* -------- totals -------- */
+    let receivable = 0;   /* sum of positive nets — they owe me */
+    let payable = 0;      /* sum of |negative nets| — I owe them */
     people.forEach((p) => {
         const t = totalsOf(p);
         if (t.net > 0) receivable += t.net;
+        else if (t.net < 0) payable += Math.abs(t.net);
     });
 
     /* -------- hero -------- */
     if (hero) {
         hero.innerHTML = `
             <div class="home-hero">
-                <div class="home-hero-top">
-                    <span class="home-hero-label">
-                        <span class="home-hero-ico">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                <div class="home-hero-pair">
+                    <div class="home-hero-item">
+                        <span class="home-hero-label">
+                            <span class="home-hero-ico">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 10h6M9 14h6"/></svg>
+                            </span>
+                            মোট পাওনা
                         </span>
-                        মোট পাওনা
-                    </span>
+                        <b class="home-hero-value">${money(receivable)}</b>
+                    </div>
+                    <div class="home-hero-item home-hero-item--debt">
+                        <span class="home-hero-label">
+                            <span class="home-hero-ico">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                            </span>
+                            মোট দেনা
+                        </span>
+                        <b class="home-hero-value">${money(payable)}</b>
+                    </div>
                 </div>
-                <b class="home-hero-value">${money(receivable)}</b>
             </div>`;
     }
 
@@ -575,18 +599,20 @@ function renderDashboard() {
         return;
     }
 
-    /* -------- cards (no avatar) -------- */
+    /* -------- cards -------- */
     grid.innerHTML = list
         .map((p, i) => {
             const t = totalsOf(p);
             const count = (p.transactions || []).length;
             const cls = balClass(t.net);
             const label = balLabel(t.net);
+            const state = t.net > 0 ? "due" : t.net < 0 ? "debt" : "settled";
             const meta =
                 count === 0 ? "কোনো লেনদেন নেই" : `${count}টি লেনদেন`;
 
             return `
-        <article class="person-card" style="animation-delay:${Math.min(i, 8) * 40}ms">
+        <article class="person-card" data-state="${state}"
+                 style="animation-delay:${Math.min(i, 8) * 40}ms">
             <button class="pc-head" data-open="${p.id}" type="button">
                 <div class="pc-info">
                     <h3>${esc(p.name)}</h3>

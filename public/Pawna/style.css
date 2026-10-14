@@ -19,6 +19,14 @@
     --pink-soft: #fde8ef;
     --pink-tint: #fff6fa;
 
+    /* debt (দেনা) — purple */
+    --debt: #8b3a8f;
+    --debt-2: #b158b8;
+    --debt-press: #5e1a68;
+    --debt-soft: #f4e6f6;
+    --debt-tint: #fbf3fc;
+    --debt-ink: #6b2076;
+
     --blue: #2563eb;
     --blue-soft: #e7f0ff;
     --green: #12a06a;
@@ -38,6 +46,7 @@
     --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
     --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
     --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+    --shadow-debt: 0 8px 22px rgba(139, 58, 143, 0.28);
 
     --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -256,52 +265,109 @@ select,
 }
 
 /* ============================================================
-   HOME HERO  (dashboard top)
+   HOME HERO — two independent stat cards
    ============================================================ */
 .home-hero {
-    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
-    color: #fff;
-    border-radius: var(--r-lg);
-    padding: 18px 20px;
     margin-bottom: 18px;
-    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
-    position: relative;
-    overflow: hidden;
     animation: cardIn 0.4s var(--ease);
 }
 
-.home-hero::before {
+.home-hero-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.home-hero-item {
+    min-width: 0;
+    padding: 14px 14px 15px;
+    border-radius: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #e8437a 0%, #a8153f 100%);
+    box-shadow: 0 10px 24px rgba(209, 32, 83, 0.28);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s var(--ease), box-shadow 0.2s;
+}
+
+.home-hero-item::before {
     content: "";
     position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 170px;
-    height: 170px;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.09);
     pointer-events: none;
 }
 
-.home-hero::after {
-    content: "";
-    position: absolute;
-    bottom: -70px;
-    left: -40px;
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    pointer-events: none;
+.home-hero-item--debt {
+    background: linear-gradient(135deg, #b158b8 0%, #5e1a68 100%);
+    box-shadow: 0 10px 24px rgba(139, 58, 143, 0.32);
 }
 
+.home-hero-item .home-hero-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    opacity: 0.95;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: relative;
+    z-index: 1;
+}
+
+.home-hero-item .home-hero-ico {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    display: grid;
+    place-items: center;
+}
+
+.home-hero-item .home-hero-ico svg {
+    width: 12px;
+    height: 12px;
+}
+
+.home-hero-item .home-hero-value {
+    font-family: var(--font-num);
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    display: block;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* legacy single-value variant (safety net) */
 .home-hero-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    padding: 16px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+    color: #fff;
+    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
     position: relative;
-    z-index: 1;
-    margin-bottom: 10px;
+    overflow: hidden;
 }
 
 .home-hero-label {
@@ -330,28 +396,6 @@ select,
     height: 15px;
 }
 
-.home-hero-badge {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.home-hero-badge[data-pawna-state="settled"] {
-    background: rgba(18, 200, 130, 0.28);
-    border-color: rgba(18, 200, 130, 0.5);
-}
-
-.home-hero-badge[data-pawna-state="advance"] {
-    background: rgba(37, 99, 235, 0.28);
-    border-color: rgba(37, 99, 235, 0.5);
-}
-
 .home-hero-value {
     display: block;
     font-family: var(--font-num);
@@ -363,6 +407,19 @@ select,
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
     position: relative;
     z-index: 1;
+    margin-top: 10px;
+}
+
+.home-hero-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
 /* ============================================================
@@ -413,7 +470,7 @@ select,
 }
 
 /* ============================================================
-   CHIP BUTTON (small copy/pill buttons)
+   CHIP BUTTON
    ============================================================ */
 .chip-btn {
     display: inline-flex;
@@ -571,7 +628,7 @@ select,
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     animation: cardIn 0.4s var(--ease) backwards;
-    transition: transform 0.2s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s;
+    transition: transform 0.2s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s, background 0.25s;
 }
 
 @keyframes cardIn {
@@ -590,6 +647,66 @@ select,
     border-color: rgba(209, 32, 83, 0.18);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+}
+
+/* ---- debt variant (দেব) — solid purple tint + left accent ---- */
+.person-card[data-state="debt"] {
+    background: linear-gradient(180deg, #fbf3fc 0%, #f7ecf9 100%);
+    border-color: #e8cdec;
+    position: relative;
+}
+
+.person-card[data-state="debt"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--debt-2), var(--debt-press));
+    border-radius: 4px 0 0 4px;
+    z-index: 1;
+}
+
+.person-card[data-state="debt"]:hover {
+    border-color: #cfa6d5;
+    box-shadow: 0 10px 30px rgba(139, 58, 143, 0.16);
+    transform: translateY(-2px);
+}
+
+.person-card[data-state="debt"] .pc-head:hover {
+    background: #f6e8f8;
+}
+
+.person-card[data-state="debt"] .pc-head:active {
+    background: var(--debt-soft);
+}
+
+.person-card[data-state="debt"] .pc-info h3 {
+    color: var(--debt-ink);
+}
+
+.person-card[data-state="debt"] .pc-meta {
+    color: #8f5c96;
+}
+
+.person-card[data-state="debt"] .pc-bal {
+    color: var(--debt-press);
+}
+
+.person-card[data-state="debt"] .pc-bal-label {
+    color: var(--debt);
+}
+
+.person-card[data-state="debt"] .pc-chevron {
+    background: #f0def3;
+    color: var(--debt);
+}
+
+.person-card[data-state="debt"]:hover .pc-chevron {
+    background: var(--debt);
+    color: #fff;
+    transform: translateX(2px);
 }
 
 .pc-head {
@@ -691,7 +808,7 @@ select,
 }
 
 .bal-neg {
-    color: var(--red-ink);
+    color: var(--debt-press);
 }
 
 .bal-zero {
@@ -1643,6 +1760,10 @@ select,
         padding: 26px 24px;
     }
 
+    .home-hero-item .home-hero-value {
+        font-size: 24px;
+    }
+
     .home-hero-value {
         font-size: 34px;
     }
@@ -1680,6 +1801,10 @@ select,
 
     .person-del {
         padding: 0 9px;
+    }
+
+    .home-hero-item .home-hero-value {
+        font-size: 17px;
     }
 }
 
