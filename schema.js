@@ -187,69 +187,41 @@ const PawnaPersonSchema = new mongoose.Schema(
 
 
 
-/* ---- sub-schema for a single transaction ---- */
-const txnSubSchema = new mongoose.Schema(
+
+
+const BankTransactionSchema = new mongoose.Schema(
     {
         type: {
             type: String,
             enum: ["deposit", "withdraw"],
             required: true,
         },
-        amount: {
-            type: Number,
-            required: true,
-            min: 0,
-        },
-        date: {
-            type: Date,
-            default: Date.now,
-        },
-        name: {
-            type: String,
-            default: null,
-            trim: true,
-        },
-        notes: {
-            type: String,
-            default: null,
-            trim: true,
-        },
+        amount: { type: Number, required: true, min: 0 },
+        date: { type: Date, default: Date.now },
+        name: { type: String, trim: true, default: null },
+        notes: { type: String, trim: true, default: null },
     },
-    {
-        _id: true,          // gives each txn its own ObjectId → used as txn.id
-        timestamps: true,
-    }
+    { _id: true }
 );
 
-/* ---- main bank schema ---- */
 const BankSchema = new mongoose.Schema(
     {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        accountNumber: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-        transactions: {
-            type: [txnSubSchema],
-            default: [],
-        },
+        name: { type: String, required: true, trim: true },
+        accountNumber: { type: String, trim: true, default: "" },
+        createdAt: { type: Date, default: Date.now },
+
+        /* persisted ledger totals (source of truth for balance) */
+        totalDeposit: { type: Number, default: 0 },
+        totalWithdraw: { type: Number, default: 0 },
+
+        /* transaction history */
+        transactions: { type: [BankTransactionSchema], default: [] },
     },
     {
-        timestamps: true,   // createdAt, updatedAt on the bank
+        strict: false,       // allow extra fields via native driver
+        versionKey: false,
     }
 );
-
-
-
-
-
-
-
 
 
 
