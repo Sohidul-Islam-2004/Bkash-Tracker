@@ -822,7 +822,7 @@ app.delete("/api/pawna/people/:id/transactions/:txnId", async (req, res) => {
             return res.status(404).json({ message: "লেনদেন খুঁজে পাওয়া যায়নি" });
         }
 
-       
+
         person.transactions.pull(txnId);
 
         await person.save();
@@ -858,20 +858,80 @@ app.delete("/api/pawna/people/:id", async (req, res) => {
         res.status(500).json({ message: "মুছতে পারা যায়নি" });
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ============================================================
    BANK — BANK HISAB (single collection)
+   ------------------------------------------------------------
+   Balance rule:
+     • Adding a transaction  → updates stored totals.
+     • Deleting a transaction → ONLY removes the history row.
+                                main balance, total joma (deposit)
+                                and total uttolon (withdraw) stay
+                                unchanged forever.
+
+   We persist `totalDeposit` / `totalWithdraw` directly on the bank
+   document via the native MongoDB driver (so no schema change is
+   needed). For legacy banks that don't have these fields yet, we
+   lazily initialize them once, on first read, from existing
+   transactions.
    ============================================================ */
 
-/* helper: build summary from embedded transactions */
-function bankSummary(bank) {
+/* ---- compute totals from a transactions array ---- */
+function computeTotalsFromTransactions(transactions) {
     let totalDeposit = 0;
     let totalWithdraw = 0;
 
-    (bank.transactions || []).forEach((t) => {
+    (transactions || []).forEach((t) => {
         const a = Number(t.amount || 0);
         if (t.type === "withdraw") totalWithdraw += a;
         else totalDeposit += a;
     });
+
+    return { totalDeposit, totalWithdraw };
+}
+
+/* ---- build summary for the frontend ---- */
+function bankSummary(bank) {
+    let totalDeposit;
+    let totalWithdraw;
+
+    if (
+        typeof bank.totalDeposit === "number" &&
+        typeof bank.totalWithdraw === "number"
+    ) {
+        totalDeposit = bank.totalDeposit;
+        totalWithdraw = bank.totalWithdraw;
+    } else {
+        const t = computeTotalsFromTransactions(bank.transactions);
+        totalDeposit = t.totalDeposit;
+        totalWithdraw = t.totalWithdraw;
+    }
 
     return {
         totalDeposit,
@@ -880,7 +940,7 @@ function bankSummary(bank) {
     };
 }
 
-/* helper: shape a bank for the frontend */
+/* ---- shape a bank for the frontend ---- */
 function shapeBank(b) {
     const txns = (b.transactions || [])
         .slice()
@@ -903,177 +963,228 @@ function shapeBank(b) {
     };
 }
 
+/* ---- ensure persisted totals exist (legacy migration) ---- */
+async function ensureTotals(bank) {
+    if (
+        typeof bank.totalDeposit === "number" &&
+        typeof bank.totalWithdraw === "number"
+    ) {
+        return bank;
+    }
+
+    const { totalDeposit, totalWithdraw } =
+        computeTotalsFromTransactions(bank.transactions);
+
+    await Bank.collection.updateOne(
+        { _id: bank._id },
+        { $set: { totalDeposit, totalWithdraw } }
+    );
+
+    bank.totalDeposit = totalDeposit;
+    bank.totalWithdraw = totalWithdraw;
+    return bank;
+}
+
 /* ------------------------------------------------------------
    GET /api/banks  →  { banks: [...] }
    ------------------------------------------------------------ */
-app.get("/api/banks", async (req, res) => {
-    try {
-        const banks = await Bank.find().sort({ createdAt: 1 });
-        res.json({ banks: banks.map(shapeBank) });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "সার্ভার ত্রুটি" });
-    }
-});
+app.get(
+    "/api/banks",
+    wrap(async (req, res) => {
+        const banks = await Bank.find().sort({ createdAt: 1 }).lean();
+
+        const out = [];
+        for (const b of banks) {
+            await ensureTotals(b);
+            out.push(shapeBank(b));
+        }
+
+        res.json({ banks: out });
+    })
+);
 
 /* ------------------------------------------------------------
    POST /api/banks  →  { bank: {...} }
-   body: { name, accountNumber? }
    ------------------------------------------------------------ */
-app.post("/api/banks", async (req, res) => {
-    try {
+app.post(
+    "/api/banks",
+    wrap(async (req, res) => {
         const name = String((req.body && req.body.name) || "").trim();
         const accountNumber = String(
             (req.body && req.body.accountNumber) || ""
         ).trim();
 
-        if (!name)
-            return res.status(400).json({ message: "নাম দিতে হবে" });
+        if (!name) throw new HttpError(400, "নাম দিতে হবে");
 
         const bank = await Bank.create({ name, accountNumber });
 
-        res.status(201).json({ bank: shapeBank(bank) });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "সার্ভার ত্রুটি" });
-    }
-});
+        /* initialize persisted totals to 0 */
+        await Bank.collection.updateOne(
+            { _id: bank._id },
+            { $set: { totalDeposit: 0, totalWithdraw: 0 } }
+        );
+
+        const fresh = await Bank.findById(bank._id).lean();
+        res.status(201).json({ bank: shapeBank(fresh) });
+    })
+);
 
 /* ------------------------------------------------------------
    DELETE /api/banks/:id  →  { ok: true }
-   (single-collection: delete the document, txns go with it)
    ------------------------------------------------------------ */
-app.delete("/api/banks/:id", async (req, res) => {
-    try {
+app.delete(
+    "/api/banks/:id",
+    wrap(async (req, res) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ভুল আইডি" });
+            throw new HttpError(400, "ভুল আইডি");
         }
 
         const bank = await Bank.findById(id);
-        if (!bank) {
-            return res
-                .status(404)
-                .json({ message: "ব্যাংক খুঁজে পাওয়া যায়নি" });
-        }
+        if (!bank) throw new HttpError(404, "ব্যাংক খুঁজে পাওয়া যায়নি");
 
         await Bank.deleteOne({ _id: bank._id });
 
         res.json({ ok: true });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "মুছতে পারা যায়নি" });
-    }
-});
+    })
+);
 
 /* ------------------------------------------------------------
    POST /api/banks/:id/transactions  →  { transaction, summary }
-   body: { type: "deposit"|"withdraw", amount, date?, name?, notes? }
+   body: { type, amount, date?, name?, notes? }
+
+   Behaviour: pushes the transaction AND increments the persisted
+   totals (totalDeposit / totalWithdraw).
    ------------------------------------------------------------ */
-app.post("/api/banks/:id/transactions", async (req, res) => {
-    try {
+app.post(
+    "/api/banks/:id/transactions",
+    wrap(async (req, res) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "ভুল আইডি" });
+            throw new HttpError(400, "ভুল আইডি");
         }
 
-        const bank = await Bank.findById(id);
-        if (!bank) {
-            return res
-                .status(404)
-                .json({ message: "ব্যাংক খুঁজে পাওয়া যায়নি" });
-        }
+        const bank = await Bank.findById(id).lean();
+        if (!bank) throw new HttpError(404, "ব্যাংক খুঁজে পাওয়া যায়নি");
+
+        await ensureTotals(bank);
 
         const body = req.body || {};
         const { type } = body;
         const amount = Number(body.amount);
 
         if (type !== "deposit" && type !== "withdraw") {
-            return res
-                .status(400)
-                .json({ message: "type অবশ্যই deposit অথবা withdraw" });
+            throw new HttpError(400, "type অবশ্যই deposit অথবা withdraw");
         }
         if (!Number.isFinite(amount) || amount <= 0) {
-            return res
-                .status(400)
-                .json({ message: "amount ধনাত্মক হতে হবে" });
+            throw new HttpError(400, "amount ধনাত্মক হতে হবে");
         }
 
-        bank.transactions.push({
+        const txn = {
+            _id: new mongoose.Types.ObjectId(),
             type,
             amount,
             date: body.date ? new Date(body.date) : new Date(),
             name: body.name ? String(body.name).trim() : null,
             notes: body.notes ? String(body.notes).trim() : null,
-        });
+        };
 
-        await bank.save();
+        await Bank.collection.updateOne(
+            { _id: bank._id },
+            {
+                $push: { transactions: txn },
+                $inc: {
+                    totalDeposit: type === "deposit" ? amount : 0,
+                    totalWithdraw: type === "withdraw" ? amount : 0,
+                },
+            }
+        );
 
-        const created =
-            bank.transactions[bank.transactions.length - 1];
+        const fresh = await Bank.findById(id).lean();
 
         res.status(201).json({
             transaction: {
-                id: created._id.toString(),
-                type: created.type,
-                amount: created.amount,
-                date: created.date,
-                name: created.name ?? null,
-                notes: created.notes ?? null,
+                id: txn._id.toString(),
+                type: txn.type,
+                amount: txn.amount,
+                date: txn.date,
+                name: txn.name,
+                notes: txn.notes,
             },
-            summary: bankSummary(bank),
+            summary: bankSummary(fresh),
         });
-    } catch (err) {
-        console.error(err);
-        if (err.name === "CastError") {
-            return res.status(400).json({ message: "ভুল আইডি" });
-        }
-        res.status(500).json({ message: "সার্ভার ত্রুটি" });
-    }
-});
+    })
+);
 
 /* ------------------------------------------------------------
    DELETE /api/banks/:id/transactions/:txnId  →  { ok, summary }
+
+   IMPORTANT: Only the history row is removed.
+   totalDeposit, totalWithdraw, and balance are NOT recalculated
+   — they stay exactly as they were before the delete.
    ------------------------------------------------------------ */
-app.delete("/api/banks/:id/transactions/:txnId", async (req, res) => {
-    try {
+app.delete(
+    "/api/banks/:id/transactions/:txnId",
+    wrap(async (req, res) => {
         const { id, txnId } = req.params;
 
         if (
             !mongoose.Types.ObjectId.isValid(id) ||
             !mongoose.Types.ObjectId.isValid(txnId)
         ) {
-            return res.status(400).json({ message: "ভুল আইডি" });
+            throw new HttpError(400, "ভুল আইডি");
         }
 
-        const result = await Bank.updateOne(
-            { _id: id },
-            { $pull: { transactions: { _id: txnId } } }
+        const bank = await Bank.findById(id).lean();
+        if (!bank) throw new HttpError(404, "ব্যাংক খুঁজে পাওয়া যায়নি");
+
+        await ensureTotals(bank);
+
+        /* ONLY pull the transaction — do NOT touch totals */
+        const result = await Bank.collection.updateOne(
+            { _id: bank._id },
+            {
+                $pull: {
+                    transactions: {
+                        _id: new mongoose.Types.ObjectId(txnId),
+                    },
+                },
+            }
         );
 
         if (result.matchedCount === 0) {
-            return res
-                .status(404)
-                .json({ message: "ব্যাংক খুঁজে পাওয়া যায়নি" });
+            throw new HttpError(404, "ব্যাংক খুঁজে পাওয়া যায়নি");
         }
         if (result.modifiedCount === 0) {
-            return res
-                .status(404)
-                .json({ message: "লেনদেন খুঁজে পাওয়া যায়নি" });
+            throw new HttpError(404, "লেনদেন খুঁজে পাওয়া যায়নি");
         }
 
-        const bank = await Bank.findById(id);
-        res.json({ ok: true, summary: bankSummary(bank) });
-    } catch (err) {
-        console.error(err);
-        if (err.name === "CastError") {
-            return res.status(400).json({ message: "ভুল আইডি" });
-        }
-        res.status(500).json({ message: "সার্ভার ত্রুটি" });
-    }
-});
+        const fresh = await Bank.findById(id).lean();
+
+        /* summary reflects persisted totals — unchanged by the delete */
+        res.json({ ok: true, summary: bankSummary(fresh) });
+    })
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ============================================================
    START
@@ -1090,19 +1201,12 @@ app.listen(PORT, () => {
 
 /* Schedule task — runs every day at 12:00 AM (Midnight) */
 cron.schedule("0 0 * * *", async () => {
-    try {
-        const result = await Person.updateMany(
-            { bundleExpiry: { $gt: 0 } },
-            { $inc: { bundleExpiry: -1 } }
-        );
-
-        console.log(`Updated ${result.modifiedCount} active bundles.`);
-    } catch (error) {
-        console.error(
-            "Error updating bundle expiry in MongoDB:",
-            error
-        );
-    }
+    const now = new Date();
+    const result = await Person.updateMany(
+        { bundleExpiry: { $lte: now } },
+        { $set: { bundleCount: 0, bundleExpiry: null } }
+    );
+    console.log(`Expired ${result.modifiedCount} bundles.`);
 });
 
 module.exports = app;
