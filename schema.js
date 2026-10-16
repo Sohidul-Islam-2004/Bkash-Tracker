@@ -53,7 +53,7 @@ const PersonSchema = new mongoose.Schema(
         },
         bundleExpiry: {
             type: Date,
-            default: null,        // was `Number` — comment said "2026-10-15" (a date)
+            default: null,
         },
 
         transactions: [
@@ -135,7 +135,9 @@ const EntriesSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-
+/* ============================================================
+   GILA — PERSON
+   ============================================================ */
 const GilaPersonSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true },
@@ -152,13 +154,9 @@ const GilaPersonSchema = new mongoose.Schema(
     { timestamps: true },
 );
 
-
-
-
-
-
-
-
+/* ============================================================
+   PAWNA — TRANSACTION (embedded)
+   ============================================================ */
 const PawnaSchema = new mongoose.Schema(
     {
         type: { type: String, enum: ["send", "receive"], required: true },
@@ -169,10 +167,12 @@ const PawnaSchema = new mongoose.Schema(
     { _id: true }
 );
 
+/* ============================================================
+   PAWNA — PERSON
+   ============================================================ */
 const PawnaPersonSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true },
-
 
         totalSend: { type: Number, default: 0 },
         totalReceive: { type: Number, default: 0 },
@@ -182,13 +182,9 @@ const PawnaPersonSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-
-
-
-
-
-
-
+/* ============================================================
+   BANK — TRANSACTION (embedded)
+   ============================================================ */
 const BankTransactionSchema = new mongoose.Schema(
     {
         type: {
@@ -204,6 +200,9 @@ const BankTransactionSchema = new mongoose.Schema(
     { _id: true }
 );
 
+/* ============================================================
+   BANK
+   ============================================================ */
 const BankSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, trim: true },
@@ -223,21 +222,31 @@ const BankSchema = new mongoose.Schema(
     }
 );
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* ============================================================
+   USER  (auth — phone + PIN)
+   ============================================================ */
+const UserSchema = new mongoose.Schema(
+    {
+        id: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true,
+            trim: true,
+        },
+        pin: {
+            type: String,
+            required: true,
+        },
+    },
+    { timestamps: true }
+);
 
 /* ============================================================
    INDEXES
@@ -250,12 +259,11 @@ TransactionSchema.index(
     { person: 1, trxId: 1 },
     {
         unique: true,
-        partialFilterExpression: { trxId: { $type: 'string' } },
+        partialFilterExpression: { trxId: { type: 'string' } },
     },
 );
 
 EntriesSchema.index({ date: 1, createdAt: 1 });
-
 
 /* Fast lookup of a single embedded gila entry by date */
 GilaPersonSchema.index({ 'entries.date': 1 });
@@ -270,6 +278,6 @@ module.exports = {
     GilaPersonSchema,
     PawnaSchema,
     PawnaPersonSchema,
-    BankSchema
-
+    BankSchema,
+    UserSchema,
 };

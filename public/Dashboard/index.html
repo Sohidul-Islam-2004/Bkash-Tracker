@@ -1,0 +1,1907 @@
+<!doctype html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#d12053" />
+    <title>ইজিলেনদেন</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='100' y2='100' gradientUnits='userSpaceOnUse'><stop offset='0%25' stop-color='%23e8437a'/><stop offset='55%25' stop-color='%23d12053'/><stop offset='100%25' stop-color='%23a8153f'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><path d='M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z' fill='rgba(255,255,255,0.10)'/><text x='50' y='74' text-anchor='middle' font-family='Noto Sans Bengali,Hind Siliguri,sans-serif' font-size='60' font-weight='800' fill='%23ffffff'>ই</text><circle cx='80' cy='22' r='5.5' fill='%23ffffff'/><circle cx='80' cy='22' r='2.2' fill='%23d12053'/></svg>"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='0' x2='100' y2='100' gradientUnits='userSpaceOnUse'><stop offset='0%25' stop-color='%23e8437a'/><stop offset='55%25' stop-color='%23d12053'/><stop offset='100%25' stop-color='%23a8153f'/></linearGradient></defs><rect width='100' height='100' rx='24' fill='url(%23g)'/><path d='M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z' fill='rgba(255,255,255,0.10)'/><text x='50' y='74' text-anchor='middle' font-family='Noto Sans Bengali,Hind Siliguri,sans-serif' font-size='60' font-weight='800' fill='%23ffffff'>ই</text><circle cx='80' cy='22' r='5.5' fill='%23ffffff'/><circle cx='80' cy='22' r='2.2' fill='%23d12053'/></svg>"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg: #f5f3f6;
+        --card: #ffffff;
+        --ink: #17181f;
+        --ink-2: #3a3d4a;
+        --muted: #6e7180;
+        --muted-2: #a1a4b3;
+        --line: #ebe6ec;
+        --line-2: #f3eef4;
+        --pink: #d12053;
+        --pink-2: #e8437a;
+        --pink-press: #a8153f;
+        --pink-soft: #fde8ef;
+        --pink-tint: #fff6fa;
+        --red: #dc2648;
+        --red-soft: #fde8ec;
+        --green: #12a06a;
+        --green-soft: #dcf6ec;
+        --top: env(safe-area-inset-top, 0px);
+        --bottom: env(safe-area-inset-bottom, 0px);
+        --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
+        --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
+        --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
+        --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
+        --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
+        --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+        --r-sm: 12px;
+        --r: 16px;
+        --r-md: 20px;
+        --r-lg: 24px;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        --font-num:
+          "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
+          BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --font-body:
+          "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+          BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        background-image: radial-gradient(
+          1200px 600px at 50% -200px,
+          rgba(209, 32, 83, 0.08),
+          transparent 70%
+        );
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        border: 0;
+        background: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .icon {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      .app {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: saturate(180%) blur(14px);
+        -webkit-backdrop-filter: saturate(180%) blur(14px);
+        border-bottom: 1px solid var(--line-2);
+        padding: calc(10px + var(--top)) 16px 10px;
+        transition: box-shadow 0.25s var(--ease);
+      }
+
+      .topbar.scrolled {
+        box-shadow: 0 1px 10px rgba(20, 22, 34, 0.05);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .brand-logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        flex-shrink: 0;
+        overflow: hidden;
+        box-shadow: var(--shadow-pink);
+        background: transparent;
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+
+      .brand-logo .brand-mark {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .brand-text {
+        min-width: 0;
+        line-height: 1.2;
+      }
+
+      .brand-text h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--ink);
+      }
+
+      .brand-sub {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .content {
+        flex: 1;
+        padding: 16px 14px calc(32px + var(--bottom));
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 4px 2px 12px;
+      }
+
+      .section-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+      }
+
+      .title-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--pink);
+        box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12);
+      }
+
+      .section-count {
+        font-family: var(--font-num);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--pink);
+        background: var(--pink-soft);
+        padding: 4px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.2px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .services {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .service {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px 16px;
+        border-radius: var(--r-md);
+        background: var(--card);
+        border: 1px solid var(--line-2);
+        box-shadow: var(--shadow-sm);
+        text-align: left;
+        transition:
+          transform 0.2s var(--ease),
+          box-shadow 0.25s var(--ease),
+          border-color 0.2s var(--ease);
+        position: relative;
+        overflow: hidden;
+        animation: cardIn 0.4s var(--ease) backwards;
+        min-height: 130px;
+      }
+
+      .service:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .service:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .service:nth-child(3) {
+        animation-delay: 0.15s;
+      }
+      .service:nth-child(4) {
+        animation-delay: 0.2s;
+      }
+      .service:nth-child(5) {
+        animation-delay: 0.25s;
+      }
+
+      @keyframes cardIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .service:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: rgba(209, 32, 83, 0.18);
+      }
+      .service:active {
+        transform: translateY(0) scale(0.99);
+        background: var(--pink-tint);
+      }
+
+      .service-ico {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--pink), var(--pink-press));
+        color: #fff;
+        box-shadow: var(--shadow-pink);
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+      }
+
+      .service-ico .icon {
+        width: 22px;
+        height: 22px;
+        stroke-width: 2.4;
+      }
+
+      .service b {
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: -0.2px;
+        line-height: 1.35;
+        color: var(--ink);
+        position: relative;
+        z-index: 1;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(32px + var(--bottom));
+        transform: translate(-50%, 24px);
+        background: var(--ink);
+        color: #fff;
+        padding: 13px 20px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.28s var(--ease),
+          transform 0.32s var(--ease);
+        z-index: 300;
+        max-width: 90vw;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (min-width: 480px) {
+        .content {
+          padding: 20px 18px calc(40px + var(--bottom));
+        }
+      }
+
+      /* ============================================================
+         NOTEPAD OVERLAY
+         ============================================================ */
+      .notepad-app {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: var(--bg);
+        background-image: radial-gradient(
+          1200px 600px at 50% -200px,
+          rgba(209, 32, 83, 0.08),
+          transparent 70%
+        );
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        animation: npIn 0.28s var(--ease);
+      }
+
+      @keyframes npIn {
+        from {
+          opacity: 0;
+          transform: translateX(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .notepad-app[hidden] {
+        display: none;
+      }
+
+      .np-inner {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .np-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
+      .np-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        transition:
+          background 0.15s,
+          transform 0.12s;
+      }
+
+      .np-btn:active {
+        transform: scale(0.92);
+      }
+
+      .np-back {
+        background: var(--pink-soft);
+        color: var(--pink);
+      }
+
+      .np-back:hover {
+        background: #fbd5e2;
+      }
+
+      .np-add {
+        background: var(--pink-soft);
+        color: var(--pink);
+      }
+
+      .np-add:hover {
+        background: #fbd5e2;
+      }
+
+      .np-btn .icon {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2.6;
+      }
+
+      .np-content {
+        flex: 1;
+        padding: 16px 14px calc(120px + var(--bottom));
+      }
+
+      /* ---- search ---- */
+      .np-search-wrap {
+        position: relative;
+        margin-bottom: 14px;
+      }
+
+      .np-search-wrap .s-ico {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 17px;
+        height: 17px;
+        color: var(--muted-2);
+        pointer-events: none;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .np-search-wrap input {
+        width: 100%;
+        padding: 13px 40px 13px 42px;
+        border: 1.5px solid var(--line);
+        border-radius: 14px;
+        font-family: inherit;
+        font-size: 14.5px;
+        color: var(--ink);
+        background: #fdfbfc;
+        -webkit-appearance: none;
+        appearance: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s,
+          background 0.15s;
+      }
+
+      .np-search-wrap input:focus {
+        outline: none;
+        border-color: var(--pink);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
+      }
+
+      .np-search-wrap input::placeholder {
+        color: #b4a7b3;
+      }
+
+      .np-search-clear {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: none;
+        place-items: center;
+        color: var(--muted);
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+
+      .np-search-clear:hover {
+        background: var(--pink-soft);
+        color: var(--pink);
+      }
+
+      .np-search-clear .icon {
+        width: 14px;
+        height: 14px;
+        stroke-width: 3;
+      }
+
+      .np-search-wrap.has-value .np-search-clear {
+        display: grid;
+      }
+
+      /* ---- note list ---- */
+      #npList {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .note-card {
+        background: var(--card);
+        border: 1px solid var(--line-2);
+        border-radius: var(--r-md);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: cardIn 0.4s var(--ease) backwards;
+        transition:
+          transform 0.2s var(--ease),
+          box-shadow 0.25s var(--ease),
+          border-color 0.25s;
+      }
+
+      .note-card:nth-child(1) {
+        animation-delay: 0.03s;
+      }
+      .note-card:nth-child(2) {
+        animation-delay: 0.06s;
+      }
+      .note-card:nth-child(3) {
+        animation-delay: 0.09s;
+      }
+      .note-card:nth-child(4) {
+        animation-delay: 0.12s;
+      }
+      .note-card:nth-child(5) {
+        animation-delay: 0.15s;
+      }
+
+      .note-card:hover {
+        border-color: rgba(209, 32, 83, 0.18);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+      }
+
+      .note-btn {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px 15px;
+        text-align: left;
+        color: inherit;
+        transition: background 0.15s;
+      }
+
+      .note-btn:hover {
+        background: var(--pink-tint);
+      }
+
+      .note-btn:active {
+        background: var(--pink-soft);
+      }
+
+      .note-chip {
+        width: 46px;
+        height: 46px;
+        flex-shrink: 0;
+        border-radius: 13px;
+        background: #fff;
+        color: var(--ink-2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        border: 1px solid var(--line);
+        box-shadow:
+          0 1px 2px rgba(20, 22, 34, 0.05),
+          inset 0 -2px 0 rgba(20, 22, 34, 0.03);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .note-chip::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--pink), var(--pink-2));
+      }
+
+      .note-chip b {
+        font-family: var(--font-num);
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -0.4px;
+        line-height: 1;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .note-chip small {
+        font-family: var(--font-num);
+        font-size: 9px;
+        font-weight: 600;
+        opacity: 0.7;
+        letter-spacing: 0.2px;
+        margin-top: 3px;
+        line-height: 1;
+      }
+
+      .note-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .note-title {
+        display: block;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-break: break-word;
+      }
+
+      .note-preview {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-top: 3px;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      .note-meta {
+        font-family: var(--font-num);
+        font-size: 11px;
+        color: var(--muted-2);
+        margin-top: 6px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .note-meta .dot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--muted-2);
+      }
+
+      .note-meta .tag {
+        background: var(--pink-soft);
+        color: var(--pink);
+        padding: 2px 7px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 10.5px;
+      }
+
+      .note-arrow {
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: #f6f1f4;
+        color: var(--muted);
+        display: grid;
+        place-items: center;
+        align-self: center;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          transform 0.2s;
+      }
+
+      .note-arrow .icon {
+        width: 13px;
+        height: 13px;
+        stroke-width: 2.6;
+      }
+
+      .note-card:hover .note-arrow {
+        background: var(--pink);
+        color: #fff;
+        transform: translateX(2px);
+      }
+
+      /* ---- empty state ---- */
+      .np-empty {
+        text-align: center;
+        padding: 56px 24px;
+        color: var(--muted);
+        background: var(--card);
+        border: 1.5px dashed #e0d3db;
+        border-radius: var(--r-lg);
+        animation: cardIn 0.5s var(--ease);
+      }
+
+      .np-empty-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--pink-tint), var(--pink-soft));
+        display: grid;
+        place-items: center;
+        color: var(--pink);
+        box-shadow: 0 10px 24px rgba(209, 32, 83, 0.1);
+      }
+
+      .np-empty-icon .icon {
+        width: 30px;
+        height: 30px;
+      }
+
+      .np-empty h3 {
+        font-size: 16px;
+        color: var(--ink);
+        margin: 0 0 6px;
+        font-weight: 700;
+      }
+
+      .np-empty p {
+        font-size: 13.5px;
+        margin: 0;
+      }
+
+      /* ---- editor ---- */
+      .np-editor-hero {
+        background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
+        color: #fff;
+        border-radius: var(--r-lg);
+        padding: 16px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
+        position: relative;
+        overflow: hidden;
+        animation: cardIn 0.4s var(--ease);
+      }
+
+      .np-editor-hero::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
+
+      .np-editor-hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .np-editor-title h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -0.4px;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+      }
+
+      .np-editor-title p {
+        font-family: var(--font-num);
+        margin: 4px 0 0;
+        font-size: 12px;
+        opacity: 0.88;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .np-status {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        padding: 5px 11px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        white-space: nowrap;
+        transition:
+          background 0.25s var(--ease),
+          border-color 0.25s var(--ease);
+        flex-shrink: 0;
+      }
+
+      .np-status[data-state="saving"] {
+        background: rgba(255, 214, 102, 0.28);
+        border-color: rgba(255, 214, 102, 0.5);
+      }
+
+      .np-status[data-state="saved"] {
+        background: rgba(18, 200, 130, 0.28);
+        border-color: rgba(18, 200, 130, 0.5);
+      }
+
+      .np-paper {
+        background: #fff;
+        border: 1px solid var(--line-2);
+        border-radius: var(--r-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+        animation: cardIn 0.45s var(--ease) 0.04s backwards;
+      }
+
+      .np-paper textarea {
+        display: block;
+        width: 100%;
+        min-height: min(46vh, 360px);
+        padding: 14px 16px 20px;
+        border: 0;
+        outline: none;
+        resize: vertical;
+        background: transparent;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent 0,
+          transparent 31px,
+          var(--line-2) 31px,
+          var(--line-2) 32px
+        );
+        background-origin: border-box;
+        background-position: 0 14px;
+        background-attachment: local;
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 32px;
+        color: var(--ink);
+        letter-spacing: 0.1px;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      .np-paper textarea::placeholder {
+        color: #bdb0bb;
+      }
+
+      .np-btn-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .np-btn-action {
+        flex: 1;
+        min-height: 50px;
+        padding: 0 18px;
+        border-radius: 15px;
+        font-size: 14.5px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition:
+          background 0.15s,
+          transform 0.12s,
+          box-shadow 0.2s,
+          color 0.15s;
+      }
+
+      .np-btn-action:active {
+        transform: scale(0.97);
+      }
+
+      .np-btn-action .icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      .np-btn-ghost {
+        background: #f5f1f4;
+        color: var(--ink-2);
+      }
+
+      .np-btn-ghost:hover {
+        background: #ece5ea;
+      }
+
+      .np-btn-danger {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+
+      .np-btn-danger:hover {
+        background: #fbd8de;
+      }
+
+      /* ---- fab ---- */
+      .np-fab {
+        position: fixed;
+        right: 20px;
+        bottom: calc(24px + var(--bottom));
+        width: 60px;
+        height: 60px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--pink), var(--pink-press));
+        color: #fff;
+        box-shadow:
+          0 12px 30px rgba(209, 32, 83, 0.42),
+          0 4px 12px rgba(209, 32, 83, 0.28);
+        display: grid;
+        place-items: center;
+        z-index: 50;
+        transition:
+          transform 0.15s var(--ease),
+          box-shadow 0.25s,
+          opacity 0.2s;
+        overflow: hidden;
+        animation: fabIn 0.4s var(--ease) 0.15s backwards;
+      }
+
+      @keyframes fabIn {
+        from {
+          opacity: 0;
+          transform: scale(0.7);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .np-fab::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: 0 0 0 0 rgba(209, 32, 83, 0.4);
+        animation: fabPulse 2.6s ease-out infinite;
+        pointer-events: none;
+      }
+
+      @keyframes fabPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(209, 32, 83, 0.35);
+        }
+        100% {
+          box-shadow: 0 0 0 20px rgba(209, 32, 83, 0);
+        }
+      }
+
+      .np-fab:hover {
+        transform: scale(1.06) translateY(-2px);
+      }
+
+      .np-fab:active {
+        transform: scale(0.94);
+      }
+
+      .np-fab .icon {
+        width: 26px;
+        height: 26px;
+        stroke-width: 2.8;
+        position: relative;
+        z-index: 1;
+      }
+
+      .np-fab[hidden] {
+        display: none;
+      }
+
+      /* ---- confirm ---- */
+      .np-confirm {
+        position: fixed;
+        inset: 0;
+        background: rgba(23, 24, 31, 0.5);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 200;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s;
+      }
+
+      .np-confirm.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .np-confirm-box {
+        background: #fff;
+        border-radius: 22px;
+        padding: 24px;
+        max-width: 360px;
+        width: 100%;
+        box-shadow: var(--shadow-lg);
+        transform: scale(0.94);
+        transition: transform 0.24s var(--ease);
+        text-align: center;
+      }
+
+      .np-confirm.show .np-confirm-box {
+        transform: scale(1);
+      }
+
+      .np-confirm-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: var(--red-soft);
+        color: var(--red);
+        display: grid;
+        place-items: center;
+      }
+
+      .np-confirm-icon .icon {
+        width: 26px;
+        height: 26px;
+      }
+
+      .np-confirm-box h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.2px;
+      }
+
+      .np-confirm-box p {
+        margin: 0 0 20px;
+        font-size: 13.5px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .np-confirm-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .np-confirm-actions .np-btn-action {
+        flex: 1;
+        min-height: 48px;
+        font-size: 14.5px;
+      }
+
+      .np-confirm-actions .np-btn-danger {
+        background: var(--red);
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(220, 38, 72, 0.3);
+      }
+
+      .np-confirm-actions .np-btn-danger:hover {
+        background: #b81d38;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ SVG SYMBOLS ============ -->
+    <svg style="display: none" aria-hidden="true">
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </symbol>
+      <symbol id="i-calc" viewBox="0 0 24 24">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="8" y1="10" x2="8" y2="10.01" />
+        <line x1="12" y1="10" x2="12" y2="10.01" />
+        <line x1="16" y1="10" x2="16" y2="10.01" />
+        <line x1="8" y1="14" x2="8" y2="14.01" />
+        <line x1="12" y1="14" x2="12" y2="14.01" />
+        <line x1="16" y1="14" x2="16" y2="14.01" />
+        <line x1="8" y1="18" x2="16" y2="18" />
+      </symbol>
+      <symbol id="i-note" viewBox="0 0 24 24">
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </symbol>
+      <symbol id="i-back" viewBox="0 0 24 24">
+        <polyline points="15 18 9 12 15 6" />
+      </symbol>
+      <symbol id="i-right" viewBox="0 0 24 24">
+        <polyline points="9 18 15 12 9 6" />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        <path d="M10 11v6M14 11v6" />
+      </symbol>
+      <symbol id="i-warn" viewBox="0 0 24 24">
+        <path
+          d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+        />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </symbol>
+    </svg>
+
+    <!-- ============ DASHBOARD ============ -->
+    <div class="app">
+      <header class="topbar" id="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <div class="brand-logo" aria-hidden="true">
+              <svg
+                class="brand-mark"
+                viewBox="0 0 100 100"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient
+                    id="el-grad"
+                    x1="0"
+                    y1="0"
+                    x2="100"
+                    y2="100"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset="0%" stop-color="#e8437a" />
+                    <stop offset="55%" stop-color="#d12053" />
+                    <stop offset="100%" stop-color="#a8153f" />
+                  </linearGradient>
+                </defs>
+                <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
+                <path
+                  d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
+                  fill="rgba(255,255,255,0.10)"
+                />
+                <text
+                  x="50"
+                  y="74"
+                  text-anchor="middle"
+                  font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
+                  font-size="60"
+                  font-weight="800"
+                  fill="#ffffff"
+                >
+                  ই
+                </text>
+                <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
+                <circle cx="80" cy="22" r="2.2" fill="#d12053" />
+              </svg>
+            </div>
+            <div class="brand-text">
+              <h1>ইজি লেনদেন</h1>
+              <span class="brand-sub">ড্যাশবোর্ড</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="section-head">
+          <h2 class="section-title"><span class="title-dot"></span>সেবাসমূহ</h2>
+          <span class="section-count" id="svcCount">০ টি</span>
+        </div>
+        <div class="services" id="servicesGrid"></div>
+      </main>
+    </div>
+
+    <!-- ============ NOTEPAD OVERLAY ============ -->
+    <div class="notepad-app" id="notepadApp" hidden>
+      <div class="np-inner">
+        <header class="topbar np-topbar" id="npTopbar">
+          <div class="topbar-inner">
+            <button class="np-btn np-back" id="npBack" aria-label="ফিরে যান">
+              <svg class="icon"><use href="#i-back" /></svg>
+            </button>
+
+            <div class="brand">
+              <div class="brand-text">
+                <h1 id="npTitle">নোটপ্যাড</h1>
+                <span class="brand-sub" id="npSub">আপনার ব্যক্তিগত নোট</span>
+              </div>
+            </div>
+
+            <button class="np-btn np-add" id="npAdd" aria-label="নতুন নোট">
+              <svg class="icon"><use href="#i-plus" /></svg>
+            </button>
+          </div>
+        </header>
+
+        <main class="np-content">
+          <!-- ============ LIST VIEW ============ -->
+          <div id="npListView">
+            <div class="np-search-wrap" id="npSearchWrap">
+              <svg class="s-ico"><use href="#i-search" /></svg>
+              <input
+                type="search"
+                id="npSearchInput"
+                placeholder="নোট খুঁজুন…"
+                autocomplete="off"
+              />
+              <button
+                class="np-search-clear"
+                id="npSearchClear"
+                type="button"
+                aria-label="মুছুন"
+              >
+                <svg class="icon"><use href="#i-x" /></svg>
+              </button>
+            </div>
+
+            <div class="section-head">
+              <h2 class="section-title">
+                <span class="title-dot"></span>নোট সমূহ
+              </h2>
+              <span class="section-count" id="npCount">০ টি</span>
+            </div>
+
+            <div id="npList"></div>
+          </div>
+
+          <!-- ============ EDITOR VIEW ============ -->
+          <div id="npEditorView" hidden>
+            <div class="np-editor-hero">
+              <div class="np-editor-hero-top">
+                <div class="np-editor-title">
+                  <h2 id="npEditorTitle">নোট</h2>
+                  <p id="npEditorMeta">—</p>
+                </div>
+                <span class="np-status" id="npStatus" data-state="saved"
+                  >সেভড</span
+                >
+              </div>
+            </div>
+
+            <div class="np-paper">
+              <textarea
+                id="npInput"
+                spellcheck="false"
+                placeholder="এখানে যা খুশি লিখুন…"
+              ></textarea>
+            </div>
+
+            <div class="np-btn-row">
+              <button
+                class="np-btn-action np-btn-ghost"
+                id="npCopy"
+                type="button"
+              >
+                <svg class="icon"><use href="#i-copy" /></svg>
+                সব কপি
+              </button>
+              <button
+                class="np-btn-action np-btn-danger"
+                id="npDelete"
+                type="button"
+              >
+                <svg class="icon"><use href="#i-trash" /></svg>
+                নোট মুছুন
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- ============ FAB (notepad) ============ -->
+    <button class="np-fab" id="npFab" aria-label="নতুন নোট" hidden>
+      <svg class="icon"><use href="#i-plus" /></svg>
+    </button>
+
+    <!-- ============ CONFIRM (notepad) ============ -->
+    <div class="np-confirm" id="npConfirm">
+      <div class="np-confirm-box">
+        <div class="np-confirm-icon">
+          <svg class="icon"><use href="#i-warn" /></svg>
+        </div>
+        <h3 id="npConfirmTitle">নিশ্চিত করুন</h3>
+        <p id="npConfirmMsg">আপনি কি নিশ্চিত?</p>
+        <div class="np-confirm-actions">
+          <button
+            class="np-btn-action np-btn-ghost"
+            id="npConfirmNo"
+            type="button"
+          >
+            বাতিল
+          </button>
+          <button
+            class="np-btn-action np-btn-danger"
+            id="npConfirmYes"
+            type="button"
+          >
+            হ্যাঁ, মুছুন
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TOAST ============ -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      (() => {
+        "use strict";
+        const $ = (s, c = document) => c.querySelector(s);
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        const toastEl = $("#toast");
+        function toast(msg) {
+          toastEl.textContent = msg;
+          toastEl.classList.add("show");
+          clearTimeout(toastEl._t);
+          toastEl._t = setTimeout(() => toastEl.classList.remove("show"), 1800);
+        }
+
+        /* ============================================================
+           DASHBOARD SERVICES
+           ============================================================ */
+        const SERVICES = [
+          {
+            icon: "i-edit",
+            label: "বিকাশ পার্টনার এর হিসাব",
+            route: "entry",
+          },
+          { icon: "i-users", label: "বিকাশ ম্যানেজমেন্ট", route: "hisab" },
+          { icon: "i-calc", label: "রাফ হিসাব", route: "raf" },
+          { icon: "i-users", label: "গিলার হিসাব", route: "gila" },
+
+          { icon: "i-note", label: "পাওনার হিসাব", route: "pawna" },
+          { icon: "i-note", label: "ব্যাংক হিসাব", route: "bank" },
+        ];
+
+        const grid = $("#servicesGrid");
+
+        grid.innerHTML = SERVICES.map(
+          (s, i) => `
+          <button class="service" data-idx="${i}" style="animation-delay:${0.05 + i * 0.05}s">
+            <span class="service-ico">
+              <svg class="icon"><use href="#${s.icon}"/></svg>
+            </span>
+            <b>${s.label}</b>
+          </button>
+        `,
+        ).join("");
+
+        const bnDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+        const toBn = (n) => String(n).replace(/\d/g, (d) => bnDigits[+d]);
+        $("#svcCount").textContent = toBn(SERVICES.length) + " টি";
+
+        let busy = false;
+
+        const ROUTES = {
+          entry: { msg: "এন্ট্রি ম্যানেজার খোলা হচ্ছে…", url: "/Entry" },
+          hisab: { msg: "বিকাশ ম্যানেজমেন্ট খোলা হচ্ছে…", url: "/Bkash" },
+          raf: { msg: "রাফ হিসাব খোলা হচ্ছে…", url: "/Raf" },
+          gila: { msg: "গিলার হিসাব খোলা হচ্ছে…", url: "/Gila" },
+          pawna: { msg: "পাওনার হিসাব খোলা হচ্ছে…", url: "/Pawna" },
+          bank: { msg: "পাওনার হিসাব খোলা হচ্ছে…", url: "/Bank" },
+        };
+
+        grid.addEventListener("click", (e) => {
+          const btn = e.target.closest(".service");
+          if (!btn || busy) return;
+          const s = SERVICES[+btn.dataset.idx];
+          if (!s) return;
+
+          /* --- notepad --- */
+          if (s.route === "notes") {
+            npOpen();
+            return;
+          }
+
+          const route = ROUTES[s.route];
+          if (!route) {
+            toast(s.label);
+            return;
+          }
+
+          busy = true;
+          btn.setAttribute("aria-busy", "true");
+          toast(route.msg);
+
+          setTimeout(() => {
+            window.location.href = route.url;
+            setTimeout(() => {
+              busy = false;
+              btn.removeAttribute("aria-busy");
+            }, 4000);
+          }, 420);
+        });
+
+        const topbar = $("#topbar");
+        window.addEventListener(
+          "scroll",
+          () => {
+            topbar.classList.toggle("scrolled", window.scrollY > 8);
+          },
+          { passive: true },
+        );
+
+        /* ============================================================
+           NOTEPAD
+           ============================================================ */
+        const NP_KEY = "bkash_theme_notepad_v1";
+
+        const npApp = $("#notepadApp");
+        const npList = $("#npList");
+        const npListView = $("#npListView");
+        const npEditorView = $("#npEditorView");
+        const npInput = $("#npInput");
+        const npTitle = $("#npTitle");
+        const npSub = $("#npSub");
+        const npCount = $("#npCount");
+        const npStatus = $("#npStatus");
+        const npEditorTitle = $("#npEditorTitle");
+        const npEditorMeta = $("#npEditorMeta");
+        const npFab = $("#npFab");
+
+        const npSearchWrap = $("#npSearchWrap");
+        const npSearchInput = $("#npSearchInput");
+
+        let npNotes = [];
+        let npCurrentId = null;
+        let npSaveTimer = null;
+        let npSearch = "";
+        let npConfirmCb = null;
+
+        /* ---------- storage ---------- */
+        function npLoad() {
+          try {
+            const raw = localStorage.getItem(NP_KEY);
+            const parsed = raw ? JSON.parse(raw) : [];
+            npNotes = Array.isArray(parsed) ? parsed : [];
+          } catch {
+            npNotes = [];
+          }
+          npNotes = npNotes.filter(
+            (n) => n && n.id && typeof n.text === "string",
+          );
+        }
+
+        function npPersist() {
+          try {
+            localStorage.setItem(NP_KEY, JSON.stringify(npNotes));
+          } catch {}
+        }
+
+        /* ---------- helpers ---------- */
+        const NP_MONTHS_SHORT = [
+          "জানু",
+          "ফেব্রু",
+          "মার্চ",
+          "এপ্রি",
+          "মে",
+          "জুন",
+          "জুলা",
+          "আগ",
+          "সেপ্ট",
+          "অক্টো",
+          "নভে",
+          "ডিসে",
+        ];
+
+        const npUid = () =>
+          Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+        function npFmtDate(ts) {
+          const d = new Date(ts);
+          const dd = String(d.getDate()).padStart(2, "0");
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          let h = d.getHours();
+          const ap = h >= 12 ? "PM" : "AM";
+          h = h % 12 || 12;
+          const mi = String(d.getMinutes()).padStart(2, "0");
+          return `${dd}/${mm}/${d.getFullYear()} · ${h}:${mi} ${ap}`;
+        }
+
+        function npTitleOf(text) {
+          const line = (text.split("\n").find((l) => l.trim()) || "").trim();
+          if (!line) return "শিরোনামহীন নোট";
+          return line.length > 52 ? line.slice(0, 52) + "…" : line;
+        }
+
+        function npPreviewOf(text) {
+          const lines = text
+            .split("\n")
+            .map((l) => l.trim())
+            .filter(Boolean);
+          const rest = lines.slice(1).join(" ");
+          return rest.length > 100 ? rest.slice(0, 100) + "…" : rest;
+        }
+
+        function npEscape(str) {
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        /* ---------- open / close ---------- */
+        function npOpen() {
+          document.body.style.overflow = "hidden";
+          npApp.hidden = false;
+          npApp.scrollTop = 0;
+          npShowList();
+        }
+
+        function npClose() {
+          npCleanupEmpty();
+          document.body.style.overflow = "";
+          npApp.hidden = true;
+        }
+
+        /* ---------- list ---------- */
+        function npShowList() {
+          npCurrentId = null;
+          npListView.hidden = false;
+          npEditorView.hidden = true;
+          npFab.hidden = false;
+          npTitle.textContent = "নোটপ্যাড";
+          npSub.textContent = "আপনার ব্যক্তিগত নোট";
+          npRenderList();
+          npApp.scrollTop = 0;
+        }
+
+        function npRenderList() {
+          const q = npSearch.trim().toLowerCase();
+          const list = [...npNotes]
+            .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+            .filter((n) => !q || n.text.toLowerCase().includes(q));
+
+          npCount.textContent = toBn(list.length) + " টি";
+
+          if (!npNotes.length) {
+            npList.innerHTML = `
+              <div class="np-empty">
+                <div class="np-empty-icon">
+                  <svg class="icon"><use href="#i-note"/></svg>
+                </div>
+                <h3>এখনো কোনো নোট নেই</h3>
+                <p>নিচের + বাটনে চাপ দিয়ে লিখা শুরু করুন</p>
+              </div>`;
+            return;
+          }
+
+          if (!list.length) {
+            npList.innerHTML = `
+              <div class="np-empty">
+                <div class="np-empty-icon">
+                  <svg class="icon"><use href="#i-search"/></svg>
+                </div>
+                <h3>কিছু পাওয়া যায়নি</h3>
+                <p>অন্য কিছু লিখে খুঁজে দেখুন</p>
+              </div>`;
+            return;
+          }
+
+          npList.innerHTML = list
+            .map((n) => {
+              const d = new Date(n.updatedAt || n.createdAt);
+              const dd = String(d.getDate()).padStart(2, "0");
+              const mon = NP_MONTHS_SHORT[d.getMonth()];
+              const title = npTitleOf(n.text);
+              const prev = npPreviewOf(n.text);
+              const chars = n.text.length;
+
+              return `
+                <article class="note-card">
+                  <button class="note-btn" data-open="${n.id}" type="button">
+                    <span class="note-chip">
+                      <b>${dd}</b>
+                      <small>${mon}</small>
+                    </span>
+
+                    <span class="note-info">
+                      <span class="note-title">${npEscape(title)}</span>
+                      ${prev ? `<span class="note-preview">${npEscape(prev)}</span>` : ""}
+                      <span class="note-meta">
+                        <span class="tag">${toBn(chars)} অক্ষর</span>
+                        <span class="dot"></span>
+                        <span>${npFmtDate(n.updatedAt || n.createdAt)}</span>
+                      </span>
+                    </span>
+
+                    <span class="note-arrow">
+                      <svg class="icon"><use href="#i-right"/></svg>
+                    </span>
+                  </button>
+                </article>`;
+            })
+            .join("");
+        }
+
+        /* ---------- editor ---------- */
+        function npShowEditor(id) {
+          const note = npNotes.find((n) => n.id === id);
+          if (!note) {
+            npShowList();
+            return;
+          }
+
+          npCurrentId = id;
+          npListView.hidden = true;
+          npEditorView.hidden = false;
+          npFab.hidden = true;
+          npTitle.textContent = "নোট";
+          npSub.textContent = npFmtDate(note.createdAt);
+
+          npInput.value = note.text;
+          npUpdateMeta();
+          npSetStatus("saved");
+
+          npApp.scrollTop = 0;
+          setTimeout(() => npInput.focus(), 180);
+        }
+
+        function npUpdateMeta() {
+          const note = npNotes.find((n) => n.id === npCurrentId);
+          if (!note) return;
+          const chars = npInput.value.length;
+          const words = npInput.value.trim()
+            ? npInput.value.trim().split(/\s+/).length
+            : 0;
+
+          npEditorTitle.textContent = npTitleOf(npInput.value);
+          npEditorMeta.textContent = `${toBn(chars)} অক্ষর · ${toBn(words)} শব্দ · ${npFmtDate(note.createdAt)}`;
+        }
+
+        function npSetStatus(state) {
+          npStatus.dataset.state = state;
+          npStatus.textContent = state === "saving" ? "সেভ হচ্ছে…" : "সেভড";
+        }
+
+        function npCreate() {
+          const now = Date.now();
+          const note = {
+            id: npUid(),
+            text: "",
+            createdAt: now,
+            updatedAt: now,
+          };
+          npNotes.unshift(note);
+          npPersist();
+          npShowEditor(note.id);
+        }
+
+        function npCleanupEmpty() {
+          if (!npCurrentId) return;
+          const note = npNotes.find((n) => n.id === npCurrentId);
+          if (note && !note.text.trim()) {
+            npNotes = npNotes.filter((n) => n.id !== npCurrentId);
+            npPersist();
+          }
+        }
+
+        /* ---------- confirm ---------- */
+        const npConfirmEl = $("#npConfirm");
+
+        function npAskConfirm(title, msg, cb) {
+          $("#npConfirmTitle").textContent = title;
+          $("#npConfirmMsg").textContent = msg;
+          npConfirmCb = cb;
+          npConfirmEl.classList.add("show");
+        }
+
+        $("#npConfirmNo").onclick = () => {
+          npConfirmEl.classList.remove("show");
+          npConfirmCb = null;
+        };
+
+        $("#npConfirmYes").onclick = () => {
+          npConfirmEl.classList.remove("show");
+          const cb = npConfirmCb;
+          npConfirmCb = null;
+          if (cb) cb();
+        };
+
+        /* ============================================================
+           NOTEPAD EVENTS
+           ============================================================ */
+
+        /* topbar buttons */
+        $("#npAdd").onclick = npCreate;
+        npFab.onclick = npCreate;
+
+        $("#npBack").onclick = () => {
+          if (npCurrentId) {
+            npCleanupEmpty();
+            npShowList();
+          } else {
+            npClose();
+          }
+        };
+
+        /* list → editor (delegated) */
+        npList.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-open]");
+          if (!btn) return;
+          npShowEditor(btn.dataset.open);
+        });
+
+        /* typing → autosave */
+        npInput.addEventListener("input", () => {
+          const note = npNotes.find((n) => n.id === npCurrentId);
+          if (!note) return;
+
+          note.text = npInput.value;
+          note.updatedAt = Date.now();
+
+          npUpdateMeta();
+          npSetStatus("saving");
+
+          clearTimeout(npSaveTimer);
+          npSaveTimer = setTimeout(() => {
+            npPersist();
+            npSetStatus("saved");
+          }, 380);
+        });
+
+        /* copy */
+        $("#npCopy").onclick = () => {
+          const note = npNotes.find((n) => n.id === npCurrentId);
+          if (!note || !note.text) {
+            toast("নোট খালি");
+            return;
+          }
+          (navigator.clipboard
+            ? navigator.clipboard.writeText(note.text)
+            : Promise.reject()
+          ).then(
+            () => toast("নোট কপি হয়েছে"),
+            () => toast("কপি ব্যর্থ"),
+          );
+        };
+
+        /* delete */
+        $("#npDelete").onclick = () => {
+          const note = npNotes.find((n) => n.id === npCurrentId);
+          if (!note) return;
+          npAskConfirm(
+            "নোট মুছবেন?",
+            "এই নোটটি স্থায়ীভাবে মুছে যাবে। এটি ফেরানো যাবে না।",
+            () => {
+              npNotes = npNotes.filter((n) => n.id !== npCurrentId);
+              npPersist();
+              npCurrentId = null;
+              toast("নোট মুছে ফেলা হয়েছে");
+              npShowList();
+            },
+          );
+        };
+
+        /* search */
+        npSearchInput.addEventListener("input", () => {
+          npSearch = npSearchInput.value;
+          npSearchWrap.classList.toggle("has-value", !!npSearch);
+          npRenderList();
+        });
+
+        $("#npSearchClear").onclick = () => {
+          npSearchInput.value = "";
+          npSearch = "";
+          npSearchWrap.classList.remove("has-value");
+          npRenderList();
+          npSearchInput.focus();
+        };
+
+        /* escape key */
+        window.addEventListener("keydown", (e) => {
+          if (e.key !== "Escape") return;
+          if (!npConfirmEl.classList.contains("show") && npApp.hidden) return;
+          if (npConfirmEl.classList.contains("show")) {
+            npConfirmEl.classList.remove("show");
+            npConfirmCb = null;
+            return;
+          }
+          if (npCurrentId) {
+            npCleanupEmpty();
+            npShowList();
+          } else {
+            npClose();
+          }
+        });
+
+        /* notepad topbar scroll shadow */
+        const npTopbar = $("#npTopbar");
+        npApp.addEventListener(
+          "scroll",
+          () => {
+            npTopbar.classList.toggle("scrolled", npApp.scrollTop > 8);
+          },
+          { passive: true },
+        );
+
+        /* save on exit */
+        window.addEventListener("beforeunload", () => {
+          const note = npNotes.find((n) => n.id === npCurrentId);
+          if (note) {
+            note.text = npInput.value;
+            note.updatedAt = Date.now();
+          }
+          npCleanupEmpty();
+          npPersist();
+        });
+
+        /* ============================================================
+           BOOT
+           ============================================================ */
+        npLoad();
+      })();
+    </script>
+  </body>
+</html>
