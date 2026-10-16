@@ -670,13 +670,13 @@ function editAll(id) {
                                inputmode="numeric" />
                     </div>
                     <div class="field">
-                        <label>আজ পাঠানো হয়েছে</label>
+                        <label>দৈনিক লিমিট</label>
                         <input id="${modalId}_du" type="number"
                                value="${Number(p.dailyUsedBase || 0)}"
                                inputmode="numeric" />
                     </div>
                     <div class="field">
-                        <label>এই মাসে পাঠানো হয়েছে</label>
+                        <label>মাসিক লিমিট</label>
                         <input id="${modalId}_mu" type="number"
                                value="${Number(p.monthlyUsedBase || 0)}"
                                inputmode="numeric" />
