@@ -187,9 +187,9 @@ function balClass(net) {
 }
 
 function balLabel(net) {
-    if (net > 0) return "পাব";
-    if (net < 0) return "দেব";
-    return "সমান";
+    if (net > 0) return "পাওনা";
+    if (net < 0) return "দেনা";
+    return "মিটমাট";
 }
 
 function fmtDate(iso) {
