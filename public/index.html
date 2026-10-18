@@ -1416,11 +1416,12 @@
             route: "entry",
           },
           { icon: "i-users", label: "বিকাশ ম্যানেজমেন্ট", route: "hisab" },
-          { icon: "i-calc", label: "রাফ হিসাব", route: "raf" },
+          { icon: "i-calc", label: "বিকাশ রাফ হিসাব", route: "raf" },
           { icon: "i-users", label: "গিলার হিসাব", route: "gila" },
 
-          { icon: "i-note", label: "পাওনার হিসাব", route: "pawna" },
+          { icon: "i-note", label: "দেনা পাওনার হিসাব", route: "pawna" },
           { icon: "i-note", label: "ব্যাংক হিসাব", route: "bank" },
+          { icon: "i-note", label: "ক্যাশের হিসাব", route: "cash" },
         ];
 
         const grid = $("#servicesGrid");
@@ -1449,6 +1450,7 @@
           gila: { msg: "গিলার হিসাব খোলা হচ্ছে…", url: "/Gila" },
           pawna: { msg: "পাওনার হিসাব খোলা হচ্ছে…", url: "/Pawna" },
           bank: { msg: "পাওনার হিসাব খোলা হচ্ছে…", url: "/Bank" },
+          cash: { msg: "ক্যাশের হিসাব খোলা হচ্ছে…", url: "/Cash" },
         };
 
         grid.addEventListener("click", (e) => {
