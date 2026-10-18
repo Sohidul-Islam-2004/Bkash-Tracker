@@ -223,6 +223,28 @@ const BankSchema = new mongoose.Schema(
 );
 
 /* ============================================================
+   CASH (Single Page Ledger)
+   ============================================================ */
+const CashTransactionSchema = new mongoose.Schema(
+    {
+        type: { type: String, enum: ["given", "taken"], required: true },
+        amount: { type: Number, required: true, min: 1 },
+        date: { type: Date, default: Date.now },
+        name: { type: String, trim: true, default: null },
+
+    },
+    { _id: true }
+);
+
+const CashSchema = new mongoose.Schema(
+    {
+        balance: { type: Number, default: 0 },
+        transactions: { type: [CashTransactionSchema], default: [] },
+    },
+    { timestamps: true }
+);
+
+/* ============================================================
    USER  (auth — phone + PIN)
    ============================================================ */
 const UserSchema = new mongoose.Schema(
@@ -279,5 +301,6 @@ module.exports = {
     PawnaSchema,
     PawnaPersonSchema,
     BankSchema,
+    CashSchema,
     UserSchema,
 };
