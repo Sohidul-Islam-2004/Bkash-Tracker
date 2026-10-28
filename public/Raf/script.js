@@ -30,7 +30,8 @@ const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const fmtNum = n => n && n.length === 11 ? n.slice(0, 5) + '-' + n.slice(5) : n;
+/* only format real 11-digit phone numbers; leave names untouched */
+const fmtNum = n => /^\d{11}$/.test(String(n)) ? n.slice(0, 5) + '-' + n.slice(5) : n;
 
 function fmtDateTime(ts) {
     const d = new Date(ts);
@@ -45,7 +46,10 @@ function fmtDateTime(ts) {
 }
 
 /* ============================================================
-   PARSE  (rule: 11-digit phone  →  first number after it = amount)
+   PARSE  (rules:
+     • 11-digit phone  →  first number after it = amount
+     • no phone on line →  name + last number = amount
+   )
    ============================================================ */
 
 /* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
@@ -61,7 +65,6 @@ function cleanText(s) {
    (typo like 017858528333) are swallowed so they never become the amount. */
 const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
 
-/* first positive number in text: 40,000 · 10200 · 1,02,000 · 3060 */
 /* first positive number in text.
    Accepted grouping separators:   ,   '   ’   ‘   ′
      → 40,000   10'200   1,02,000   1'02'000   10’20’000
@@ -73,10 +76,6 @@ function extractAmount(str) {
     // drop "pin:1234" style noise
     const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
 
-    //          ┌─ 1–3 leading digits
-    //          │       ┌─ ≥1 group of 2–3 digits, sep ∈ , ' ’ ‘ ′
-    //          │       │                ┌─ optional .decimal
-    //          │       │                │        ┌─ plain fallback
     const re = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
 
     let m;
@@ -85,6 +84,31 @@ function extractAmount(str) {
         if (Number.isFinite(n) && n > 0) return n;
     }
     return null;
+}
+
+/* Name + amount line (no phone on it).
+   The LAST number on the line is the amount, everything else is the name.
+   The name must contain at least one letter, so "500" or "10/13" alone
+   never become an entry. */
+function splitNameAmount(body) {
+    const re = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
+    let m, last = null;
+    while ((m = re.exec(body))) last = m;
+    if (!last) return null;
+
+    const amount = Number(last[0].replace(/[,'’‘′]/g, ''));
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+
+    let name = (body.slice(0, last.index) + ' ' + body.slice(last.index + last[0].length))
+        .replace(/\s+/g, ' ')
+        .replace(/^[\s\-–—:=,،.।|/*]+|[\s\-–—:=,،.।|/*]+$/gu, '')
+        .trim();
+
+    if (!name || !/\p{L}/u.test(name)) return null;                       // must have a letter
+    if (/^(মোট|সর্বমোট|total|grand\s*total)$/i.test(name)) return null;    // skip totals
+    if (name.length > 80) name = name.slice(0, 80).trim();
+
+    return { name, amount };
 }
 
 /* every phone in a line, with the text that follows it (up to the next phone) */
@@ -187,6 +211,10 @@ function parseEntries(text) {
             } else if (isNewMsg) {
                 pending = null;    // a different message with no number: drop it
             }
+        } else {
+            /* no phone on this line: try "name + amount" */
+            const na = splitNameAmount(body);
+            if (na) out.push({ number: na.name, amount: na.amount });
         }
     }
     if (pending) warnings.push(`amount missing for ${pending.number}`);
@@ -279,6 +307,11 @@ function render() {
     // newest first
     const sorted = [...entries].sort((a, b) => b.createdAt - a.createdAt);
     list.innerHTML = sorted.map(e => renderCard(e, entries.indexOf(e) + 1)).join('');
+
+    // reapply fold state after re-render
+    if (typeof window.applyCollapsedState === 'function') {
+        window.applyCollapsedState();
+    }
 }
 
 function renderCard(e, no) {
@@ -327,7 +360,7 @@ function renderCard(e, no) {
                     ${e.entries.map((en, i) => `
                         <div class="num-row">
                             <span class="num-idx">${i + 1}</span>
-                            <span class="num">${fmtNum(en.number)}</span>
+                            <span class="num" dir="auto">${escapeHtml(fmtNum(en.number))}</span>
                             <span class="amt">৳ ${bn(en.amount)}</span>
                         </div>
                     `).join('')}
@@ -336,7 +369,7 @@ function renderCard(e, no) {
 
             <div class="card-foot">
                 <span class="foot-lbl">
-                    <b>${e.entries.length}</b> টি নম্বর
+                    <b>${e.entries.length}</b> টি এন্ট্রি
                 </span>
                 <span class="foot-total">
                     মোট <b>৳ ${bn(e.total)}</b>
@@ -423,7 +456,7 @@ document.getElementById('saveBtn').onclick = () => {
     persist();
     render();
     closeSheet();
-    toast(`সেভ হয়েছে • ${parsed.length} টি নম্বর • ৳${bn(total)}`, 'ok');
+    toast(`সেভ হয়েছে • ${parsed.length} টি • ৳${bn(total)}`, 'ok');
 };
 
 /* ============================================================
@@ -437,7 +470,7 @@ function buildCopyText(entry) {
     if (entry.note) {
         lines.push(`📝 ${entry.note}`);
     }
-    lines.push(`নম্বর: ${entry.entries.length} টি`);
+    lines.push(`এন্ট্রি: ${entry.entries.length} টি`);
     lines.push('━━━━━━━━━━━━━━━━━━━━');
 
     entry.entries.forEach(en => {
