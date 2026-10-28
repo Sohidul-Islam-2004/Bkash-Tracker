@@ -171,18 +171,31 @@ function cleanText(s) {
 const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
 
 /* first positive number in text: 40,000 · 10200 · 1,02,000 · 3060 */
+/* first positive number in text.
+   Accepted grouping separators:   ,   '   ’   ‘   ′
+     → 40,000   10'200   1,02,000   1'02'000   10’20’000
+   Plain runs still work:          10200   3060
+   Decimal (taka.paisa) preserved: 10.50   10'200.50                       */
 function extractAmount(str) {
     if (!str) return null;
+
+    // drop "pin:1234" style noise
     const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
-    const re = /\d{1,3}(?:,\d{2,3})+(?!\d)|\d+/g;
+
+    //          ┌─ 1–3 leading digits
+    //          │       ┌─ ≥1 group of 2–3 digits, sep ∈ , ' ’ ‘ ′
+    //          │       │                ┌─ optional .decimal
+    //          │       │                │        ┌─ plain fallback
+    const re = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
+
     let m;
     while ((m = re.exec(cleaned))) {
-        const n = Number(m[0].replace(/,/g, ''));
+        const raw = m[0];
+        const n = Number(raw.replace(/[,'’‘′]/g, ''));
         if (Number.isFinite(n) && n > 0) return n;
     }
     return null;
 }
-
 /* every phone in a line, with the text that follows it (up to the next phone) */
 function splitByPhone(body) {
     const hits = [];
