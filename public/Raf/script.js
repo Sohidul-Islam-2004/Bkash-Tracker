@@ -46,11 +46,20 @@ function fmtDateTime(ts) {
 }
 
 /* ============================================================
-   PARSE  (rules:
-     • 11-digit phone  →  first number after it = amount
-     • no phone on line →  name + last number = amount
-     • "pin..." lines  →  always ignored
-   )
+   PARSE
+   ------------------------------------------------------------
+   Rule (in this order, per line):
+
+     1. strip WhatsApp header
+     2. SKIP  if empty / media / deleted / pin-line
+     3. PHONE MODE        — line contains an 11-digit phone
+                            → amount = first number AFTER the phone
+                            → every word on the line is ignored
+                            → stray bad digit runs → red error
+     4. CONTINUATION MODE — last phone has no amount yet
+                            → this line supplies the amount
+     5. NAME MODE         — no phone anywhere
+                            → LAST number = amount, rest = name
    ============================================================ */
 
 /* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
@@ -61,47 +70,41 @@ function cleanText(s) {
 }
 
 /* BD mobile: 01[3-9] + 8 digits = 11 digits.
-   Tolerates "880"/"+88" prefix and single space / dot / dash between digits
-   (e.g. "0 1985-521016").  Any digits glued straight onto the 11 digits
-   (typo like 017858528333) are swallowed so they never become the amount. */
+   Tolerates "880"/"+88" prefix and single space / dot / dash between digits.
+   Any digits glued straight onto the 11 digits (typo like 017858528333)
+   are swallowed so they never become the amount. */
 const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
 
 /* Mobile-banking PIN line written under a WhatsApp entry:
    pin680   Pin680   Pin;8377   Pin805   pin : 1234   pin#1234
-   Always noise — must never become a name-amount entry. */
+   Always noise — must never become a name-amount entry.
+   Does NOT match real names: Pinky, Pinu, Pinjabi, etc. */
 const PIN_RE = /^\s*m?pin\s*[:;#.=\-–—]?\s*\d+\s*$/i;
 
-/* first positive number in text.
-   Accepted grouping separators:   ,   '   ’   ‘   ′
-     → 40,000   10'200   1,02,000   1'02'000   10’20’000
-   Plain runs still work:          10200   3060
-   Decimal (taka.paisa) preserved: 10.50   10'200.50                       */
+/* A numeric token: plain run, or grouped (40,000 · 10'200 · 1,02,000). */
+const AMOUNT_RE = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
+
+/* first positive number in text */
 function extractAmount(str) {
     if (!str) return null;
-
-    // drop "pin:1234" style noise
     const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
-
-    const re = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
-
+    AMOUNT_RE.lastIndex = 0;
     let m;
-    while ((m = re.exec(cleaned))) {
+    while ((m = AMOUNT_RE.exec(cleaned))) {
         const n = Number(m[0].replace(/[,'’‘′]/g, ''));
         if (Number.isFinite(n) && n > 0) return n;
     }
     return null;
 }
 
-/* Name + amount line (no phone on it).
-   The LAST number on the line is the amount, everything else is the name.
-   The name must contain at least one letter, so "500" or "10/13" alone
-   never become an entry. */
+/* NAME MODE: last number = amount, everything else = name.
+   Returns null if there is no amount, or no letter in the name. */
 function splitNameAmount(body) {
-    if (PIN_RE.test(body)) return null;                 // pin… lines are noise
+    if (PIN_RE.test(body)) return null;         // pin… lines are noise
 
-    const re = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
+    AMOUNT_RE.lastIndex = 0;
     let m, last = null;
-    while ((m = re.exec(body))) last = m;
+    while ((m = AMOUNT_RE.exec(body))) last = m;
     if (!last) return null;
 
     const amount = Number(last[0].replace(/[,'’‘′]/g, ''));
@@ -112,8 +115,8 @@ function splitNameAmount(body) {
         .replace(/^[\s\-–—:=,،.।|/*]+|[\s\-–—:=,،.।|/*]+$/gu, '')
         .trim();
 
-    if (!name || !/\p{L}/u.test(name)) return null;                       // must have a letter
-    if (/^(মোট|সর্বমোট|total|grand\s*total)$/i.test(name)) return null;    // skip totals
+    if (!name || !/\p{L}/u.test(name)) return null;                    // must contain a letter
+    if (/^(মোট|সর্বমোট|total|grand\s*total)$/i.test(name)) return null; // skip totals
     if (name.length > 80) name = name.slice(0, 80).trim();
 
     return { name, amount };
@@ -129,7 +132,7 @@ function splitByPhone(body) {
             number: m[1].replace(/\D/g, ''),
             start: m.index,
             end: m.index + m[0].length,
-            glued: m[2]            // extra digits stuck to the phone (typo)
+            glued: m[2]
         });
     }
     return hits.map((h, i) => ({
@@ -141,19 +144,17 @@ function splitByPhone(body) {
     }));
 }
 
-/* digit runs that look like a phone number but are NOT a valid 11-digit one.
-   (amounts never have 10+ digits, and never start with 0 and run 8+ digits) */
+/* digit runs that look like a phone but are NOT a valid 11-digit one */
 function findBadNumbers(body, parts) {
     const bad = [];
     const re = /\d+/g;
     let m;
     while ((m = re.exec(body))) {
         const s0 = m.index, e0 = s0 + m[0].length;
-        if (parts.some(p => s0 < p.end && e0 > p.start)) continue;   // part of a valid phone
+        if (parts.some(p => s0 < p.end && e0 > p.start)) continue;
         const len = m[0].length;
         if (len >= 10 || (m[0][0] === '0' && len >= 8)) bad.push({ digits: len });
     }
-    /* spaced / dashed number such as "0 1985-52101" with the wrong digit count */
     if (!bad.length && !parts.length && /^(?:\+?88[ .\-]?)?0[ .\-]?1[ .\-]?\d/.test(body)) {
         bad.push({ digits: null });
     }
@@ -161,8 +162,8 @@ function findBadNumbers(body, parts) {
 }
 
 const HEADER_RES = [
-    /^\[[^\]]*\]\s*[^:]*:\s*/,                                   // [10/13, 9:37 AM] Name:
-    /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s*\d{1,2}:\d{2}(?::\d{2})?\s*(?:[AaPp]\.?[Mm]\.?)?\s*-\s*[^:]*:\s*/ // 10/13/25, 9:37 AM - Name:
+    /^\[[^\]]*\]\s*[^:]*:\s*/,                                                                     // [10/13, 9:37 AM] Name:
+    /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s*\d{1,2}:\d{2}(?::\d{2})?\s*(?:[AaPp]\.?[Mm]\.?)?\s*-\s*[^:]*:\s*/  // 10/13/25, 9:37 AM - Name:
 ];
 
 function parseEntries(text) {
@@ -170,6 +171,7 @@ function parseEntries(text) {
     const warnings = [];
     const errors = [];
     let pending = null;
+
     const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message)$/i;
     const badReason = n => n
         ? `নম্বর ভুল: ${n} ডিজিট (১১ ডিজিট হতে হবে)`
@@ -179,55 +181,74 @@ function parseEntries(text) {
         let body = raw.trim();
         if (!body) continue;
 
+        /* --- 1. strip WhatsApp header --- */
         let isNewMsg = false;
         for (const re of HEADER_RES) {
             if (re.test(body)) { body = body.replace(re, ''); isNewMsg = true; break; }
         }
         body = body.trim();
-        if (!body || skipRe.test(body) || PIN_RE.test(body)) {
+        if (!body) { if (isNewMsg) pending = null; continue; }
+
+        /* --- 2. skip noise (includes pin lines) --- */
+        if (skipRe.test(body) || PIN_RE.test(body)) {
             if (isNewMsg) pending = null;
             continue;
         }
 
         const parts = splitByPhone(body);
-
-        /* wrong numbers (too short / too long) */
         const bad = findBadNumbers(body, parts);
-        bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
 
+        /* ==========================================================
+           3. PHONE MODE  —  at least one phone on the line
+              names on the line are IGNORED — only phone + amount.
+           ========================================================== */
         if (parts.length) {
             if (pending) {
                 warnings.push(`amount missing for ${pending.number}`);
                 pending = null;
             }
             for (const p of parts) {
-                if (p.glued) {
-                    /* 12+ digits glued together → wrong number, do not guess */
+                if (p.glued) {                                   // 12+ digits glued: error
                     errors.push({ line: body, reason: badReason(11 + p.glued.length) });
                     pending = null;
                     continue;
                 }
-                const amount = extractAmount(p.after);
+                const amount = extractAmount(p.after);           // first number AFTER phone
                 if (amount != null) out.push({ number: p.number, amount });
-                else pending = { number: p.number };
+                else pending = { number: p.number };             // wait for next line
             }
-        } else if (bad.length) {
+            bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
+            continue;
+        }
+
+        /* ---------- phone-looking but wrong length → red error ---------- */
+        if (bad.length) {
+            bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
             pending = null;
-        } else if (pending) {
-            /* continuation line (e.g. "40,000/=" under the phone) */
+            continue;
+        }
+
+        /* ==========================================================
+           4. CONTINUATION MODE — previous phone has no amount yet
+           ========================================================== */
+        if (pending) {
             const amount = extractAmount(body);
             if (amount != null) {
                 out.push({ number: pending.number, amount });
                 pending = null;
             } else if (isNewMsg) {
-                pending = null;    // a different message with no number: drop it
+                pending = null;                                   // unrelated new msg
             }
-        } else {
-            /* no phone on this line: try "name + amount" */
-            const na = splitNameAmount(body);
-            if (na) out.push({ number: na.name, amount: na.amount });
+            continue;
         }
+
+        /* ==========================================================
+           5. NAME MODE — no phone, no pending: name + last number
+           ========================================================== */
+        const na = splitNameAmount(body);
+        if (na) out.push({ number: na.name, amount: na.amount });
     }
+
     if (pending) warnings.push(`amount missing for ${pending.number}`);
     out.warnings = warnings;
     out.errors = errors;
@@ -235,7 +256,7 @@ function parseEntries(text) {
 }
 
 /* ============================================================
-   WRONG-NUMBER BOX  (shown under the text area)
+   WRONG-NUMBER BOX
    ============================================================ */
 function showEntryErrors(errs) {
     let box = document.getElementById('entryErrors');
@@ -315,18 +336,15 @@ function render() {
         return;
     }
 
-    // newest first
     const sorted = [...entries].sort((a, b) => b.createdAt - a.createdAt);
     list.innerHTML = sorted.map(e => renderCard(e, entries.indexOf(e) + 1)).join('');
 
-    // reapply fold state after re-render
     if (typeof window.applyCollapsedState === 'function') {
         window.applyCollapsedState();
     }
 }
 
 function renderCard(e, no) {
-    /* compact note chip shown in the header */
     const noteChip = e.note
         ? `<span class="card-note-chip" title="${escapeHtml(e.note)}">
              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -416,10 +434,8 @@ document.getElementById('addBtn').onclick = openSheet;
 document.getElementById('closeBtn').onclick = closeSheet;
 sheetBg.onclick = closeSheet;
 
-/* clear the red box as soon as the text is edited */
 document.getElementById('entryInput').addEventListener('input', () => showEntryErrors([]));
 
-/* Paste button */
 document.getElementById('pasteBtn').onclick = async () => {
     try {
         const txt = await navigator.clipboard.readText();
@@ -445,7 +461,6 @@ document.getElementById('saveBtn').onclick = () => {
 
     const parsed = parseEntries(raw);
 
-    /* wrong number (not 11 digits) → show it and do NOT save */
     if (parsed.errors && parsed.errors.length) {
         showEntryErrors(parsed.errors);
         return toast(parsed.errors.length + ' টি নম্বর ভুল — ঠিক করে আবার সেভ করুন', 'err');
@@ -471,26 +486,19 @@ document.getElementById('saveBtn').onclick = () => {
 };
 
 /* ============================================================
-   COPY ENTRY  (note + numbers + total)
+   COPY ENTRY
    ============================================================ */
 function buildCopyText(entry) {
     const lines = [];
-
     lines.push(`📅 ${fmtDateTime(entry.createdAt)}`);
-
-    if (entry.note) {
-        lines.push(`📝 ${entry.note}`);
-    }
+    if (entry.note) lines.push(`📝 ${entry.note}`);
     lines.push(`এন্ট্রি: ${entry.entries.length} টি`);
     lines.push('━━━━━━━━━━━━━━━━━━━━');
-
     entry.entries.forEach(en => {
         lines.push(`${fmtNum(en.number)} = ${en.amount}`);
     });
-
     lines.push('━━━━━━━━━━━━━━━━━━━━');
     lines.push(`মোট                = ${bn(entry.total)}`);
-
     return lines.join('\n');
 }
 
@@ -499,7 +507,6 @@ async function copyText(text) {
         if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(text);
         } else {
-            // fallback for older browsers / non-https
             const ta = document.createElement('textarea');
             ta.value = text;
             ta.style.position = 'fixed';
@@ -517,10 +524,9 @@ async function copyText(text) {
 }
 
 /* ============================================================
-   CLICK HANDLERS (copy + delete) — delegated
+   CLICK HANDLERS
    ============================================================ */
 document.addEventListener('click', async ev => {
-    /* ---------- copy ---------- */
     const copyBtn = ev.target.closest('[data-copy]');
     if (copyBtn) {
         ev.stopPropagation();
@@ -541,7 +547,6 @@ document.addEventListener('click', async ev => {
         return;
     }
 
-    /* ---------- delete ---------- */
     const del = ev.target.closest('[data-del]');
     if (!del) return;
 
@@ -562,13 +567,7 @@ render();
 
 /* ============================================================
    SMOOTH COLLAPSE / EXPAND
-   ------------------------------------------------------------
-   • drag the sheet handle down to dismiss
-   • click a card head to fold / unfold its body
-   • fold state is remembered per entry
    ============================================================ */
-
-/* ---------- 1. DRAG-TO-CLOSE the bottom sheet ---------- */
 (function enableSheetDrag() {
     const handle = document.querySelector('.sheet-handle');
     const sheetEl = document.getElementById('sheet');
@@ -590,13 +589,10 @@ render();
         if (!dragging) return;
         currentY = y;
         const dy = Math.max(0, y - startY);
-
-        // rubber-band: past 50% of height, dampen heavily
         const h = sheetEl.offsetHeight;
         const eased = dy < h * 0.5
             ? dy
             : h * 0.5 + (dy - h * 0.5) * 0.35;
-
         sheetEl.style.transform = `translate3d(0, ${eased}px, 0)`;
     };
 
@@ -608,27 +604,20 @@ render();
 
         const dy = currentY - startY;
         const dt = Math.max(1, Date.now() - startTime);
-        const velocity = dy / dt; // px per ms
+        const velocity = dy / dt;
 
-        // dismiss if dragged far enough, or fast-flicked down
         if (dy > 120 || velocity > 0.6) closeSheet();
     };
 
-    /* --- touch --- */
-    handle.addEventListener('touchstart', (e) => {
-        start(e.touches[0].clientY);
-    }, { passive: true });
-
+    handle.addEventListener('touchstart', (e) => start(e.touches[0].clientY), { passive: true });
     handle.addEventListener('touchmove', (e) => {
         if (!dragging) return;
         move(e.touches[0].clientY);
-        if (e.cancelable) e.preventDefault();   // stop page scroll
+        if (e.cancelable) e.preventDefault();
     }, { passive: false });
-
     handle.addEventListener('touchend', end);
     handle.addEventListener('touchcancel', end);
 
-    /* --- mouse --- */
     handle.addEventListener('mousedown', (e) => {
         e.preventDefault();
         start(e.clientY);
@@ -643,7 +632,6 @@ render();
         window.addEventListener('mouseup', onUp);
     });
 
-    /* --- safety: reset transform if a drag is somehow interrupted --- */
     window.addEventListener('blur', () => {
         if (!dragging) return;
         dragging = false;
@@ -652,11 +640,9 @@ render();
     });
 })();
 
-/* ---------- 2. CARD FOLD: click the head to collapse ---------- */
 (function enableCardFold() {
     const STORE = 'raf_hisab_collapsed_v1';
 
-    // read saved state
     window.applyCollapsedState = function applyCollapsedState() {
         let saved = {};
         try { saved = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { }
@@ -667,7 +653,6 @@ render();
         });
     };
 
-    // persist current state
     function persistCollapsedState() {
         const state = {};
         document.querySelectorAll('.card').forEach(card => {
@@ -676,7 +661,6 @@ render();
         try { localStorage.setItem(STORE, JSON.stringify(state)); } catch { }
     }
 
-    // delegated click — toggle fold, unless the user hit copy/delete
     document.addEventListener('click', (e) => {
         if (e.target.closest('.card-copy, .card-del')) return;
 
@@ -690,11 +674,9 @@ render();
         persistCollapsedState();
     });
 
-    // run once on boot in case anything is already rendered
     applyCollapsedState();
 })();
 
-/* ---------- 3. ESC closes the sheet ---------- */
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     const s = document.getElementById('sheet');
