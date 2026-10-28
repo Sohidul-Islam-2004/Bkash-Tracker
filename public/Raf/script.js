@@ -49,6 +49,7 @@ function fmtDateTime(ts) {
    PARSE  (rules:
      • 11-digit phone  →  first number after it = amount
      • no phone on line →  name + last number = amount
+     • "pin..." lines  →  always ignored
    )
    ============================================================ */
 
@@ -64,6 +65,11 @@ function cleanText(s) {
    (e.g. "0 1985-521016").  Any digits glued straight onto the 11 digits
    (typo like 017858528333) are swallowed so they never become the amount. */
 const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
+
+/* Mobile-banking PIN line written under a WhatsApp entry:
+   pin680   Pin680   Pin;8377   Pin805   pin : 1234   pin#1234
+   Always noise — must never become a name-amount entry. */
+const PIN_RE = /^\s*m?pin\s*[:;#.=\-–—]?\s*\d+\s*$/i;
 
 /* first positive number in text.
    Accepted grouping separators:   ,   '   ’   ‘   ′
@@ -91,6 +97,8 @@ function extractAmount(str) {
    The name must contain at least one letter, so "500" or "10/13" alone
    never become an entry. */
 function splitNameAmount(body) {
+    if (PIN_RE.test(body)) return null;                 // pin… lines are noise
+
     const re = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
     let m, last = null;
     while ((m = re.exec(body))) last = m;
@@ -176,7 +184,10 @@ function parseEntries(text) {
             if (re.test(body)) { body = body.replace(re, ''); isNewMsg = true; break; }
         }
         body = body.trim();
-        if (!body || skipRe.test(body)) { if (isNewMsg) pending = null; continue; }
+        if (!body || skipRe.test(body) || PIN_RE.test(body)) {
+            if (isNewMsg) pending = null;
+            continue;
+        }
 
         const parts = splitByPhone(body);
 
