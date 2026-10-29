@@ -30,7 +30,7 @@ const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* only format real 11-digit phone numbers; leave names untouched */
+/* only format real 11-digit phone numbers; leave anything else untouched */
 const fmtNum = n => /^\d{11}$/.test(String(n)) ? n.slice(0, 5) + '-' + n.slice(5) : n;
 
 function fmtDateTime(ts) {
@@ -50,16 +50,13 @@ function fmtDateTime(ts) {
    ------------------------------------------------------------
    Rule (in this order, per line):
 
-     1. strip WhatsApp header
-     2. SKIP  if empty / media / deleted / pin-line
-     3. PHONE MODE        — line contains an 11-digit phone
+     1. SKIP  if empty / media / deleted
+     2. PHONE MODE        — line contains an 11-digit phone
                             → amount = first number AFTER the phone
                             → every word on the line is ignored
                             → stray bad digit runs → red error
-     4. CONTINUATION MODE — last phone has no amount yet
+     3. CONTINUATION MODE — last phone has no amount yet
                             → this line supplies the amount
-     5. NAME MODE         — no phone anywhere
-                            → LAST number = amount, rest = name
    ============================================================ */
 
 /* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
@@ -75,51 +72,19 @@ function cleanText(s) {
    are swallowed so they never become the amount. */
 const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
 
-/* Mobile-banking PIN line written under a WhatsApp entry:
-   pin680   Pin680   Pin;8377   Pin805   pin : 1234   pin#1234
-   Always noise — must never become a name-amount entry.
-   Does NOT match real names: Pinky, Pinu, Pinjabi, etc. */
-const PIN_RE = /^\s*m?pin\s*[:;#.=\-–—]?\s*\d+\s*$/i;
-
 /* A numeric token: plain run, or grouped (40,000 · 10'200 · 1,02,000). */
 const AMOUNT_RE = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
 
 /* first positive number in text */
 function extractAmount(str) {
     if (!str) return null;
-    const cleaned = str.replace(/\bpin\s*[:#]?\s*\d+/gi, ' ');
     AMOUNT_RE.lastIndex = 0;
     let m;
-    while ((m = AMOUNT_RE.exec(cleaned))) {
+    while ((m = AMOUNT_RE.exec(str))) {
         const n = Number(m[0].replace(/[,'’‘′]/g, ''));
         if (Number.isFinite(n) && n > 0) return n;
     }
     return null;
-}
-
-/* NAME MODE: last number = amount, everything else = name.
-   Returns null if there is no amount, or no letter in the name. */
-function splitNameAmount(body) {
-    if (PIN_RE.test(body)) return null;         // pin… lines are noise
-
-    AMOUNT_RE.lastIndex = 0;
-    let m, last = null;
-    while ((m = AMOUNT_RE.exec(body))) last = m;
-    if (!last) return null;
-
-    const amount = Number(last[0].replace(/[,'’‘′]/g, ''));
-    if (!Number.isFinite(amount) || amount <= 0) return null;
-
-    let name = (body.slice(0, last.index) + ' ' + body.slice(last.index + last[0].length))
-        .replace(/\s+/g, ' ')
-        .replace(/^[\s\-–—:=,،.।|/*]+|[\s\-–—:=,،.।|/*]+$/gu, '')
-        .trim();
-
-    if (!name || !/\p{L}/u.test(name)) return null;                    // must contain a letter
-    if (/^(মোট|সর্বমোট|total|grand\s*total)$/i.test(name)) return null; // skip totals
-    if (name.length > 80) name = name.slice(0, 80).trim();
-
-    return { name, amount };
 }
 
 /* every phone in a line, with the text that follows it (up to the next phone) */
@@ -161,11 +126,6 @@ function findBadNumbers(body, parts) {
     return bad;
 }
 
-const HEADER_RES = [
-    /^\[[^\]]*\]\s*[^:]*:\s*/,                                                                     // [10/13, 9:37 AM] Name:
-    /^\d{1,2}\/\d{1,2}\/\d{2,4},?\s*\d{1,2}:\d{2}(?::\d{2})?\s*(?:[AaPp]\.?[Mm]\.?)?\s*-\s*[^:]*:\s*/  // 10/13/25, 9:37 AM - Name:
-];
-
 function parseEntries(text) {
     const out = [];
     const warnings = [];
@@ -178,28 +138,15 @@ function parseEntries(text) {
         : 'নম্বর ভুল: ১১ ডিজিট নয়';
 
     for (const raw of cleanText(text).split(/\r?\n/)) {
-        let body = raw.trim();
+        const body = raw.trim();
         if (!body) continue;
-
-        /* --- 1. strip WhatsApp header --- */
-        let isNewMsg = false;
-        for (const re of HEADER_RES) {
-            if (re.test(body)) { body = body.replace(re, ''); isNewMsg = true; break; }
-        }
-        body = body.trim();
-        if (!body) { if (isNewMsg) pending = null; continue; }
-
-        /* --- 2. skip noise (includes pin lines) --- */
-        if (skipRe.test(body) || PIN_RE.test(body)) {
-            if (isNewMsg) pending = null;
-            continue;
-        }
+        if (skipRe.test(body)) continue;
 
         const parts = splitByPhone(body);
         const bad = findBadNumbers(body, parts);
 
         /* ==========================================================
-           3. PHONE MODE  —  at least one phone on the line
+           PHONE MODE  —  at least one phone on the line
               names on the line are IGNORED — only phone + amount.
            ========================================================== */
         if (parts.length) {
@@ -229,24 +176,16 @@ function parseEntries(text) {
         }
 
         /* ==========================================================
-           4. CONTINUATION MODE — previous phone has no amount yet
+           CONTINUATION MODE — previous phone has no amount yet
            ========================================================== */
         if (pending) {
             const amount = extractAmount(body);
             if (amount != null) {
                 out.push({ number: pending.number, amount });
                 pending = null;
-            } else if (isNewMsg) {
-                pending = null;                                   // unrelated new msg
             }
             continue;
         }
-
-        /* ==========================================================
-           5. NAME MODE — no phone, no pending: name + last number
-           ========================================================== */
-        const na = splitNameAmount(body);
-        if (na) out.push({ number: na.name, amount: na.amount });
     }
 
     if (pending) warnings.push(`amount missing for ${pending.number}`);
