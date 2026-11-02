@@ -11,7 +11,7 @@ let db = { people: [] };
 let historyOpen = false;
 let pendingPhotoDataUrl = null;
 let currentView = "viewDashboard";
-
+let tt = 'as';
 /* ============================================================
    API HELPERS
    ============================================================ */
