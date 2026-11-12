@@ -678,9 +678,7 @@ function compare(salam, hasan) {
         const status = !h.length ? 'onlySalam' : !s.length ? 'onlyHasan' : sum(s) === sum(h) ? 'ok' : 'diff';
         return { number, s, h, sSum: sum(s), hSum: sum(h), status };
     });
-    const order = { diff: 0, onlySalam: 1, onlyHasan: 2, ok: 3 };
-    rows.sort((a, b) => order[a.status] - order[b.status]);
-    return rows;
+    return rows;   /* সিরিয়াল = মেসেজে যে ক্রমে এসেছে (আগে সালামের ক্রম, তারপর শুধু হাসানে থাকা নম্বর) */
 }
 
 const LABEL = {
@@ -725,9 +723,10 @@ function renderResult(salam, hasan, rows, noScroll) {
         </div>
 
         <div class="rows">
-            <div class="row row-head"><span>নম্বর</span><span>সালাম</span><span>হাসান</span></div>
-            ${rows.map(r => `
+            <div class="row row-head"><span>#</span><span>নম্বর</span><span>সালাম</span><span>হাসান</span></div>
+            ${rows.map((r, i) => `
             <div class="row ${r.status}">
+                <span class="sl">${i + 1}</span>
                 <span class="num">${fmtNumber(r.number)}<em>${LABEL[r.status]}${r.status === 'diff' ? ' · ' + (r.hSum > r.sSum ? '+' : '−') + num(Math.abs(r.hSum - r.sSum)) : ''}</em></span>
                 <span class="amt">${r.s.length ? num(r.sSum) : '—'}${parts(r.s)}</span>
                 <span class="amt">${r.h.length ? num(r.hSum) : '—'}${parts(r.h)}</span>
