@@ -46,46 +46,42 @@ function fmtDateTime(ts) {
 }
 
 /* ============================================================
-   PARSE
+   PARSE  —  কড়া নিয়ম, যেন ভুল চুপচাপ পার না হয়
    ------------------------------------------------------------
-   Rule (in this order, per line):
+   প্রতি লাইনে, এই ক্রমে:
 
-     1. SKIP  if empty / media / deleted
-     2. PHONE MODE        — line contains an 11-digit phone
-                            → amount = first number AFTER the phone
-                            → every word on the line is ignored
-                            → stray bad digit runs → red error
-     3. CONTINUATION MODE — last phone has no amount yet
-                            → this line supplies the amount
+     ১. বাদ          — খালি লাইন / <Media omitted> / মুছে ফেলা মেসেজ
+     ২. নম্বর মোড     — লাইনে ১১-ডিজিট নম্বর আছে
+                        → টাকা = নম্বরের পরের প্রথম সংখ্যা
+                        → লাইনের নাম/লেখা ধরা হয় না
+                        → পিন নম্বর টাকা হিসেবে ধরা হয় না
+                        → ভুল ডিজিটের নম্বর → লাল ভুল
+     ৩. পরের লাইন    — আগের নম্বরের টাকা এখনো পাওয়া যায়নি
+                        → এই লাইনের সংখ্যাটাই তার টাকা
+
+   যে লেখাগুলো আন্দাজ করা হয় না, থামিয়ে দেওয়া হয় (লাল ভুল):
+     "10 200" (মাঝে ফাঁকা) · "10.200" (ডট) · "5k" · ১১ ডিজিটের কম-বেশি নম্বর
+
+   যেগুলো ভুল নাও হতে পারে, সতর্কতা হিসেবে দেখানো হয় (আবার সেভ চাপলে যায়):
+     টাকা ছাড়া নম্বর · খুব কম/বেশি টাকা · একই নম্বর একাধিকবার · ভাগের যোগফল না মেলা
    ============================================================ */
 
-/* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
+const AMOUNT_MIN_OK = 100;        // এর নিচে হলে সতর্কতা
+const AMOUNT_MAX_OK = 500000;     // এর উপরে হলে সতর্কতা
+
+/* Bengali digits → English, strip invisible chars, normalise odd dashes */
 function cleanText(s) {
     return fromBn(String(s || ''))
-        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '')
-        .replace(/[\u00A0\u202F]/g, ' ');
+        .replace(/[​-‏‪-‮⁦-⁩﻿]/g, '')
+        .replace(/[  ]/g, ' ')
+        .replace(/[‐-―−]/g, '-');
 }
 
 /* BD mobile: 01[3-9] + 8 digits = 11 digits.
-   Tolerates "880"/"+88" prefix and single space / dot / dash between digits.
-   Any digits glued straight onto the 11 digits (typo like 017858528333)
-   are swallowed so they never become the amount. */
-const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
-
-/* A numeric token: plain run, or grouped (40,000 · 10'200 · 1,02,000). */
-const AMOUNT_RE = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
-
-/* first positive number in text */
-function extractAmount(str) {
-    if (!str) return null;
-    AMOUNT_RE.lastIndex = 0;
-    let m;
-    while ((m = AMOUNT_RE.exec(str))) {
-        const n = Number(m[0].replace(/[,'’‘′]/g, ''));
-        if (Number.isFinite(n) && n > 0) return n;
-    }
-    return null;
-}
+   Tolerates "88" / "+88" / "0088" prefix and a single space / dot / dash
+   between digits.  Digits glued straight onto the 11 digits (typo like
+   017858528333) are captured so they never become the amount. */
+const PHONE_RE = /(?<!\d)(?:(?:\+|00)?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
 
 /* every phone in a line, with the text that follows it (up to the next phone) */
 function splitByPhone(body) {
@@ -109,7 +105,8 @@ function splitByPhone(body) {
     }));
 }
 
-/* digit runs that look like a phone but are NOT a valid 11-digit one */
+/* digit runs that look like a mobile number but have the wrong digit count.
+   (ব্যাংক একাউন্ট নম্বরকে ভুল মোবাইল নম্বর ধরা হয় না) */
 function findBadNumbers(body, parts) {
     const bad = [];
     const re = /\d+/g;
@@ -117,106 +114,195 @@ function findBadNumbers(body, parts) {
     while ((m = re.exec(body))) {
         const s0 = m.index, e0 = s0 + m[0].length;
         if (parts.some(p => s0 < p.end && e0 > p.start)) continue;
-        const len = m[0].length;
-        if (len >= 10 || (m[0][0] === '0' && len >= 8)) bad.push({ digits: len });
+        const core = m[0].replace(/^(?:00)?88(?=0?1)/, '');
+        const len = core.length;
+        const phoneLike =
+            (/^01/.test(core) && len >= 8 && len <= 13 && len !== 11) ||
+            (/^1[3-9]/.test(core) && len === 10);
+        if (phoneLike) bad.push({ digits: len });
     }
-    if (!bad.length && !parts.length && /^(?:\+?88[ .\-]?)?0[ .\-]?1[ .\-]?\d/.test(body)) {
+    if (!bad.length && !parts.length &&
+        /^(?:(?:\+|00)?88[ .\-]?)?0[ .\-]?1[ .\-]?\d/.test(body)) {
         bad.push({ digits: null });
     }
     return bad;
 }
 
-function parseEntries(text) {
-    const out = [];
-    const warnings = [];
-    const errors = [];
-    let pending = null;
+const PIN_RE = /(?<![a-z])p[io][nm]\s*[:;=\-]?\s*\d+|পিন\s*[:;=\-]?\s*\d+/gi;
+const AMT_RE = /\d[\d,'’‘′]*(?:\.\d+)?/;
 
-    const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message)$/i;
-    const badReason = n => n
-        ? `নম্বর ভুল: ${n} ডিজিট (১১ ডিজিট হতে হবে)`
-        : 'নম্বর ভুল: ১১ ডিজিট নয়';
+/* first positive number in text.  Accepted grouping: , ' ’ ‘ ′
+   Returns { amount, problem } — problem is set when the writing is ambiguous
+   ("10 200", "10.200", "5k") so the line is stopped instead of guessed. */
+function readAmount(text) {
+    const t = cleanText(text).replace(PIN_RE, ' ');
+    const m = t.match(AMT_RE);
+    if (!m) return null;
+    const rawNum = m[0];
+    const rest = t.slice(m.index + rawNum.length);
+    let problem = null;
+    if (/^\d{1,3}$/.test(rawNum) && /^[ \t]+\d{3}(?!\d)/.test(rest)) problem = 'টাকার মাঝে ফাঁকা আছে';
+    else if (/^\d{1,3}\.\d{3}$/.test(rawNum)) problem = 'টাকায় ডট (.) আছে';
+    else if (/^\s?k(?![a-z])/i.test(rest)) problem = '"k" দিয়ে লেখা টাকা';
+    const amount = parseFloat(rawNum.replace(/[,'’‘′]/g, ''));
+    if (!Number.isFinite(amount) || amount <= 0) return null;
+    return { amount, problem };
+}
+
+const SKIP_RE = /^(?:<Media omitted>|This message was deleted|You deleted this message)$/i;
+const SPLIT_RE = /^(\d[\d,]*)\s*-{3,}\s*\d/;          // "50000-------680"
+const badReason = n => n
+    ? `নম্বর ভুল: ${n} ডিজিট (১১ ডিজিট হতে হবে)`
+    : 'নম্বর ভুল: ১১ ডিজিট নয়';
+
+/* পেস্ট করা পুরো লেখা → এন্ট্রি / ভুল / টাকা ছাড়া নম্বর */
+function parseBlock(text) {
+    const entries = [], errors = [], loose = [];
+    let pending = null, last = null, seq = 0;   // seq = পেস্টে নম্বরটা কত নম্বরে আছে
 
     for (const raw of cleanText(text).split(/\r?\n/)) {
         const body = raw.trim();
-        if (!body) continue;
-        if (skipRe.test(body)) continue;
+        if (!body || SKIP_RE.test(body)) continue;
 
         const parts = splitByPhone(body);
         const bad = findBadNumbers(body, parts);
+        bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
 
-        /* ==========================================================
-           PHONE MODE  —  at least one phone on the line
-              names on the line are IGNORED — only phone + amount.
-           ========================================================== */
         if (parts.length) {
-            if (pending) {
-                warnings.push(`amount missing for ${pending.number}`);
-                pending = null;
-            }
+            if (pending) { loose.push(pending); pending = null; }
             for (const p of parts) {
-                if (p.glued) {                                   // 12+ digits glued: error
+                const order = ++seq;
+                if (p.glued) {                                   // ১২+ ডিজিট একসাথে লেগে আছে
                     errors.push({ line: body, reason: badReason(11 + p.glued.length) });
                     pending = null;
                     continue;
                 }
-                const amount = extractAmount(p.after);           // first number AFTER phone
-                if (amount != null) out.push({ number: p.number, amount });
-                else pending = { number: p.number };             // wait for next line
+                const a = readAmount(p.after);
+                if (!a) { pending = { number: p.number, line: body, order }; continue; }
+                if (a.problem) { errors.push({ line: body, reason: a.problem + ' — ঠিক করে লিখুন' }); continue; }
+                last = { number: p.number, amount: a.amount, line: body, splits: [], order };
+                entries.push(last);
             }
-            bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
-            continue;
-        }
-
-        /* ---------- phone-looking but wrong length → red error ---------- */
-        if (bad.length) {
-            bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
+        } else if (bad.length) {
             pending = null;
-            continue;
-        }
-
-        /* ==========================================================
-           CONTINUATION MODE — previous phone has no amount yet
-           ========================================================== */
-        if (pending) {
-            const amount = extractAmount(body);
-            if (amount != null) {
-                out.push({ number: pending.number, amount });
+        } else if (pending) {
+            /* আগের নম্বরের টাকা এই লাইনে (যেমন নম্বরের নিচে "40,000/=") */
+            const a = readAmount(body);
+            if (a) {
+                if (a.problem) errors.push({ line: pending.line + ' ⏎ ' + body, reason: a.problem + ' — ঠিক করে লিখুন' });
+                else {
+                    last = { number: pending.number, amount: a.amount, line: pending.line + ' ⏎ ' + body, splits: [], order: pending.order };
+                    entries.push(last);
+                }
                 pending = null;
             }
-            continue;
+        } else if (last) {
+            const sp = body.match(SPLIT_RE);
+            if (sp) last.splits.push(parseFloat(sp[1].replace(/,/g, '')));
         }
     }
+    if (pending) loose.push(pending);
+    return { entries, errors, loose };
+}
 
-    if (pending) warnings.push(`amount missing for ${pending.number}`);
-    out.warnings = warnings;
-    out.errors = errors;
+/* ভুল নয়, কিন্তু একবার চোখ বুলিয়ে নেওয়া দরকার */
+function checkWarnings(block) {
+    const warn = [];   // প্রতিটায় order থাকে, যাতে পেস্টের সিরিয়ালেই দেখানো যায়
+
+    block.loose.forEach(l => warn.push({
+        order: l.order, line: l.line, reason: `${fmtNum(l.number)} — এই নম্বরের টাকা লেখা নেই`
+    }));
+
+    const seen = new Map();
+    block.entries.forEach(e => {
+        if (e.amount < AMOUNT_MIN_OK) warn.push({
+            order: e.order, line: e.line, reason: `${fmtNum(e.number)} = ${bn(e.amount)} — টাকা খুব কম`
+        });
+        else if (e.amount > AMOUNT_MAX_OK) warn.push({
+            order: e.order, line: e.line, reason: `${fmtNum(e.number)} = ${bn(e.amount)} — টাকা খুব বেশি`
+        });
+
+        if (e.splits.length) {
+            const t = e.splits.reduce((a, c) => a + c, 0);
+            if (t !== e.amount) warn.push({
+                order: e.order,
+                line: e.splits.map(bn).join(' + '),
+                reason: `${fmtNum(e.number)} = ${bn(e.amount)} — ভাগের যোগফল ${bn(t)}`
+            });
+        }
+
+        const first = seen.get(e.number);
+        seen.set(e.number, first ? { ...first, count: first.count + 1 } : { order: e.order, count: 1 });
+    });
+
+    seen.forEach((v, number) => {
+        if (v.count > 1) warn.push({
+            order: v.order, line: '', reason: `${fmtNum(number)} — একই নম্বর ${bn(v.count)} বার আছে`
+        });
+    });
+
+    return warn.sort((a, b) => a.order - b.order);
+}
+
+/* বাকি কোড এটাই ব্যবহার করে: এন্ট্রির তালিকা, সাথে .errors ও .warnings */
+function parseEntries(text) {
+    const block = parseBlock(text);
+    const out = block.entries.map(e => ({ number: e.number, amount: e.amount }));
+    out.errors = block.errors;
+    out.warnings = checkWarnings(block);
     return out;
 }
 
 /* ============================================================
-   WRONG-NUMBER BOX
+   ভুল ও সতর্কতার বাক্স  (লাল = সেভ হবে না, হলুদ = দেখে নিন)
    ============================================================ */
-function showEntryErrors(errs) {
-    let box = document.getElementById('entryErrors');
-    if (!errs || !errs.length) {
-        if (box) box.remove();
-        return;
-    }
+function issueBox(id, after) {
+    let box = document.getElementById(id);
     if (!box) {
         box = document.createElement('div');
-        box.id = 'entryErrors';
-        document.getElementById('entryInput').insertAdjacentElement('afterend', box);
+        box.id = id;
+        after.insertAdjacentElement('afterend', box);
     }
+    return box;
+}
+
+function showEntryErrors(errs) {
+    const old = document.getElementById('entryErrors');
+    if (!errs || !errs.length) { if (old) old.remove(); return; }
+
+    const box = issueBox('entryErrors', document.getElementById('entryInput'));
     box.style.cssText =
-        'margin:8px 0;padding:10px;border:1px solid #e5484d;border-radius:10px;' +
-        'background:rgba(229,72,77,.08);color:#e5484d;font-size:13px;line-height:1.5;';
+        'margin:8px 0;padding:10px 12px;border:1px solid #e5484d;border-radius:12px;' +
+        'background:rgba(229,72,77,.08);color:#b81d38;font-size:13px;line-height:1.5;';
     box.innerHTML =
-        `<b>⚠ ${errs.length} টি ভুল এন্ট্রি</b>` +
+        `<b>⛔ ${bn(errs.length)} টি ভুল — ঠিক না করলে সেভ হবে না</b>` +
         errs.map(x =>
-            `<div style="margin-top:6px"><span dir="ltr" style="word-break:break-all">${escapeHtml(x.line)}</span>` +
-            `<br><small>${x.reason}</small></div>`
+            `<div style="margin-top:7px"><span dir="ltr" style="word-break:break-all;opacity:.85">${escapeHtml(x.line)}</span>` +
+            `<br><b style="font-weight:700">${escapeHtml(x.reason)}</b></div>`
         ).join('');
+}
+
+function showEntryWarnings(warns) {
+    const old = document.getElementById('entryWarnings');
+    if (!warns || !warns.length) { if (old) old.remove(); return; }
+
+    const box = issueBox('entryWarnings', document.getElementById('entryErrors') || document.getElementById('entryInput'));
+    box.style.cssText =
+        'margin:8px 0;padding:10px 12px;border:1px solid #f3d675;border-left:5px solid #f2b705;' +
+        'border-radius:6px 12px 12px 6px;background:#fff8d6;color:#7a5800;font-size:13px;line-height:1.5;';
+    box.innerHTML =
+        `<b>⚠️ ${bn(warns.length)} টি দেখে নিন</b>` +
+        warns.map(x =>
+            `<div style="margin-top:7px"><b style="font-weight:700;color:#3f3000">${escapeHtml(x.reason)}</b>` +
+            (x.line ? `<br><span dir="ltr" style="word-break:break-all;opacity:.8">${escapeHtml(x.line)}</span>` : '') +
+            `</div>`
+        ).join('') +
+        `<div style="margin-top:9px;font-weight:700">ঠিক থাকলে আবার "সেভ করুন" চাপুন।</div>`;
+}
+
+function clearIssues() {
+    showEntryErrors([]);
+    showEntryWarnings([]);
 }
 
 /* ============================================================
@@ -356,7 +442,8 @@ const sheetBg = document.getElementById('sheetBg');
 function openSheet() {
     document.getElementById('entryInput').value = '';
     document.getElementById('noteInput').value = '';
-    showEntryErrors([]);
+    clearIssues();
+    disarmSave();
     sheet.classList.add('show');
     sheetBg.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -373,7 +460,10 @@ document.getElementById('addBtn').onclick = openSheet;
 document.getElementById('closeBtn').onclick = closeSheet;
 sheetBg.onclick = closeSheet;
 
-document.getElementById('entryInput').addEventListener('input', () => showEntryErrors([]));
+document.getElementById('entryInput').addEventListener('input', () => {
+    clearIssues();
+    disarmSave();
+});
 
 document.getElementById('pasteBtn').onclick = async () => {
     try {
@@ -381,7 +471,8 @@ document.getElementById('pasteBtn').onclick = async () => {
         if (txt) {
             const ta = document.getElementById('entryInput');
             ta.value = ta.value ? ta.value + '\n' + txt : txt;
-            showEntryErrors([]);
+            clearIssues();
+            disarmSave();
             toast('পেস্ট হয়েছে', 'ok');
         }
     } catch {
@@ -391,7 +482,23 @@ document.getElementById('pasteBtn').onclick = async () => {
 
 /* ============================================================
    SAVE
+   ------------------------------------------------------------
+   লাল ভুল থাকলে সেভ হয় না।
+   শুধু সতর্কতা থাকলে একবার দেখায়, দ্বিতীয়বার চাপলে সেভ হয়।
    ============================================================ */
+let saveArmed = false;
+
+function setSaveLabel(text) {
+    const btn = document.getElementById('saveBtn');
+    const node = [...btn.childNodes].reverse().find(n => n.nodeType === 3 && n.textContent.trim());
+    if (node) node.textContent = ' ' + text + ' ';
+}
+
+function disarmSave() {
+    saveArmed = false;
+    setSaveLabel('সেভ করুন');
+}
+
 document.getElementById('saveBtn').onclick = () => {
     const raw = document.getElementById('entryInput').value.trim();
     const note = document.getElementById('noteInput').value.trim();
@@ -400,13 +507,28 @@ document.getElementById('saveBtn').onclick = () => {
 
     const parsed = parseEntries(raw);
 
-    if (parsed.errors && parsed.errors.length) {
+    /* ১. লাল ভুল — এখানেই থামা */
+    if (parsed.errors.length) {
+        disarmSave();
         showEntryErrors(parsed.errors);
-        return toast(parsed.errors.length + ' টি নম্বর ভুল — ঠিক করে আবার সেভ করুন', 'err');
+        showEntryWarnings(parsed.warnings);
+        return toast(bn(parsed.errors.length) + ' টি লাইনে ভুল — ঠিক করে আবার সেভ করুন', 'err');
     }
     showEntryErrors([]);
 
-    if (!parsed.length) return toast('বৈধ কোনো এন্ট্রি পাওয়া যায়নি', 'err');
+    if (!parsed.length) {
+        disarmSave();
+        showEntryWarnings(parsed.warnings);
+        return toast('বৈধ কোনো এন্ট্রি পাওয়া যায়নি', 'err');
+    }
+
+    /* ২. সতর্কতা — প্রথমবার শুধু দেখায় */
+    if (parsed.warnings.length && !saveArmed) {
+        saveArmed = true;
+        setSaveLabel('তবুও সেভ করুন');
+        showEntryWarnings(parsed.warnings);
+        return toast(bn(parsed.warnings.length) + ' টি সতর্কতা — দেখে নিয়ে আবার সেভ চাপুন', 'err');
+    }
 
     const total = parsed.reduce((s, e) => s + e.amount, 0);
 
@@ -421,7 +543,8 @@ document.getElementById('saveBtn').onclick = () => {
     persist();
     render();
     closeSheet();
-    toast(`সেভ হয়েছে • ${parsed.length} টি • ৳${bn(total)}`, 'ok');
+    disarmSave();
+    toast(`সেভ হয়েছে • ${bn(parsed.length)} টি • ৳${bn(total)}`, 'ok');
 };
 
 /* ============================================================
