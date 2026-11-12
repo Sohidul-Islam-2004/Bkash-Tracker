@@ -624,7 +624,7 @@ function chatFileToText(msgs, from, until) {
    সার্ভারে কিছু যায় না — লেখা শুধু এই ব্রাউজারের localStorage এ থাকে।
    মেসেজ পড়ার নিয়ম Entry পেজের মতোই (/shared/parser.js)।
    ============================================================ */
-const { esc, num, toast } = App;
+const { esc, num, toast, copyText, fmtDateTime } = App;
 const $ = id => document.getElementById(id);
 
 /* ============================================================
@@ -717,6 +717,13 @@ function renderResult(salam, hasan, rows, noScroll) {
             <div class="${gap ? 'gap' : ''}"><span>পার্থক্য</span><b>${gap ? (gap > 0 ? '+' : '−') + '৳ ' + num(Math.abs(gap)) : '৳ 0'}</b><small>${gap > 0 ? 'হাসানে বেশি' : gap < 0 ? 'হাসানে কম' : 'সমান'}</small></div>
         </div>
 
+        <div class="copy-bar">
+            <span>কপি করুন</span>
+            <button type="button" data-copy="s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>সালাম</button>
+            <button type="button" data-copy="h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>হাসান</button>
+            <button type="button" data-copy="diff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>গরমিল</button>
+        </div>
+
         <div class="section-head">
             <div class="section-title"><span class="title-dot"></span>নম্বর ধরে</div>
             <span class="section-count">${num(rows.length)} টি</span>
@@ -735,6 +742,48 @@ function renderResult(salam, hasan, rows, noScroll) {
     if (!noScroll) $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+/* ============================================================
+   COPY — রাফ হিসাবের মতো সাজানো লেখা
+   ============================================================ */
+let last = null;   // সর্বশেষ মিলানো: { salam, hasan, rows }
+const LINE = '━━━━━━━━━━━━━━━━━━━━';
+
+/* এক পক্ষের তালিকা: who = 's' (সালাম) | 'h' (হাসান) */
+function buildSideText(who) {
+    const name = who === 's' ? 'সালাম' : 'হাসান';
+    const side = who === 's' ? last.salam : last.hasan;
+    const lines = [`📅 ${fmtDateTime(Date.now())}`, `${name}ের এন্ট্রি: ${side.count} টি`, LINE];
+    last.rows.forEach(r => r[who].forEach(amount => lines.push(`${fmtNumber(r.number)} = ${amount}`)));
+    lines.push(LINE, `মোট                = ${num(side.total)}`);
+    return lines.join('\n');
+}
+
+/* শুধু গরমিলগুলো */
+function buildDiffText() {
+    const bad = last.rows.map((r, i) => ({ r, sl: i + 1 })).filter(x => x.r.status !== 'ok');
+    const lines = [`📅 ${fmtDateTime(Date.now())}`];
+    if (!bad.length) lines.push(`✅ সব মিলেছে — ${last.rows.length} টি নম্বর`);
+    else {
+        lines.push(`⚠️ গরমিল: ${bad.length} টি (মোট ${last.rows.length} টি নম্বর)`, LINE);
+        bad.forEach(({ r, sl }) => {
+            lines.push(`${sl}) ${fmtNumber(r.number)} — ${LABEL[r.status]}`);
+            lines.push(`    সালাম ${r.s.length ? num(r.sSum) : 'নেই'} | হাসান ${r.h.length ? num(r.hSum) : 'নেই'}`);
+        });
+    }
+    const gap = last.hasan.total - last.salam.total;
+    lines.push(LINE, `সালাম মোট  = ${num(last.salam.total)}`, `হাসান মোট  = ${num(last.hasan.total)}`,
+        `পার্থক্য     = ${gap ? (gap > 0 ? '+' : '−') + num(Math.abs(gap)) : '0'}`);
+    return lines.join('\n');
+}
+
+document.addEventListener('click', async ev => {
+    const btn = ev.target.closest('[data-copy]');
+    if (!btn || !last) return;
+    const kind = btn.dataset.copy;
+    const ok = await copyText(kind === 'diff' ? buildDiffText() : buildSideText(kind));
+    toast(ok ? 'কপি হয়েছে' : 'কপি ব্যর্থ', ok ? 'ok' : 'err');
+});
+
 function check(quiet) {
     const sText = $('salamInput').value.trim(), hText = $('hasanInput').value.trim();
     $('result').hidden = true;
@@ -751,7 +800,8 @@ function check(quiet) {
     if (!salam.count || !hasan.count) return toast((salam.count ? 'হাসানের' : 'সালামের') + ' বক্সে কোনো এন্ট্রি পাওয়া যায়নি', 'err');
 
     save(true);
-    renderResult(salam, hasan, compare(salam, hasan), quiet === true);
+    last = { salam, hasan, rows: compare(salam, hasan) };
+    renderResult(salam, hasan, last.rows, quiet === true);
 }
 
 $('checkBtn').onclick = () => check();
