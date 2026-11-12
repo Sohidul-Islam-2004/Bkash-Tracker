@@ -532,6 +532,46 @@ textarea::placeholder {
     color: var(--red);
 }
 
+.copy-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: var(--r);
+    background: var(--card);
+    border: 1px solid var(--line-2);
+}
+
+.copy-bar span {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.copy-bar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pink);
+    background: var(--pink-soft);
+}
+
+.copy-bar button:active {
+    transform: scale(0.96);
+}
+
+.copy-bar svg {
+    width: 15px;
+    height: 15px;
+}
+
 .section-head {
     margin: 20px 4px 10px;
 }
