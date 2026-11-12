@@ -30,7 +30,6 @@ let records = [];
 const openDays = new Set();
 let confirmCb = null;
 let currentRoute = '';
-const { esc: escHtml, num: bn, parseNum, monthName, weekday, todayStr, toast } = App;
 
 /* ============================================================
    BACKEND CRUD
@@ -79,7 +78,25 @@ async function removeByDate(date) {
 /* ============================================================
    NUMERAL HELPERS  —  DISPLAY IS ENGLISH
    ============================================================ */
+const toBn = s => String(s);
+const bn = n => Number(n).toLocaleString('en-US');
 
+const BN_TO_EN = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
+function parseNum(str) {
+    const cleaned = fromBn(str).replace(/[^\d.\-]/g, '');
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+}
+
+const MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+    'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+const monthName = ym => MONTHS[+ym.split('-')[1] - 1];
+const WEEKDAYS = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
+const weekday = d => {
+    const [y, m, dd] = d.split('-').map(Number);
+    return WEEKDAYS[new Date(y, m - 1, dd).getDay()];
+};
 const fmtNum = n => n.length === 11 ? n.slice(0, 5) + '-' + n.slice(5) : n;
 const fmtDate = iso => {
     if (!iso) return '';
@@ -95,6 +112,24 @@ const fmtTime = () => {
         hour12: true,
     });
 };
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+const toastEl = document.getElementById('toast');
+const toastIcon = document.getElementById('toastIcon');
+const toastMsg = document.getElementById('toastMsg');
+let tT;
+
+function toast(msg, type = '') {
+    toastMsg.textContent = msg;
+    toastEl.className = 'toast show ' + type;
+    if (type === 'ok') { toastIcon.textContent = '✓'; toastIcon.style.display = 'grid'; }
+    else if (type === 'err') { toastIcon.textContent = '!'; toastIcon.style.display = 'grid'; }
+    else { toastIcon.style.display = 'none'; }
+    clearTimeout(tT);
+    tT = setTimeout(() => toastEl.classList.remove('show'), 2400);
+}
 
 /* ============================================================
    CONFIRM
@@ -116,6 +151,134 @@ document.getElementById('confirmYes').onclick = async () => {
     confirmCb = null;
 };
 
+const escHtml = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ============================================================
+   PARSE  (rule: 11-digit phone  →  first number after it = amount)
+   ============================================================ */
+
+/* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
+function cleanText(s) {
+    return fromBn(String(s || ''))
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '')
+        .replace(/[\u00A0\u202F]/g, ' ');
+}
+
+/* BD mobile: 01[3-9] + 8 digits = 11 digits.
+   Tolerates "880"/"+88" prefix and single space / dot / dash between digits
+   (e.g. "0 1985-521016").  Any digits glued straight onto the 11 digits
+   (typo like 017858528333) are swallowed so they never become the amount. */
+const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
+
+/* every phone in a line, with the text that follows it (up to the next phone) */
+function splitByPhone(body) {
+    const hits = [];
+    let m;
+    PHONE_RE.lastIndex = 0;
+    while ((m = PHONE_RE.exec(body))) {
+        hits.push({
+            number: m[1].replace(/\D/g, ''),
+            start: m.index,
+            end: m.index + m[0].length,
+            glued: m[2]            // extra digits stuck to the phone (typo)
+        });
+    }
+    return hits.map((h, i) => ({
+        number: h.number,
+        glued: h.glued,
+        start: h.start,
+        end: h.end,
+        after: body.slice(h.end, i + 1 < hits.length ? hits[i + 1].start : body.length)
+    }));
+}
+
+/* digit runs that look like a phone number but are NOT a valid 11-digit one.
+   (amounts never have 10+ digits, and never start with 0 and run 8+ digits) */
+function findBadNumbers(body, parts) {
+    const bad = [];
+    const re = /\d+/g;
+    let m;
+    while ((m = re.exec(body))) {
+        const s0 = m.index, e0 = s0 + m[0].length;
+        if (parts.some(p => s0 < p.end && e0 > p.start)) continue;   // part of a valid phone
+        const len = m[0].length;
+        if (len >= 10 || (m[0][0] === '0' && len >= 8)) bad.push({ digits: len });
+    }
+    /* spaced / dashed number such as "0 1985-52101" with the wrong digit count */
+    if (!bad.length && !parts.length && /^(?:\+?88[ .\-]?)?0[ .\-]?1[ .\-]?\d/.test(body)) {
+        bad.push({ digits: null });
+    }
+    return bad;
+}
+
+/* first positive number in text.
+   Accepted grouping separators:   ,   '   ’   ‘   ′
+     → 40,000   10'200   1,02,000   1'02'000   10’20’000
+   Plain runs still work:          10200   3060
+   Decimal (taka.paisa) preserved: 10.50   10'200.50                       */
+function extractAmount(text) {
+    const cleaned = cleanText(text);
+    const m = cleaned.match(/\d[\d,'’‘′]*(?:\.\d+)?/);
+    if (!m) return null;
+    const num = parseFloat(m[0].replace(/[,'’‘′]/g, ''));
+    if (!Number.isFinite(num) || num <= 0) return null;
+    return num;
+}
+
+function parseEntries(text) {
+    const out = [];
+    const warnings = [];
+    const errors = [];
+    let pending = null;
+    const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message)$/i;
+    const badReason = n => n
+        ? `নম্বর ভুল: ${n} ডিজিট (১১ ডিজিট হতে হবে)`
+        : 'নম্বর ভুল: ১১ ডিজিট নয়';
+
+    for (const raw of cleanText(text).split(/\r?\n/)) {
+        const body = raw.trim();
+        if (!body) continue;
+        if (skipRe.test(body)) continue;
+
+        const parts = splitByPhone(body);
+
+        /* wrong numbers (too short / too long) */
+        const bad = findBadNumbers(body, parts);
+        bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
+
+        if (parts.length) {
+            if (pending) {
+                warnings.push(`amount missing for ${pending.number}`);
+                pending = null;
+            }
+            for (const p of parts) {
+                if (p.glued) {
+                    /* 12+ digits glued together → wrong number, do not guess */
+                    errors.push({ line: body, reason: badReason(11 + p.glued.length) });
+                    pending = null;
+                    continue;
+                }
+                const amount = extractAmount(p.after);
+                if (amount != null) out.push({ number: p.number, amount });
+                else pending = { number: p.number };
+            }
+        } else if (bad.length) {
+            pending = null;
+        } else if (pending) {
+            /* continuation line (e.g. "40,000/=" under the phone) */
+            const amount = extractAmount(body);
+            if (amount != null) {
+                out.push({ number: pending.number, amount });
+                pending = null;
+            }
+        }
+    }
+    if (pending) warnings.push(`amount missing for ${pending.number}`);
+    out.warnings = warnings;
+    out.errors = errors;       // not saved to backend (JSON ignores array props)
+    return out;
+}
+
 /* ============================================================
    SHEET
    ============================================================ */
@@ -127,10 +290,6 @@ function openSheet() {
     document.getElementById('date').value = today;
     document.getElementById('input').value = '';
     document.getElementById('joma').value = '';
-    document.getElementById('previewBox').classList.remove('show');
-    document.getElementById('fromField').hidden = true;
-    fileMsgs = null;
-    resetAck();
     updateSheetEjaaHint(today);
     sheet.classList.add('show');
     sheetBg.classList.add('show');
@@ -157,18 +316,8 @@ function updateSheetEjaaHint(date) {
         return;
     }
     const all = computeAllDays();
-    let ejaa;
-    if (all[date]) ejaa = all[date].ejaa;
-    else {
-        /* নতুন তারিখ: এর আগের শেষ দিনের পাওনাই ইজা */
-        const before = Object.keys(all).filter(d => d < date).sort();
-        ejaa = before.length ? all[before[before.length - 1]].pawna : InitialCarry;
-    }
-    const months = groupData();
-    const day = months[date.slice(0, 7)] && months[date.slice(0, 7)].days[date];
-    const dep = day ? day.deposit : 0;
-    hint.textContent = `এই দিনের ইজা (আগের দিনের পাওনা): ৳ ${bn(ejaa)}` +
-        (dep ? ` • এই দিনে আগে জমা সেভ আছে ৳ ${bn(dep)} — এখানে শুধু নতুন জমা লিখুন` : '');
+    const ejaa = all[date] ? all[date].ejaa : 0;
+    hint.textContent = `এই দিনের ইজা (আগের দিনের পাওনা): ৳ ${bn(ejaa)}`;
 }
 
 /* ============================================================
@@ -179,192 +328,83 @@ document.getElementById('pasteBtn').onclick = async () => {
         const text = await navigator.clipboard.readText();
         if (text) {
             document.getElementById('input').value = text;
-            resetAck();
             toast('পেস্ট হয়েছে', 'ok');
         }
     } catch { toast('অনুমতি দেওয়া হয়নি', 'err'); }
 };
 
 /* ============================================================
-   PREVIEW  (এন্ট্রি + ভুল + সতর্কতা)
+   PREVIEW
    ============================================================ */
 const previewBox = document.getElementById('previewBox');
-const inputEl = document.getElementById('input');
-const dateEl = document.getElementById('date');
-const saveLabel = document.getElementById('saveLabel');
-let ackSig = null;          // which set of warnings the user has already seen
-
-function resetAck() {
-    ackSig = null;
-    if (saveLabel) saveLabel.textContent = 'সেভ করুন';
-}
-inputEl.addEventListener('input', resetAck);
-dateEl.addEventListener('change', resetAck);
-
-function runAnalysis() {
-    return analyze(inputEl.value, dateEl.value, buildSavedIndex(records));
-}
-
-const boxStyle = (c, bg) =>
-    `margin:8px 0;padding:10px;border:1px solid ${c};border-radius:10px;background:${bg};color:${c};font-size:13px;line-height:1.5`;
-const lineHtml = t => t ? `<br><small dir="ltr" style="word-break:break-all;opacity:.85">${escHtml(t)}</small>` : '';
-
-function analysisHtml(r) {
-    let html = '';
-
-    if (r.errors.length) {
-        html += `<div style="${boxStyle('#e5484d', 'rgba(229,72,77,.08)')}">
-            <b>⛔ ${r.errors.length} টি ভুল — ঠিক না করলে সেভ হবে না</b>
-            ${r.errors.map(x => `<div style="margin-top:6px"><span dir="ltr" style="word-break:break-all">${escHtml(x.line)}</span><br><small>${escHtml(x.reason)}</small></div>`).join('')}
-        </div>`;
+document.getElementById('previewBtn').onclick = () => {
+    const entries = parseEntries(document.getElementById('input').value);
+    const errs = entries.errors || [];
+    const errHtml = errs.length ? `
+        <div class="preview-errors" style="margin:8px 0;padding:10px;border:1px solid #e5484d;border-radius:10px;background:rgba(229,72,77,.08);color:#e5484d;font-size:13px;line-height:1.5">
+            <b>⚠ ${errs.length} টি ভুল এন্ট্রি</b>
+            ${errs.map(x => `<div style="margin-top:6px"><span dir="ltr" style="word-break:break-all">${escHtml(x.line)}</span><br><small>${x.reason}</small></div>`).join('')}
+        </div>` : '';
+    if (!entries.length) {
+        if (errs.length) {
+            previewBox.innerHTML = errHtml;
+            previewBox.classList.add('show');
+            toast('ভুল নম্বর আছে — ঠিক করুন', 'err');
+        } else {
+            previewBox.classList.remove('show');
+            toast('কোনো বৈধ এন্ট্রি পাওয়া যায়নি', 'err');
+        }
+        return;
     }
-    if (r.reds.length) {
-        html += `<div style="${boxStyle('#b45309', 'rgba(245,158,11,.10)')}">
-            <b>⚠ ${r.reds.length} টি সতর্কতা — মিলিয়ে দেখুন</b>
-            ${r.reds.map(x => `<div style="margin-top:6px">${escHtml(x.text)}${lineHtml(x.line)}</div>`).join('')}
-        </div>`;
-    }
-    if (r.infos.length) {
-        html += `<details style="${boxStyle('#475569', 'rgba(100,116,139,.08)')}">
-            <summary style="cursor:pointer;font-weight:700">ℹ ${r.infos.length} টি তথ্য</summary>
-            ${r.infos.map(x => `<div style="margin-top:6px">${escHtml(x.text)}${(x.list || []).map(l => lineHtml(l)).join('')}</div>`).join('')}
-        </details>`;
-    }
-    if (r.entries.length) {
-        const uniq = new Set(r.entries.map(e => e.number)).size;
-        html += `
+    const total = entries.reduce((s, e) => s + e.amount, 0);
+    const uniq = new Set(entries.map(e => e.number)).size;
+    const reversed = [...entries].reverse();
+    previewBox.innerHTML = errHtml + `
         <div class="preview-summary">
-            <div class="preview-chip"><div class="n">${r.entries.length}</div><div class="l">এন্ট্রি</div></div>
+            <div class="preview-chip"><div class="n">${entries.length}</div><div class="l">এন্ট্রি</div></div>
             <div class="preview-chip"><div class="n">${uniq}</div><div class="l">ইউনিক</div></div>
-            <div class="preview-chip"><div class="n">৳${bn(r.total)}</div><div class="l">মোট</div></div>
+            <div class="preview-chip"><div class="n">৳${bn(total)}</div><div class="l">মোট</div></div>
         </div>
         <div class="preview-list">
-            ${[...r.entries].reverse().map(e => `
+            ${reversed.map(e => `
                 <div class="preview-row">
                     <span class="num">${fmtNum(e.number)}</span>
                     <span class="amt">৳ ${bn(e.amount)}</span>
                 </div>`).join('')}
         </div>`;
-    }
-    return html;
-}
-
-function showAnalysis(r) {
-    const html = analysisHtml(r);
-    previewBox.innerHTML = html;
-    previewBox.classList.toggle('show', Boolean(html));
-}
-
-document.getElementById('previewBtn').onclick = () => {
-    const r = runAnalysis();
-    showAnalysis(r);
-    if (r.errors.length) return toast(r.errors.length + ' টি ভুল আছে — ঠিক করুন', 'err');
-    if (!r.entries.length) {
-        return toast(r.skippedSaved ? 'সব এন্ট্রি আগেই সেভ আছে' : 'কোনো বৈধ এন্ট্রি পাওয়া যায়নি', 'err');
-    }
-    if (r.reds.length) toast(r.reds.length + ' টি সতর্কতা — মিলিয়ে দেখুন', 'err');
+    previewBox.classList.add('show');
 };
-
-/* ============================================================
-   CHAT FILE  (WhatsApp → Export chat → .txt)
-   ------------------------------------------------------------
-   শেষ সেভ হওয়া মেসেজের পর থেকে সব মেসেজ নিজে থেকেই আসে,
-   তাই কোনো মেসেজ কপি করতে বাদ পড়ে না।
-   ============================================================ */
-const chatFile = document.getElementById('chatFile');
-const fromField = document.getElementById('fromField');
-const fromTs = document.getElementById('fromTs');
-let fileMsgs = null;
-
-const toLocalInput = d =>
-    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-
-function fillFromFile() {
-    if (!fileMsgs) return;
-    const from = fromTs.value ? new Date(fromTs.value) : null;
-    /* ফোনের তারিখ ভুল থাকলে কিছু মেসেজ ভবিষ্যতের তারিখে থাকে — সেগুলো নেওয়া হয় না */
-    const until = new Date(Date.now() + 86400000);
-    const future = fileMsgs.filter(m => m.ts && m.ts > until).length;
-    const text = chatFileToText(fileMsgs, from, until);
-    inputEl.value = text;
-    resetAck();
-    const n = text ? text.split('\n').filter(l => HDR_ISO.test(l)).length : 0;
-    const note = future ? ` • ${future} টা মেসেজের তারিখ ভবিষ্যতের, বাদ` : '';
-    if (!n) {
-        previewBox.classList.remove('show');
-        return toast('এই সময়ের পরে কোনো মেসেজ নেই' + note, 'err');
-    }
-    document.getElementById('previewBtn').click();
-    toast(n + ' টা মেসেজ আনা হয়েছে' + note, 'ok');
-}
-
-document.getElementById('fileBtn').onclick = () => chatFile.click();
-chatFile.onchange = async () => {
-    const f = chatFile.files[0];
-    if (!f) return;
-    try {
-        const chat = parseChat(await f.text(), dateEl.value);
-        if (!chat.hasHeaders) return toast('এটা WhatsApp চ্যাট ফাইল (.txt) মনে হচ্ছে না', 'err');
-        fileMsgs = chat.msgs;
-        const start = latestSavedAt(records) || new Date((dateEl.value || todayStr()) + 'T00:00');
-        fromTs.value = toLocalInput(start);
-        fromField.hidden = false;
-        fillFromFile();
-    } catch (err) {
-        console.error(err);
-        toast('ফাইল পড়া যায়নি', 'err');
-    } finally {
-        chatFile.value = '';
-    }
-};
-fromTs.addEventListener('change', fillFromFile);
 
 /* ============================================================
    SAVE
    ============================================================ */
 document.getElementById('saveBtn').onclick = async () => {
-    const date = dateEl.value;
-    const raw = inputEl.value.trim();
+    const date = document.getElementById('date').value;
+    const raw = document.getElementById('input').value.trim();
     const depositVal = parseNum(document.getElementById('joma').value);
     if (!date) return toast('তারিখ নির্বাচন করুন', 'err');
 
-    const r = runAnalysis();
-    showAnalysis(r);
-
-    /* 1. ভুল থাকলে সেভ হবে না */
-    if (r.errors.length) {
-        return toast(r.errors.length + ' টি ভুল — ঠিক করে আবার সেভ করুন', 'err');
+    const entries = parseEntries(raw);
+    if (entries.errors && entries.errors.length) {
+        document.getElementById('previewBtn').click();   // show the wrong lines
+        return toast(entries.errors.length + ' টি নম্বর ভুল — ঠিক করে আবার সেভ করুন', 'err');
     }
-    if (!r.entries.length) {
-        return toast(r.skippedSaved ? 'সব এন্ট্রি আগেই সেভ আছে — নতুন কিছু নেই' : 'বৈধ এন্ট্রি পাওয়া যায়নি', 'err');
-    }
+    if (!entries.length) return toast('বৈধ এন্ট্রি পাওয়া যায়নি', 'err');
 
-    /* 2. সতর্কতা থাকলে একবার দেখিয়ে, দ্বিতীয়বার চাপলে সেভ */
-    const sig = [date, raw.length, r.total, r.reds.map(x => x.text).join('#')].join('|');
-    if (r.reds.length && ackSig !== sig) {
-        ackSig = sig;
-        if (saveLabel) saveLabel.textContent = 'দেখেছি — সেভ করুন';
-        return toast(r.reds.length + ' টি সতর্কতা — মিলিয়ে দেখে আবার সেভ চাপুন', 'err');
-    }
-
+    const total = entries.reduce((s, e) => s + e.amount, 0);
     const saveBtn = document.getElementById('saveBtn');
     saveBtn.disabled = true;
 
     try {
         await createRecord({
-            date, raw,
-            entries: r.entries,
-            total: r.total,
-            count: r.entries.length,
+            date, raw, entries, total,
+            count: entries.length,
             deposit: depositVal
         });
 
-        inputEl.value = '';
+        document.getElementById('input').value = '';
         document.getElementById('joma').value = '';
         previewBox.classList.remove('show');
-        fileMsgs = null;
-        fromField.hidden = true;
-        resetAck();
         closeSheet();
         openDays.add(date);
 
@@ -372,7 +412,7 @@ document.getElementById('saveBtn').onclick = async () => {
         const wasOnSameMonth = currentRoute === `month/${ym}`;
         const wasOnSameDay = currentRoute === `day/${date}`;
 
-        toast(`সেভ হয়েছে • ${r.entries.length} এন্ট্রি • জমা ৳${bn(depositVal)}`, 'ok');
+        toast(`সেভ হয়েছে • ${entries.length} এন্ট্রি • জমা ৳${bn(depositVal)}`, 'ok');
 
         if (wasOnSameDay) {
             renderDayView(date);
@@ -415,7 +455,7 @@ function groupData() {
             d.total += r.total;
             d.count += r.count;
             d.entries.push(...r.entries);
-            d.deposit += Number(r.deposit) || 0;      // একই দিনে একাধিক সেভ হলে জমা যোগ হয়
+            if (r.deposit) d.deposit = Number(r.deposit) || 0;
         });
     return months;
 }
@@ -551,8 +591,8 @@ async function handleRoute() {
     viewMonth.hidden = true;
     viewDay.hidden = true;
     document.body.classList.remove('in-month');
-    document.getElementById('topTitle').textContent = 'সালাম ভাইয়ের লেনদেন';
-    document.getElementById('topSub').textContent = 'প্রতিদিনের হিসাব';
+    document.getElementById('topTitle').textContent = 'ইজি লেনদেন';
+    document.getElementById('topSub').textContent = 'সালাম ভাইয়ের সাথে লেনদেন';
     renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
@@ -1000,6 +1040,22 @@ document.getElementById('backBtn').onclick = () => {
         window.location.replace('/');
     }
 };
+
+/* ============================================================
+   TOPBAR SHADOW
+   ============================================================ */
+const topbar = document.getElementById('topbar');
+window.addEventListener('scroll', () => {
+    topbar.classList.toggle('scrolled', window.scrollY > 8);
+}, { passive: true });
+
+/* ============================================================
+   DATE
+   ============================================================ */
+function todayStr(d = new Date()) {
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+}
 
 /* ============================================================
    BOOT

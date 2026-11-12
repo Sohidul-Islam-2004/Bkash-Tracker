@@ -117,7 +117,6 @@ let db = { people: [] };
 let currentView = "viewDashboard";
 let currentPersonId = null;
 let loading = false;
-const { esc, money, toast, fmtDateTime: fmtDate } = App;
 
 /* ============================================================
    DATA LAYER
@@ -164,6 +163,25 @@ function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+function money(n) {
+    const num = Number(n || 0);
+    const sign = num < 0 ? "-" : "";
+    return (
+        sign +
+        "৳" +
+        Math.abs(num).toLocaleString("en-IN", { maximumFractionDigits: 0 })
+    );
+}
+
+function esc(s) {
+    return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function balClass(net) {
     return net > 0 ? "pos" : net < 0 ? "neg" : "zero";
 }
@@ -172,6 +190,81 @@ function balLabel(net) {
     if (net > 0) return "পাওনা";
     if (net < 0) return "দেনা";
     return "মিটমাট";
+}
+
+function fmtDate(iso) {
+    const d = new Date(iso);
+    const dateStr = d.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "numeric",
+        year: "2-digit",
+    });
+    const timeStr = d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    });
+    return `${dateStr} · ${timeStr}`;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+const toastEl = document.getElementById("toast");
+const toastIconEl = document.getElementById("toastIcon");
+const toastMsgEl = document.getElementById("toastMsg");
+let toastTimer = null;
+
+function toast(msg, kind, opts = {}) {
+    if (!toastEl || !toastMsgEl) return;
+    toastMsgEl.textContent = msg;
+
+    /* icon */
+    if (toastIconEl) {
+        if (kind === "success") {
+            toastIconEl.textContent = "✓";
+            toastIconEl.style.display = "grid";
+        } else if (kind === "error") {
+            toastIconEl.textContent = "!";
+            toastIconEl.style.display = "grid";
+        } else {
+            toastIconEl.style.display = "none";
+            toastIconEl.textContent = "";
+        }
+    }
+
+    /* remove any previous action button */
+    const oldBtn = toastEl.querySelector(".toast-action");
+    if (oldBtn) oldBtn.remove();
+
+    /* action button (undo) */
+    if (opts.actionLabel && typeof opts.onAction === "function") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "toast-action";
+        btn.textContent = opts.actionLabel;
+        btn.onclick = () => {
+            hideToast();
+            opts.onAction();
+        };
+        toastEl.appendChild(btn);
+    }
+
+    toastEl.className =
+        "toast show" +
+        (kind === "error" ? " error" : kind === "success" ? " success" : "");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(
+        hideToast,
+        opts.duration || (opts.actionLabel ? 4500 : 2400)
+    );
+}
+
+function hideToast() {
+    if (!toastEl) return;
+    toastEl.className = "toast";
+    clearTimeout(toastTimer);
 }
 
 /* ============================================================
@@ -218,6 +311,8 @@ function confirmModal({
         document.getElementById(`${id}_ok`).onclick = () => cleanup(true);
     });
 }
+
+
 
 function askAmount({ title, description = "" }) {
     return new Promise((resolve) => {
@@ -294,9 +389,9 @@ function askAmount({ title, description = "" }) {
    ROUTING
    ============================================================ */
 const VIEW_TITLES = {
-    viewDashboard: "দেনা পাওনা",
+    viewDashboard: "ইজি লেনদেন",
     viewAddPerson: "নতুন মানুষ",
-    viewPerson: "দেনা পাওনা",
+    viewPerson: "ইজি লেনদেন",
 };
 
 function show(id) {
@@ -308,14 +403,14 @@ function show(id) {
     const title = document.getElementById("pageTitle");
     const sub = document.getElementById("pageSub");
 
-    if (title) title.textContent = VIEW_TITLES[id] || "দেনা পাওনা";
+    if (title) title.textContent = VIEW_TITLES[id] || "ইজি লেনদেন";
     if (sub) {
         sub.textContent =
             id === "viewAddPerson"
                 ? "নতুন ব্যক্তি যোগ করুন"
                 : id === "viewPerson"
                     ? "লেনদেনের বিস্তারিত"
-                    : "কে কত পাবে, কাকে কত দিতে হবে";
+                    : "পাওনার হিসাব";
     }
     window.scrollTo(0, 0);
 }
@@ -347,6 +442,30 @@ function showPerson(id) {
     show("viewPerson");
     const title = document.getElementById("pageTitle");
     if (title) title.textContent = p.name;
+}
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+const DEFAULT_LOGO =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4a7d"/>
+      <stop offset="1" stop-color="#a51845"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#g)"/>
+  <text x="32" y="44" font-family="Arial,sans-serif" font-size="32"
+        font-weight="700" fill="#fff" text-anchor="middle">৳</text>
+</svg>`
+    );
+
+function renderLogo() {
+    const el = document.getElementById("brandLogo");
+    if (el) el.src = DEFAULT_LOGO;
 }
 
 /* ============================================================
@@ -769,6 +888,7 @@ async function deleteTxn(personId, txnId) {
         if (currentView === "viewPerson") renderPerson(personId);
         else renderDashboard();
 
+
     } catch (err) {
         toast("মুছতে পারা যায়নি: " + err.message, "error");
     }
@@ -824,12 +944,64 @@ async function submitPerson(e) {
     }
 }
 
-App.lockZoomAndCopy();
+/* ============================================================
+   ZOOM / COPY / CONTEXT-MENU LOCKDOWN
+   ============================================================ */
+document.addEventListener(
+    "wheel",
+    (e) => {
+        if (e.ctrlKey || e.metaKey) e.preventDefault();
+    },
+    { passive: false }
+);
+document.addEventListener("gesturestart", (e) => e.preventDefault());
+document.addEventListener("gesturechange", (e) => e.preventDefault());
+document.addEventListener("gestureend", (e) => e.preventDefault());
+document.addEventListener(
+    "touchstart",
+    (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    },
+    { passive: false }
+);
+document.addEventListener(
+    "touchmove",
+    (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    },
+    { passive: false }
+);
+document.addEventListener("keydown", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    const isEditable =
+        tag === "input" || tag === "textarea" || e.target.isContentEditable;
+    if ((e.ctrlKey || e.metaKey) && !isEditable) {
+        const k = e.key.toLowerCase();
+        if (["c", "a", "x", "s", "u"].includes(k)) e.preventDefault();
+    }
+});
+document.addEventListener("contextmenu", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    e.preventDefault();
+});
+let lastTouchEnd = 0;
+document.addEventListener(
+    "touchend",
+    (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) e.preventDefault();
+        lastTouchEnd = now;
+    },
+    { passive: false }
+);
 
 /* ============================================================
    INIT
    ============================================================ */
 async function init() {
+    renderLogo();
+
     /* back button */
     const backBtn = document.getElementById("backBtn");
     if (backBtn) {
@@ -852,11 +1024,25 @@ async function init() {
     /* search */
     const searchBox = document.getElementById("searchBox");
 
+
     if (searchBox) searchBox.addEventListener("input", renderDashboard);
+
 
     /* form */
     const form = document.getElementById("addPersonForm");
     if (form) form.addEventListener("submit", submitPerson);
+
+    /* topbar shadow on scroll */
+    const topbar = document.getElementById("topbar");
+    if (topbar) {
+        window.addEventListener(
+            "scroll",
+            () => {
+                topbar.classList.toggle("scrolled", window.scrollY > 8);
+            },
+            { passive: true }
+        );
+    }
 
     /* start — show loading then fetch from backend */
     loading = true;

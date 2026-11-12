@@ -11,7 +11,7 @@ let db = { people: [] };
 let historyOpen = false;
 let pendingPhotoDataUrl = null;
 let currentView = "viewDashboard";
-const { esc, money, toast } = App;
+let tt = 'as';
 /* ============================================================
    API HELPERS
    ============================================================ */
@@ -93,6 +93,32 @@ function translateError(msg) {
    ============================================================ */
 function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function toast(msg, kind) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className =
+        "toast show" +
+        (kind === "error" ? " error" : kind === "success" ? " success" : "");
+    clearTimeout(t._t);
+    t._t = setTimeout(() => {
+        t.className = "toast";
+    }, 2400);
+}
+
+function money(n) {
+    const num = Number(n || 0);
+    return "৳" + num.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+}
+
+function esc(s) {
+    return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function initialsOf(n) {
@@ -240,6 +266,30 @@ function openWhatsApp(waNumber, message) {
     if (num.startsWith("01") && num.length === 11) num = "88" + num;
     const text = encodeURIComponent(message);
     window.open(`https://wa.me/${num}?text=${text}`, "_blank");
+}
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+const DEFAULT_LOGO =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4a7d"/>
+      <stop offset="1" stop-color="#a51845"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#g)"/>
+  <text x="32" y="44" font-family="Arial,sans-serif" font-size="32"
+        font-weight="700" fill="#fff" text-anchor="middle">৳</text>
+</svg>`,
+    );
+
+function renderLogo() {
+    const img = document.getElementById("brandLogo");
+    img.src = DEFAULT_LOGO;
 }
 
 /* ============================================================
@@ -1264,7 +1314,47 @@ function changePersonPhoto(id) {
     input.click();
 }
 
-App.lockZoomAndCopy();
+/* ============================================================
+   DISABLE ZOOM + COPY
+   ============================================================ */
+document.addEventListener("wheel", (e) => {
+    if (e.ctrlKey || e.metaKey) e.preventDefault();
+}, { passive: false });
+
+document.addEventListener("gesturestart", (e) => e.preventDefault());
+document.addEventListener("gesturechange", (e) => e.preventDefault());
+document.addEventListener("gestureend", (e) => e.preventDefault());
+
+document.addEventListener("touchstart", (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+document.addEventListener("touchmove", (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+document.addEventListener("keydown", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    const isEditable = tag === "input" || tag === "textarea" || e.target.isContentEditable;
+    if ((e.ctrlKey || e.metaKey) && !isEditable) {
+        const k = e.key.toLowerCase();
+        if (k === "c" || k === "a" || k === "x" || k === "s" || k === "u") {
+            e.preventDefault();
+        }
+    }
+});
+
+document.addEventListener("contextmenu", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    e.preventDefault();
+});
+
+let lastTouchEnd = 0;
+document.addEventListener("touchend", () => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+}, { passive: false });
 
 /* ============================================================
    INIT
@@ -1277,4 +1367,5 @@ document.getElementById("backBtn").onclick = () => {
     window.location.href = "/";
 };
 
+renderLogo();
 showDashboard();

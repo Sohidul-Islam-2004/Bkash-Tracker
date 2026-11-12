@@ -123,7 +123,6 @@ let db = { banks: [] };
 let currentView = "viewDashboard";
 let currentBankId = null;
 let loading = false;
-const { esc, money, toast, fmtDateTime: fmtDate } = App;
 
 /* ============================================================
    DATA LAYER
@@ -183,8 +182,84 @@ function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+function money(n) {
+    const num = Number(n || 0);
+    const sign = num < 0 ? "-" : "";
+    return (
+        sign +
+        "৳" +
+        Math.abs(num).toLocaleString("en-IN", { maximumFractionDigits: 0 })
+    );
+}
+
+function esc(s) {
+    return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function fmtDate(iso) {
+    const d = new Date(iso);
+    const dateStr = d.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "numeric",
+        year: "2-digit",
+    });
+    const timeStr = d.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    });
+    return `${dateStr} · ${timeStr}`;
+}
+
 function bnNumber(n) {
     return Number(n || 0).toLocaleString("bn-BD");
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimer = null;
+
+function toast(msg, kind, opts = {}) {
+    const t = document.getElementById("toast");
+    t.innerHTML = "";
+
+    const text = document.createElement("span");
+    text.textContent = msg;
+    t.appendChild(text);
+
+    if (opts.actionLabel && typeof opts.onAction === "function") {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "toast-action";
+        btn.textContent = opts.actionLabel;
+        btn.onclick = () => {
+            hideToast();
+            opts.onAction();
+        };
+        t.appendChild(btn);
+    }
+
+    t.className =
+        "toast show" +
+        (kind === "error" ? " error" : kind === "success" ? " success" : "");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(
+        hideToast,
+        opts.duration || (opts.actionLabel ? 4500 : 2400)
+    );
+}
+
+function hideToast() {
+    const t = document.getElementById("toast");
+    t.className = "toast";
+    clearTimeout(toastTimer);
 }
 
 /* ============================================================
@@ -225,6 +300,8 @@ function confirmModal({
         document.getElementById(`${id}_ok`).onclick = () => cleanup(true);
     });
 }
+
+
 
 function askAmount({ title, description = "", namePlaceholder = "নাম লিখুন" }) {
     return new Promise((resolve) => {
@@ -364,6 +441,34 @@ function showBank(id) {
     show("viewBank");
     const title = document.getElementById("pageTitle");
     if (title) title.textContent = b.name;
+}
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+const DEFAULT_LOGO =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8437a"/>
+      <stop offset="1" stop-color="#a8153f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#g)"/>
+  <path d="M32 14 L48 24 L48 28 L16 28 L16 24 Z" fill="#fff"/>
+  <rect x="18" y="30" width="4" height="16" fill="#fff"/>
+  <rect x="27" y="30" width="4" height="16" fill="#fff"/>
+  <rect x="36" y="30" width="4" height="16" fill="#fff"/>
+  <rect x="45" y="30" width="4" height="16" fill="#fff"/>
+  <rect x="14" y="48" width="36" height="4" fill="#fff"/>
+</svg>`
+    );
+
+function renderLogo() {
+    const el = document.getElementById("brandLogo");
+    if (el) el.src = DEFAULT_LOGO;
 }
 
 /* ============================================================
@@ -837,12 +942,64 @@ async function submitBank(e) {
     }
 }
 
-App.lockZoomAndCopy();
+/* ============================================================
+   ZOOM / COPY / CONTEXT-MENU LOCKDOWN
+   ============================================================ */
+document.addEventListener(
+    "wheel",
+    (e) => {
+        if (e.ctrlKey || e.metaKey) e.preventDefault();
+    },
+    { passive: false }
+);
+document.addEventListener("gesturestart", (e) => e.preventDefault());
+document.addEventListener("gesturechange", (e) => e.preventDefault());
+document.addEventListener("gestureend", (e) => e.preventDefault());
+document.addEventListener(
+    "touchstart",
+    (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    },
+    { passive: false }
+);
+document.addEventListener(
+    "touchmove",
+    (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    },
+    { passive: false }
+);
+document.addEventListener("keydown", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    const isEditable =
+        tag === "input" || tag === "textarea" || e.target.isContentEditable;
+    if ((e.ctrlKey || e.metaKey) && !isEditable) {
+        const k = e.key.toLowerCase();
+        if (["c", "a", "x", "s", "u"].includes(k)) e.preventDefault();
+    }
+});
+document.addEventListener("contextmenu", (e) => {
+    const tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    e.preventDefault();
+});
+let lastTouchEnd = 0;
+document.addEventListener(
+    "touchend",
+    () => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) e.preventDefault();
+        lastTouchEnd = now;
+    },
+    { passive: false }
+);
 
 /* ============================================================
    INIT
    ============================================================ */
 async function init() {
+    renderLogo();
+
     const backBtn = document.getElementById("backBtn");
     if (backBtn) {
         backBtn.addEventListener("click", () => {
@@ -871,6 +1028,17 @@ async function init() {
 
     const form = document.getElementById("addBankForm");
     if (form) form.addEventListener("submit", submitBank);
+
+    const topbar = document.getElementById("topbar");
+    if (topbar) {
+        window.addEventListener(
+            "scroll",
+            () => {
+                topbar.classList.toggle("scrolled", window.scrollY > 8);
+            },
+            { passive: true }
+        );
+    }
 
     /* start — show loading then fetch from backend */
     loading = true;
