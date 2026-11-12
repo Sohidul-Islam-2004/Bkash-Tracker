@@ -10,38 +10,35 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#d12053" />
-    <title>বিকাশ হিসাব</title>
+    <link rel="icon" type="image/svg+xml" href="/shared/icon.svg" />
+    <title>বিকাশ ম্যানেজমেন্ট — ইজি লেনদেন</title>
 
-    <link rel="stylesheet" href="style.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/shared/base.css" />
+    <link rel="stylesheet" href="style.css" />
   </head>
 
   <body>
     <!-- ============================================================
          TOP BAR
     ============================================================ -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <!-- Back button (smart — handled by script.js) -->
+    <header class="topbar" id="topbar">
+      <div class="topbar-inner">
         <button class="back-btn" id="backBtn" aria-label="ফিরে যান">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
 
-        <img id="brandLogo" alt="লোগো" />
-        <div class="topbar-titles">
-          <h1>বিকাশ হিসাব</h1>
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-text">
+            <h1>বিকাশ ম্যানেজমেন্ট</h1>
+            <span class="brand-sub">ব্যালেন্স ও লিমিট</span>
+          </div>
         </div>
       </div>
     </header>
@@ -244,9 +241,10 @@
     <!-- ============================================================
          TOAST + MODAL ROOT
     ============================================================ -->
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div id="modalRoot"></div>
 
+    <script src="/shared/app.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

@@ -5,6 +5,7 @@ const STORAGE_KEY = 'raf_hisab_entries_v1';
 
 let entries = [];
 let deleteTarget = null;
+const { esc: escapeHtml, num: bn, toast, copyText } = App;
 
 function load() {
     try {
@@ -22,13 +23,6 @@ function persist() {
 /* ============================================================
    HELPERS
    ============================================================ */
-const bn = n => Number(n || 0).toLocaleString('en-US');
-
-const BN_TO_EN = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
-
-const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* only format real 11-digit phone numbers; leave anything else untouched */
 const fmtNum = n => /^\d{11}$/.test(String(n)) ? n.slice(0, 5) + '-' + n.slice(5) : n;
@@ -43,155 +37,6 @@ function fmtDateTime(ts) {
     const ampm = hr >= 12 ? 'PM' : 'AM';
     hr = hr % 12 || 12;
     return `${day}/${mon}/${yr} • ${hr}:${min} ${ampm}`;
-}
-
-/* ============================================================
-   PARSE
-   ------------------------------------------------------------
-   Rule (in this order, per line):
-
-     1. SKIP  if empty / media / deleted
-     2. PHONE MODE        — line contains an 11-digit phone
-                            → amount = first number AFTER the phone
-                            → every word on the line is ignored
-                            → stray bad digit runs → red error
-     3. CONTINUATION MODE — last phone has no amount yet
-                            → this line supplies the amount
-   ============================================================ */
-
-/* Bengali digits → English, and strip invisible chars (LRM, RLM, BOM, ZWSP …) */
-function cleanText(s) {
-    return fromBn(String(s || ''))
-        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, '')
-        .replace(/[\u00A0\u202F]/g, ' ');
-}
-
-/* BD mobile: 01[3-9] + 8 digits = 11 digits.
-   Tolerates "880"/"+88" prefix and single space / dot / dash between digits.
-   Any digits glued straight onto the 11 digits (typo like 017858528333)
-   are swallowed so they never become the amount. */
-const PHONE_RE = /(?<!\d)(?:\+?88[ .\-]?)?(0[ .\-]?1[ .\-]?[3-9](?:[ .\-]?\d){8})(\d*)/g;
-
-/* A numeric token: plain run, or grouped (40,000 · 10'200 · 1,02,000). */
-const AMOUNT_RE = /\d{1,3}(?:[,'’‘′]\d{2,3})+(?:\.\d+)?|\d+(?:\.\d+)?/g;
-
-/* first positive number in text */
-function extractAmount(str) {
-    if (!str) return null;
-    AMOUNT_RE.lastIndex = 0;
-    let m;
-    while ((m = AMOUNT_RE.exec(str))) {
-        const n = Number(m[0].replace(/[,'’‘′]/g, ''));
-        if (Number.isFinite(n) && n > 0) return n;
-    }
-    return null;
-}
-
-/* every phone in a line, with the text that follows it (up to the next phone) */
-function splitByPhone(body) {
-    const hits = [];
-    let m;
-    PHONE_RE.lastIndex = 0;
-    while ((m = PHONE_RE.exec(body))) {
-        hits.push({
-            number: m[1].replace(/\D/g, ''),
-            start: m.index,
-            end: m.index + m[0].length,
-            glued: m[2]
-        });
-    }
-    return hits.map((h, i) => ({
-        number: h.number,
-        glued: h.glued,
-        start: h.start,
-        end: h.end,
-        after: body.slice(h.end, i + 1 < hits.length ? hits[i + 1].start : body.length)
-    }));
-}
-
-/* digit runs that look like a phone but are NOT a valid 11-digit one */
-function findBadNumbers(body, parts) {
-    const bad = [];
-    const re = /\d+/g;
-    let m;
-    while ((m = re.exec(body))) {
-        const s0 = m.index, e0 = s0 + m[0].length;
-        if (parts.some(p => s0 < p.end && e0 > p.start)) continue;
-        const len = m[0].length;
-        if (len >= 10 || (m[0][0] === '0' && len >= 8)) bad.push({ digits: len });
-    }
-    if (!bad.length && !parts.length && /^(?:\+?88[ .\-]?)?0[ .\-]?1[ .\-]?\d/.test(body)) {
-        bad.push({ digits: null });
-    }
-    return bad;
-}
-
-function parseEntries(text) {
-    const out = [];
-    const warnings = [];
-    const errors = [];
-    let pending = null;
-
-    const skipRe = /^(?:<Media omitted>|This message was deleted|You deleted this message)$/i;
-    const badReason = n => n
-        ? `নম্বর ভুল: ${n} ডিজিট (১১ ডিজিট হতে হবে)`
-        : 'নম্বর ভুল: ১১ ডিজিট নয়';
-
-    for (const raw of cleanText(text).split(/\r?\n/)) {
-        const body = raw.trim();
-        if (!body) continue;
-        if (skipRe.test(body)) continue;
-
-        const parts = splitByPhone(body);
-        const bad = findBadNumbers(body, parts);
-
-        /* ==========================================================
-           PHONE MODE  —  at least one phone on the line
-              names on the line are IGNORED — only phone + amount.
-           ========================================================== */
-        if (parts.length) {
-            if (pending) {
-                warnings.push(`amount missing for ${pending.number}`);
-                pending = null;
-            }
-            for (const p of parts) {
-                if (p.glued) {                                   // 12+ digits glued: error
-                    errors.push({ line: body, reason: badReason(11 + p.glued.length) });
-                    pending = null;
-                    continue;
-                }
-                const amount = extractAmount(p.after);           // first number AFTER phone
-                if (amount != null) out.push({ number: p.number, amount });
-                else pending = { number: p.number };             // wait for next line
-            }
-            bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
-            continue;
-        }
-
-        /* ---------- phone-looking but wrong length → red error ---------- */
-        if (bad.length) {
-            bad.forEach(b => errors.push({ line: body, reason: badReason(b.digits) }));
-            pending = null;
-            continue;
-        }
-
-        /* ==========================================================
-           CONTINUATION MODE — previous phone has no amount yet
-           ========================================================== */
-        if (pending) {
-            const amount = extractAmount(body);
-            if (amount != null) {
-                out.push({ number: pending.number, amount });
-                pending = null;
-            }
-            continue;
-        }
-    }
-
-    if (pending) warnings.push(`amount missing for ${pending.number}`);
-    out.warnings = warnings;
-    out.errors = errors;
-    return out;
 }
 
 /* ============================================================
@@ -217,18 +62,6 @@ function showEntryErrors(errs) {
             `<div style="margin-top:6px"><span dir="ltr" style="word-break:break-all">${escapeHtml(x.line)}</span>` +
             `<br><small>${x.reason}</small></div>`
         ).join('');
-}
-
-/* ============================================================
-   TOAST
-   ============================================================ */
-const toastEl = document.getElementById('toast');
-let toastTimer;
-function toast(msg, type = '') {
-    toastEl.textContent = msg;
-    toastEl.className = 'toast show ' + type;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
 }
 
 /* ============================================================
@@ -370,6 +203,7 @@ function closeSheet() {
 }
 
 document.getElementById('addBtn').onclick = openSheet;
+document.getElementById('backBtn').onclick = () => { window.location.href = '/'; };
 document.getElementById('closeBtn').onclick = closeSheet;
 sheetBg.onclick = closeSheet;
 
@@ -402,7 +236,7 @@ document.getElementById('saveBtn').onclick = () => {
 
     if (parsed.errors && parsed.errors.length) {
         showEntryErrors(parsed.errors);
-        return toast(parsed.errors.length + ' টি নম্বর ভুল — ঠিক করে আবার সেভ করুন', 'err');
+        return toast(parsed.errors.length + ' টি লাইনে ভুল — ঠিক করে আবার সেভ করুন', 'err');
     }
     showEntryErrors([]);
 
@@ -439,27 +273,6 @@ function buildCopyText(entry) {
     lines.push('━━━━━━━━━━━━━━━━━━━━');
     lines.push(`মোট                = ${bn(entry.total)}`);
     return lines.join('\n');
-}
-
-async function copyText(text) {
-    try {
-        if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(text);
-        } else {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-        }
-        return true;
-    } catch {
-        return false;
-    }
 }
 
 /* ============================================================

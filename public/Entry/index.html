@@ -7,13 +7,15 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="theme-color" content="#d12053" />
-    <title>bKash এন্ট্রি ম্যানেজার</title>
+    <link rel="icon" type="image/svg+xml" href="/shared/icon.svg" />
+    <title>সালাম ভাইয়ের লেনদেন — ইজি লেনদেন</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/shared/base.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -36,59 +38,12 @@
 
         <!-- Brand -->
         <div class="brand">
-          <div class="brand-logo" aria-hidden="true">
-            <svg
-              class="brand-mark"
-              viewBox="0 0 100 100"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient
-                  id="el-grad"
-                  x1="0"
-                  y1="0"
-                  x2="100"
-                  y2="100"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop offset="0%" stop-color="#e8437a" />
-                  <stop offset="55%" stop-color="#d12053" />
-                  <stop offset="100%" stop-color="#a8153f" />
-                </linearGradient>
-              </defs>
-
-              <!-- tile -->
-              <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
-
-              <!-- top-left sheen -->
-              <path
-                d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
-                fill="rgba(255,255,255,0.10)"
-              />
-
-              <!-- ই -->
-              <text
-                x="50"
-                y="74"
-                text-anchor="middle"
-                font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
-                font-size="60"
-                font-weight="800"
-                fill="#ffffff"
-              >
-                ই
-              </text>
-
-              <!-- coin accent -->
-              <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
-              <circle cx="80" cy="22" r="2.2" fill="#d12053" />
-            </svg>
-          </div>
+          <div class="brand-logo" aria-hidden="true"></div>
 
           <div class="brand-text">
-            <h1 id="topTitle">ইজি লেনদেন</h1>
+            <h1 id="topTitle">সালাম ভাইয়ের লেনদেন</h1>
             <span class="brand-sub" id="topSub"
-              >সালাম ভাইয়ের সাথে লেনদেন</span
+              >প্রতিদিনের হিসাব</span
             >
           </div>
         </div>
@@ -268,7 +223,23 @@
           </button>
         </div>
         <div class="input-hint">
-          প্রতি লাইনে: ১১-ডিজিট নম্বর, তারপর # বা - চিহ্ন, তারপর টাকা
+          WhatsApp থেকে মেসেজ কপি করে পেস্ট করুন (সময় ও নামসহ), অথবা নিচের
+          বাটনে পুরো চ্যাট ফাইল দিন
+        </div>
+        <div style="margin-top: 8px">
+          <button class="entry-copy-all" id="fileBtn" type="button">
+            চ্যাট ফাইল (.txt) থেকে আনুন
+          </button>
+          <input type="file" id="chatFile" accept=".txt,text/plain" hidden />
+        </div>
+      </div>
+
+      <!-- চ্যাট ফাইল: কোন সময়ের পর থেকে -->
+      <div class="field" id="fromField" hidden>
+        <label for="fromTs">এই সময়ের পর থেকে মেসেজ নেওয়া হচ্ছে</label>
+        <input type="datetime-local" id="fromTs" />
+        <div class="input-hint">
+          শেষ সেভ হওয়া মেসেজের সময় নিজে থেকে বসে। দরকার হলে বদলান।
         </div>
       </div>
 
@@ -329,7 +300,7 @@
           >
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          সেভ করুন
+          <span id="saveLabel">সেভ করুন</span>
         </button>
       </div>
 
@@ -369,11 +340,10 @@
     </div>
 
     <!-- ============ TOAST ============ -->
-    <div class="toast" id="toast">
-      <span class="toast-icon" id="toastIcon"></span>
-      <span class="toast-msg" id="toastMsg"></span>
-    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script src="/shared/app.js"></script>
+    <script src="/shared/parser.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

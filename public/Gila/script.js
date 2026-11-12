@@ -102,29 +102,11 @@ let loadError = null;                // set when the person list failed to load
 let editingPdayOriginal = null;      // date of the entry being edited (null = new entry)
 
 let routeToken = 0;                     // guards against out-of-order async renders
+const { esc, num: bn, parseNum, monthName, weekday, todayStr, toast } = App;
 
 /* ============================================================
    HELPERS
    ============================================================ */
-const bn = n => Number(n || 0).toLocaleString('en-US');
-
-const BN_TO_EN = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-const fromBn = s => String(s).replace(/[০-৯]/g, d => BN_TO_EN[d] || d);
-function parseNum(str) {
-    const cleaned = fromBn(str).replace(/[^\d.\-]/g, '');
-    const n = parseFloat(cleaned);
-    return Number.isFinite(n) ? n : 0;
-}
-
-const MONTHS = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
-    'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-const monthName = ym => MONTHS[+ym.split('-')[1] - 1];
-
-const WEEKDAYS = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
-const weekday = d => {
-    const [y, m, dd] = d.split('-').map(Number);
-    return WEEKDAYS[new Date(y, m - 1, dd).getDay()];
-};
 
 /* NEW: ISO date (YYYY-MM-DD) -> DD/MM/YYYY */
 /* ISO date (YYYY-MM-DD) -> D/M/YY  (no leading zeros, 2-digit year) */
@@ -141,10 +123,6 @@ function formatMonthMY(ym) {
     const [y, m] = ym.split('-');
     return `${+m}/${y.slice(-2)}`;
 }
-
-/* escape user text before it goes into innerHTML (names are user-typed) */
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function getPerson(id) { return persons.find(p => p.id === id); }
 
@@ -172,11 +150,6 @@ function personMonthPieces(pid, ym) {
     return personEntriesFor(pid)
         .filter(e => e.date.slice(0, 7) === ym)
         .reduce((s, e) => s + (Number(e.pieces) || 0), 0);
-}
-
-function todayStr(d = new Date()) {
-    const off = d.getTimezoneOffset();
-    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
 
 /* disable a button while an async action runs */
@@ -223,23 +196,6 @@ async function ensureEntries(pid) {
 function dropEntriesCache(pid) {
     entriesLoaded.delete(pid);
     personEntries = personEntries.filter(e => e.personId !== pid);
-}
-
-/* ============================================================
-   TOAST
-   ============================================================ */
-const toastEl = document.getElementById('toast');
-const toastIcon = document.getElementById('toastIcon');
-const toastMsg = document.getElementById('toastMsg');
-let tT;
-function toast(msg, type = '') {
-    toastMsg.textContent = msg;
-    toastEl.className = 'toast show ' + type;
-    if (type === 'ok') { toastIcon.textContent = '✓'; toastIcon.style.display = 'grid'; }
-    else if (type === 'err') { toastIcon.textContent = '!'; toastIcon.style.display = 'grid'; }
-    else { toastIcon.style.display = 'none'; }
-    clearTimeout(tT);
-    tT = setTimeout(() => toastEl.classList.remove('show'), 2400);
 }
 
 /* ============================================================
@@ -366,7 +322,7 @@ async function handleRoute() {
     /* home */
     viewHome.hidden = false;
     document.body.classList.remove('in-month');
-    setTitle('ইজিলেনদেন', 'গিলার হিসাব');
+    setTitle('গিলার হিসাব', 'সব ব্যক্তি');
     renderHome();
     window.scrollTo({ top: 0, behavior: 'instant' });
 }
@@ -887,12 +843,6 @@ document.getElementById('backBtn').onclick = () => {
     if (r.startsWith('person/')) { navigateTo(''); return; }
     window.location.replace('/');
 };
-
-/* ============================================================
-   TOPBAR SHADOW
-   ============================================================ */
-const topbar = document.getElementById('topbar');
-window.addEventListener('scroll', () => topbar.classList.toggle('scrolled', window.scrollY > 8), { passive: true });
 
 /* ============================================================
    BOOT

@@ -2,22 +2,6 @@
    হিসাব — ledger app (bKash-app aesthetic)
    ============================================================ */
 :root {
-    --bg: #f5f3f6;
-    --card: #ffffff;
-
-    --ink: #17181f;
-    --ink-2: #3a3d4a;
-    --muted: #6e7180;
-    --muted-2: #a1a4b3;
-
-    --line: #ebe6ec;
-    --line-2: #f3eef4;
-
-    --pink: #d12053;
-    --pink-2: #e8437a;
-    --pink-press: #a8153f;
-    --pink-soft: #fde8ef;
-    --pink-tint: #fff6fa;
 
     /* debt (দেনা) — purple */
     --debt: #8b3a8f;
@@ -27,35 +11,8 @@
     --debt-tint: #fbf3fc;
     --debt-ink: #6b2076;
 
-    --blue: #2563eb;
-    --blue-soft: #e7f0ff;
-    --green: #12a06a;
-    --green-soft: #dcf6ec;
-    --green-ink: #0a6b45;
-    --red: #dc2648;
-    --red-soft: #fde8ec;
-    --red-ink: #b3122f;
-
-    --r-sm: 12px;
-    --r: 16px;
-    --r-md: 20px;
-    --r-lg: 24px;
-
-    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
-    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
-    --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
-    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
-    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
     --shadow-debt: 0 8px 22px rgba(139, 58, 143, 0.28);
 
-    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-    --wrap: 480px;
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-
-    --top: env(safe-area-inset-top, 0px);
-    --bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * {
@@ -127,116 +84,11 @@ select,
 
 .money,
 .pc-bal,
-.lg-big,
 .lg-col,
-.lg-total b,
 .sum-value,
-.sum-input,
-.amount-chip,
-.hero-value,
 .ph-bal {
     font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
-}
-
-/* ============================================================
-   TOPBAR
-   ============================================================ */
-.topbar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 1px solid var(--line-2);
-    padding: calc(10px + var(--top)) 16px 10px;
-    transition: box-shadow 0.25s var(--ease);
-}
-
-.topbar.scrolled {
-    box-shadow: 0 1px 10px rgba(20, 22, 34, 0.05);
-}
-
-.topbar-inner {
-    max-width: var(--wrap);
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.icon-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    transition: background 0.15s, transform 0.12s;
-}
-
-.icon-btn:hover {
-    background: #fbd5e2;
-}
-
-.icon-btn:active {
-    transform: scale(0.92);
-}
-
-.icon-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-    flex: 1;
-}
-
-.brand-logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    box-shadow: var(--shadow-pink);
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.brand-logo svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
-.brand-text {
-    min-width: 0;
-    line-height: 1.2;
-}
-
-.brand-text h1 {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.brand-sub {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* ============================================================
@@ -355,21 +207,6 @@ select,
     text-overflow: ellipsis;
 }
 
-/* legacy single-value variant (safety net) */
-.home-hero-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 16px;
-    border-radius: var(--r-lg);
-    background: linear-gradient(135deg, #d12053 0%, #9c1038 100%);
-    color: #fff;
-    box-shadow: 0 16px 40px rgba(209, 32, 83, 0.28);
-    position: relative;
-    overflow: hidden;
-}
-
 .home-hero-label {
     display: inline-flex;
     align-items: center;
@@ -410,103 +247,6 @@ select,
     margin-top: 10px;
 }
 
-.home-hero-badge {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-/* ============================================================
-   SECTION HEAD
-   ============================================================ */
-.section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 4px 2px 12px;
-}
-
-.section-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ink);
-    letter-spacing: -0.2px;
-}
-
-.title-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--pink);
-    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12);
-}
-
-.section-count {
-    font-family: var(--font-num);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--pink);
-    background: var(--pink-soft);
-    padding: 4px 10px;
-    border-radius: 20px;
-    letter-spacing: 0.2px;
-    font-variant-numeric: tabular-nums;
-}
-
-.section-head-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* ============================================================
-   CHIP BUTTON
-   ============================================================ */
-.chip-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 10px;
-    border-radius: 9px;
-    background: #fff;
-    border: 1px solid var(--line);
-    color: var(--ink-2);
-    font-size: 11.5px;
-    font-weight: 700;
-    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
-}
-
-.chip-btn:hover {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-    border-color: #fbd5e2;
-}
-
-.chip-btn:active {
-    transform: scale(0.95);
-}
-
-.chip-btn svg {
-    width: 12px;
-    height: 12px;
-}
-
-.chip-btn.copied {
-    background: var(--green-soft) !important;
-    color: var(--green) !important;
-    border-color: #c8eedd !important;
-}
-
 /* ============================================================
    SEARCH BAR
    ============================================================ */
@@ -544,32 +284,6 @@ select,
 
 .search-wrap input::-webkit-search-cancel-button {
     -webkit-appearance: none;
-}
-
-.search-clear {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #efe9ee;
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 700;
-    display: grid;
-    place-items: center;
-    transition: background 0.15s, transform 0.12s;
-}
-
-.search-clear:hover {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-}
-
-.search-clear:active {
-    transform: translateY(-50%) scale(0.9);
 }
 
 .searchbar.solo .search-wrap {
@@ -728,20 +442,6 @@ select,
     box-shadow:
         0 6px 16px rgba(209, 32, 83, 0.22),
         inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-
-.avatar-sm {
-    width: 48px;
-    height: 48px;
-    font-size: 16px;
-    border-radius: 15px;
-}
-
-.avatar-lg {
-    width: 68px;
-    height: 68px;
-    font-size: 24px;
-    border-radius: 20px;
 }
 
 .pc-info {
@@ -994,15 +694,6 @@ select,
     z-index: 1;
 }
 
-.ph-lbl {
-    display: block;
-    font-size: 12.5px;
-    opacity: 0.85;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    margin-bottom: 4px;
-}
-
 .ph-bal {
     display: block;
     font-size: 32px;
@@ -1068,10 +759,6 @@ select,
     background: linear-gradient(180deg, #2fc98c, var(--green));
 }
 
-.sum-item--count::before {
-    background: linear-gradient(180deg, #9aa0b4, var(--ink-2));
-}
-
 .sum-label {
     font-size: 11px;
     font-weight: 700;
@@ -1101,123 +788,6 @@ select,
 
 .sum-item--in .sum-value {
     color: var(--green-ink);
-}
-
-/* ============================================================
-   SUM PAWNA (prominent status row)
-   ============================================================ */
-.sum-pawna {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 13px 14px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, #fff5f8, #fde8ef);
-    border: 1.5px solid #f7d3e0;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(209, 32, 83, 0.08);
-    margin-bottom: 12px;
-    transition: background 0.25s var(--ease), border-color 0.25s var(--ease);
-}
-
-.sum-pawna::after {
-    content: "";
-    position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: rgba(209, 32, 83, 0.06);
-    pointer-events: none;
-}
-
-.sum-pawna-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13.5px;
-    font-weight: 700;
-    letter-spacing: -0.1px;
-    color: var(--pink-press);
-    position: relative;
-    z-index: 1;
-}
-
-.sum-pawna-label .ico {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    border-radius: 9px;
-    background: rgba(209, 32, 83, 0.14);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-}
-
-.sum-pawna-label .ico svg {
-    width: 15px;
-    height: 15px;
-}
-
-.sum-pawna-value {
-    font-family: var(--font-num);
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-    font-variant-numeric: tabular-nums;
-    color: var(--pink);
-    white-space: nowrap;
-    position: relative;
-    z-index: 1;
-}
-
-.sum-pawna[data-pawna-state="settled"] {
-    background: linear-gradient(135deg, #f2fbf7, var(--green-soft));
-    border-color: #c8eedd;
-    box-shadow: 0 4px 12px rgba(18, 160, 106, 0.08);
-}
-
-.sum-pawna[data-pawna-state="settled"] .sum-pawna-label {
-    color: #0b6b47;
-}
-
-.sum-pawna[data-pawna-state="settled"] .sum-pawna-label .ico {
-    background: rgba(18, 160, 106, 0.14);
-    color: var(--green);
-}
-
-.sum-pawna[data-pawna-state="settled"] .sum-pawna-value {
-    color: var(--green);
-}
-
-.sum-pawna[data-pawna-state="settled"]::after {
-    background: rgba(18, 160, 106, 0.07);
-}
-
-.sum-pawna[data-pawna-state="advance"] {
-    background: linear-gradient(135deg, #f2f7ff, var(--blue-soft));
-    border-color: #cfe0fb;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-}
-
-.sum-pawna[data-pawna-state="advance"] .sum-pawna-label {
-    color: #1a4fbf;
-}
-
-.sum-pawna[data-pawna-state="advance"] .sum-pawna-label .ico {
-    background: rgba(37, 99, 235, 0.14);
-    color: var(--blue);
-}
-
-.sum-pawna[data-pawna-state="advance"] .sum-pawna-value {
-    color: var(--blue);
-}
-
-.sum-pawna[data-pawna-state="advance"]::after {
-    background: rgba(37, 99, 235, 0.07);
 }
 
 /* ============================================================
@@ -1441,13 +1011,6 @@ select,
     font-family: var(--font-num);
 }
 
-.hint {
-    margin: 6px 2px 0;
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-}
-
 /* ============================================================
    BUTTONS
    ============================================================ */
@@ -1547,73 +1110,6 @@ select,
 }
 
 /* ============================================================
-   TOAST
-   ============================================================ */
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(30px + var(--bottom));
-    transform: translate(-50%, 30px);
-    background: var(--ink);
-    color: #fff;
-    padding: 13px 20px;
-    border-radius: 14px;
-    font-size: 14.5px;
-    font-weight: 600;
-    text-align: center;
-    max-width: min(90vw, 440px);
-    opacity: 0;
-    pointer-events: none;
-    z-index: 300;
-    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
-    transition: opacity 0.25s, transform 0.25s;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
-    pointer-events: auto;
-}
-
-.toast.success {
-    background: #0d7a51;
-}
-
-.toast.error {
-    background: #b81d38;
-}
-
-.toast-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: none;
-    place-items: center;
-    flex-shrink: 0;
-    font-size: 12px;
-    font-weight: 800;
-    background: rgba(255, 255, 255, 0.18);
-}
-
-.toast .toast-action {
-    background: rgba(255, 255, 255, 0.2);
-    border: 0;
-    color: #fff;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 6px 12px;
-    border-radius: 9px;
-    transition: background 0.15s;
-}
-
-.toast .toast-action:hover {
-    background: rgba(255, 255, 255, 0.32);
-}
-
-/* ============================================================
    MODAL / CENTERED DIALOG
    ============================================================ */
 .modal-bg {
@@ -1692,41 +1188,6 @@ select,
     flex: 1;
 }
 
-.chips {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 10px 0 4px;
-}
-
-.amount-chip {
-    min-height: 44px;
-    border: 1.5px solid var(--line);
-    border-radius: 12px;
-    background: #fdfbfc;
-    color: var(--ink-2);
-    font-size: 14.5px;
-    font-weight: 700;
-    transition: all 0.15s var(--ease);
-}
-
-.amount-chip:hover {
-    border-color: var(--pink);
-    color: var(--pink-press);
-    background: var(--pink-tint);
-}
-
-.amount-chip:active {
-    transform: scale(0.95);
-}
-
-.amount-chip.selected {
-    background: var(--pink);
-    border-color: var(--pink);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(209, 32, 83, 0.3);
-}
-
 /* ============================================================
    RESPONSIVE
    ============================================================ */
@@ -1770,16 +1231,8 @@ select,
         min-height: 46px;
     }
 
-    .chips {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
     .sum-value {
         font-size: 15.5px;
-    }
-
-    .sum-pawna-value {
-        font-size: 18px;
     }
 
     .person-del span {

@@ -2,11 +2,6 @@
    TOKENS
    ============================================================ */
 :root {
-    --bg: #ede8ee;
-    --card: #ffffff;
-
-    --ink: #17181f;
-    --ink-2: #3a3d4a;
     --muted: #7a7d8c;
     --line: #ece6ee;
     --line-2: #f4eff5;
@@ -19,32 +14,18 @@
     --note-ink: #3f3000;
     --note-ink-2: #7a5800;
 
-    --pink: #d12053;
-    --pink-2: #e8437a;
-    --pink-press: #a8153f;
-    --pink-soft: #fde8ef;
     --pink-tint: #fff7fa;
-
-    --green: #12a06a;
-    --green-soft: #dcf6ec;
-    --red: #dc2648;
-    --red-soft: #fde8ec;
-
-    --top: env(safe-area-inset-top, 0px);
-    --bottom: env(safe-area-inset-bottom, 0px);
 
     --shadow-sm: 0 1px 2px rgba(20, 22, 34, .04), 0 4px 14px rgba(20, 22, 34, .05);
     --shadow-md: 0 10px 30px rgba(20, 22, 34, .08);
     --shadow-lg: 0 24px 48px rgba(20, 22, 34, .14);
     --shadow-pink: 0 8px 22px rgba(209, 32, 83, .28);
 
-    --r: 16px;
     --r-lg: 22px;
 
     --ease: cubic-bezier(.2, .8, .2, 1);
 
     --font-num: "Noto Sans Bengali", "Hind Siliguri", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* ============================================================
@@ -88,93 +69,10 @@ textarea {
     font-family: inherit;
 }
 
-/* ============================================================
-   TOPBAR
-   ============================================================ */
-.topbar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background: rgba(255, 255, 255, .82);
-    backdrop-filter: saturate(180%) blur(16px);
-    -webkit-backdrop-filter: saturate(180%) blur(16px);
-    border-bottom: 1px solid var(--line-2);
-    padding: calc(14px + var(--top)) 16px 14px;
-}
-
-.topbar-inner {
-    max-width: 480px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.brand-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #f06a97, var(--pink) 55%, var(--pink-press));
-    color: #fff;
-    display: grid;
-    place-items: center;
-    font-family: var(--font-num);
-    font-weight: 800;
-    font-size: 21px;
-    box-shadow: var(--shadow-pink);
-    flex-shrink: 0;
-}
-
-.brand-text {
-    min-width: 0;
-    line-height: 1.2;
-}
-
-.brand-text h1 {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -.3px;
-}
-
 .brand-text span {
     font-size: 12px;
     color: var(--muted);
     font-weight: 500;
-}
-
-.add-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #fff;
-    display: grid;
-    place-items: center;
-    box-shadow: 0 6px 16px rgba(209, 32, 83, .3);
-    transition: transform .12s, box-shadow .15s;
-    flex-shrink: 0;
-}
-
-.add-btn:hover {
-    box-shadow: 0 8px 22px rgba(209, 32, 83, .42);
-}
-
-.add-btn:active {
-    transform: scale(.92);
-}
-
-.add-btn svg {
-    width: 20px;
-    height: 20px;
 }
 
 /* ============================================================
@@ -295,34 +193,6 @@ textarea {
     flex-shrink: 0;
 }
 
-.card-date {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-num);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--ink-2);
-    font-variant-numeric: tabular-nums;
-    background: #fff;
-    border: 1px solid var(--card-border);
-    padding: 4px 10px 4px 7px;
-    border-radius: 20px;
-    white-space: nowrap;
-}
-
-.card-date .date-ico {
-    display: inline-flex;
-    width: 14px;
-    height: 14px;
-    color: var(--pink);
-}
-
-.card-date .date-ico svg {
-    width: 100%;
-    height: 100%;
-}
-
 .card-actions {
     display: flex;
     align-items: center;
@@ -379,44 +249,6 @@ textarea {
 .card-del svg {
     width: 15px;
     height: 15px;
-}
-
-/* ---------- NOTE (amber sticky-note, stands apart from the pink theme) ---------- */
-.card-note {
-    margin: 14px 14px 4px 19px;
-    padding: 10px 14px 12px;
-    background: var(--note-bg);
-    border: 1px solid var(--note-line);
-    border-left: 5px solid var(--note-accent);
-    border-radius: 6px 14px 14px 6px;
-    box-shadow: 0 3px 10px rgba(242, 183, 5, .18);
-    word-break: break-word;
-}
-
-.note-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11.5px;
-    font-weight: 800;
-    color: var(--note-ink-2);
-    background: var(--note-chip);
-    padding: 2px 9px 2px 7px;
-    border-radius: 20px;
-    margin-bottom: 6px;
-}
-
-.note-label svg {
-    width: 12px;
-    height: 12px;
-}
-
-.card-note .note-text {
-    display: block;
-    font-size: 14.5px;
-    font-weight: 600;
-    line-height: 1.55;
-    color: var(--note-ink);
 }
 
 /* ---------- NUM LIST ---------- */
@@ -521,7 +353,6 @@ textarea {
     color: var(--pink-press);
     font-variant-numeric: tabular-nums;
 }
-
 
 /* ============================================================
    EMPTY
@@ -928,43 +759,6 @@ textarea {
 }
 
 /* ============================================================
-   TOAST
-   ============================================================ */
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(32px + var(--bottom));
-    transform: translate(-50%, 24px);
-    background: var(--ink);
-    color: #fff;
-    padding: 13px 20px;
-    border-radius: 14px;
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 16px 40px rgba(20, 22, 34, .3);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .28s var(--ease), transform .32s var(--ease);
-    z-index: 300;
-    max-width: 90vw;
-    text-align: center;
-    line-height: 1.5;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
-}
-
-.toast.ok {
-    background: #0d7a51;
-}
-
-.toast.err {
-    background: #b81d38;
-}
-
-/* ============================================================
    SMALL SCREENS
    ============================================================ */
 @media (max-width: 380px) {
@@ -985,14 +779,6 @@ textarea {
         min-height: 110px;
     }
 }
-
-/* ============================================================
-   SMOOTH COLLAPSE / EXPAND PATCH
-   ------------------------------------------------------------
-   • bottom sheet: spring slide + drag to close
-   • confirm dialog: pop-in scale
-   • cards: fold-open body with persistent state
-   ============================================================ */
 
 /* ------------------------------------------------------------
    1. BOTTOM SHEET — spring physics + drag
@@ -1190,10 +976,6 @@ textarea {
     }
 }
 
-/* ============================================================
-   CARD HEAD — note chip, no date pill
-   ============================================================ */
-
 /* meta = badge + note chip, tight horizontal cluster */
 .card-meta {
     display: flex;
@@ -1247,13 +1029,6 @@ textarea {
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
-}
-
-/* ---------- retire the old date pill styles ---------- */
-.card-date,
-.card-date .date-ico {
-    /* keep rule for safety, but unused */
-    display: none !important;
 }
 
 /* ---------- keep the chevron in the same size family ---------- */
