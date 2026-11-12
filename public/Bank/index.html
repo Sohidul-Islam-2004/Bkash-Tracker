@@ -3,15 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0a5c3e" />
+    <meta name="theme-color" content="#d12053" />
+    <link rel="icon" type="image/svg+xml" href="/shared/icon.svg" />
     <meta name="format-detection" content="telephone=no" />
-    <title>ব্যাংক হিসাব</title>
+    <title>ব্যাংক হিসাব — ইজি লেনদেন</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&family=Inter:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="/shared/base.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
 
@@ -26,24 +28,7 @@
         </button>
 
         <div class="brand">
-          <div class="brand-logo" aria-hidden="true">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="el-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#0f8055" />
-                  <stop offset="55%" stop-color="#0a5c3e" />
-                  <stop offset="100%" stop-color="#063d29" />
-                </linearGradient>
-              </defs>
-              <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
-              <path d="M50 18 L82 36 L82 43 L18 43 L18 36 Z" fill="#ffffff" />
-              <rect x="24" y="48" width="7" height="26" fill="#ffffff" />
-              <rect x="41" y="48" width="7" height="26" fill="#ffffff" />
-              <rect x="59" y="48" width="7" height="26" fill="#ffffff" />
-              <rect x="76" y="48" width="7" height="26" fill="#ffffff" />
-              <rect x="18" y="78" width="64" height="7" fill="#ffffff" />
-            </svg>
-          </div>
+          <div class="brand-logo" aria-hidden="true"></div>
           <div class="brand-text">
             <h1 id="pageTitle">ব্যাংক হিসাব</h1>
             <span class="brand-sub" id="pageSub">সব ব্যাংকের হিসাব</span>
@@ -133,6 +118,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div id="modalRoot"></div>
 
+    <script src="/shared/app.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

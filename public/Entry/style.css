@@ -1,54 +1,4 @@
 /* ============================================================
-   TOKENS
-   ============================================================ */
-:root {
-    --bg: #f5f3f6;
-    --card: #ffffff;
-
-    --ink: #17181f;
-    --ink-2: #3a3d4a;
-    --muted: #6e7180;
-    --muted-2: #a1a4b3;
-    --line: #ebe6ec;
-    --line-2: #f3eef4;
-
-    --pink: #d12053;
-    --pink-2: #e8437a;
-    --pink-press: #a8153f;
-    --pink-soft: #fde8ef;
-    --pink-tint: #fff6fa;
-
-    --blue: #2563eb;
-    --blue-soft: #e7f0ff;
-    --green: #12a06a;
-    --green-soft: #dcf6ec;
-    --red: #dc2648;
-    --red-soft: #fde8ec;
-
-    --top: env(safe-area-inset-top, 0px);
-    --bottom: env(safe-area-inset-bottom, 0px);
-
-    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
-    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
-    --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
-    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
-    --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
-    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
-
-    --r-sm: 12px;
-    --r: 16px;
-    --r-md: 20px;
-    --r-lg: 24px;
-
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-
-    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-/* ============================================================
    BASE
    ============================================================ */
 * {
@@ -101,90 +51,12 @@ select {
     border-radius: 4px;
 }
 
-/* ============================================================
-   TOPBAR
-   ============================================================ */
-.topbar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 1px solid var(--line-2);
-    padding: calc(10px + var(--top)) 16px 10px;
-    transition: box-shadow 0.25s var(--ease);
-}
-
-.topbar.scrolled {
-    box-shadow: 0 1px 10px rgba(20, 22, 34, 0.05);
-}
-
-.topbar-inner {
-    max-width: 720px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.back-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: none;
-    place-items: center;
-    flex-shrink: 0;
-    transition: background 0.15s, transform 0.12s;
-}
-
-.back-btn:hover {
-    background: #fbd5e2;
-}
-
-.back-btn:active {
-    transform: scale(0.92);
-}
-
-.back-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
 body.in-month .back-btn {
     display: grid;
 }
 
 body.in-month .brand-logo {
     display: none;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-    flex: 1;
-}
-
-.brand-logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #fff;
-    display: grid;
-    place-items: center;
-    font-weight: 800;
-    font-size: 13px;
-    letter-spacing: -0.4px;
-    box-shadow: var(--shadow-pink);
-    flex-shrink: 0;
-    position: relative;
-    overflow: hidden;
 }
 
 .brand-logo::after {
@@ -205,56 +77,6 @@ body.in-month .brand-logo {
     50% {
         transform: translateX(100%);
     }
-}
-
-.brand-text {
-    min-width: 0;
-    line-height: 1.2;
-}
-
-.brand-text h1 {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.brand-sub {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.icon-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-    transition: background 0.15s, transform 0.12s;
-    flex-shrink: 0;
-}
-
-.icon-btn:hover {
-    background: #fbd5e2;
-}
-
-.icon-btn:active {
-    transform: scale(0.92);
-}
-
-.icon-btn svg {
-    width: 20px;
-    height: 20px;
 }
 
 /* ============================================================
@@ -285,47 +107,6 @@ body.in-month .brand-logo {
 #viewHome[hidden],
 #viewMonth[hidden] {
     display: none;
-}
-
-/* ============================================================
-   SECTION HEAD
-   ============================================================ */
-.section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 4px 2px 12px;
-}
-
-.section-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ink);
-    letter-spacing: -0.2px;
-}
-
-.title-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--pink);
-    box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.12);
-}
-
-.section-count {
-    font-family: var(--font-num);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--pink);
-    background: var(--pink-soft);
-    padding: 4px 10px;
-    border-radius: 20px;
-    letter-spacing: 0.2px;
-    font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================
@@ -406,63 +187,6 @@ body.in-month .brand-logo {
     background: var(--pink-soft);
 }
 
-.month-badge {
-    width: 54px;
-    height: 54px;
-    flex-shrink: 0;
-    border-radius: 16px;
-    background: linear-gradient(160deg, #e83a6c 0%, var(--pink) 45%, var(--pink-press) 100%);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    box-shadow:
-        0 8px 18px rgba(209, 32, 83, 0.26),
-        inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-}
-
-.month-badge::after {
-    content: "";
-    position: absolute;
-    top: -22px;
-    right: -22px;
-    width: 62px;
-    height: 62px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.month-badge b {
-    font-family: var(--font-num);
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.1px;
-    line-height: 1;
-    position: relative;
-    z-index: 1;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
-}
-
-.month-badge small {
-    font-family: var(--font-num);
-    font-size: 10px;
-    font-weight: 600;
-    opacity: 0.92;
-    letter-spacing: 0.3px;
-    margin-top: 3px;
-    line-height: 1;
-    position: relative;
-    z-index: 1;
-    font-variant-numeric: tabular-nums;
-}
-
 .month-info {
     flex: 1;
     min-width: 0;
@@ -476,26 +200,6 @@ body.in-month .brand-logo {
     color: var(--ink);
     letter-spacing: -0.3px;
     line-height: 1.25;
-}
-
-.month-meta {
-    font-family: var(--font-num);
-    font-size: 12.5px;
-    color: var(--muted);
-    margin-top: 3px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    font-variant-numeric: tabular-nums;
-}
-
-.meta-dot {
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: var(--muted-2);
 }
 
 .month-total {
@@ -643,61 +347,6 @@ body.in-month .brand-logo {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
-/* ---------- NEW: month hero stats (মোট জমা / হাসান পাওনা) ---------- */
-.month-hero-stats {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.22);
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    position: relative;
-    z-index: 1;
-}
-
-.mh-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 11px 13px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    min-width: 0;
-}
-
-.mh-stat-lbl {
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    opacity: 0.85;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.mh-stat-val {
-    font-family: var(--font-num);
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    line-height: 1.2;
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* হাসান পাওনা stat tile gets a soft highlighted glow */
-.mh-stat:last-child {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
 /* ============================================================
    DAY LIST
    ============================================================ */
@@ -739,11 +388,6 @@ body.in-month .brand-logo {
 
 .day-card:hover {
     border-color: rgba(209, 32, 83, 0.15);
-}
-
-.day-card.is-open {
-    border-color: rgba(209, 32, 83, 0.22);
-    box-shadow: 0 6px 18px rgba(209, 32, 83, 0.06);
 }
 
 .day-head {
@@ -797,16 +441,6 @@ body.in-month .brand-logo {
     opacity: 0.9;
 }
 
-.day-card.is-open .day-chip {
-    background: linear-gradient(160deg, #e83a6c 0%, var(--pink) 45%, var(--pink-press) 100%);
-    color: #fff;
-    border-color: transparent;
-    box-shadow:
-        0 8px 18px rgba(209, 32, 83, 0.26),
-        inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    transform: translateY(-1px);
-}
-
 .day-chip b {
     font-family: var(--font-num);
     font-size: 18px;
@@ -825,10 +459,6 @@ body.in-month .brand-logo {
     letter-spacing: 0.3px;
     margin-top: 3px;
     line-height: 1;
-}
-
-.day-card.is-open .day-chip small {
-    opacity: 0.92;
 }
 
 .day-info {
@@ -877,28 +507,6 @@ body.in-month .brand-logo {
 .chev svg {
     width: 13px;
     height: 13px;
-}
-
-.day-card.is-open .chev {
-    transform: rotate(180deg);
-    background: var(--pink-soft);
-    color: var(--pink);
-}
-
-/* Collapse */
-.collapse {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.34s var(--ease);
-}
-
-.collapse>.collapse-in {
-    overflow: hidden;
-    min-height: 0;
-}
-
-.is-open>.collapse {
-    grid-template-rows: 1fr;
 }
 
 /* ============================================================
@@ -1030,49 +638,6 @@ body.in-month .brand-logo {
     color: var(--green);
 }
 
-.sum-input {
-    width: 100%;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-family: var(--font-num);
-    font-size: 16.5px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    line-height: 1.25;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-    border-radius: 0;
-}
-
-.sum-item--ejaa .sum-input {
-    color: var(--blue);
-}
-
-.sum-item--joma .sum-input {
-    color: var(--green);
-}
-
-.sum-input::placeholder {
-    color: var(--muted-2);
-    font-weight: 700;
-    opacity: 0.7;
-}
-
-.sum-input::-webkit-outer-spin-button,
-.sum-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.sum-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
 /* ---------- হাসান পাওনা row  (NOW at the TOP) ---------- */
 .sum-pawna {
     display: flex;
@@ -1198,32 +763,10 @@ body.in-month .brand-logo {
 }
 
 /* ---------- value flash on change ---------- */
-@keyframes sumFlash {
-    0% {
-        background: rgba(209, 32, 83, 0.12);
-    }
-
-    100% {
-        background: transparent;
-    }
-}
-
-.sum-value.flash,
-.sum-pawna-value.flash {
-    animation: sumFlash 0.7s var(--ease);
-    border-radius: 6px;
-}
 
 .sum-item:last-child,
 .sum-item:nth-last-child(2) {
     transform: translateZ(0);
-}
-
-/* ============================================================
-   ENTRY LIST  —  newest on top, friendly header
-   ============================================================ */
-.day-body {
-    padding: 0 12px 12px;
 }
 
 /* NEW: number list header with count + copy-all */
@@ -1252,17 +795,6 @@ body.in-month .brand-logo {
     border-radius: 50%;
     background: var(--pink);
     box-shadow: 0 0 0 3px rgba(209, 32, 83, 0.1);
-}
-
-.entry-head-count {
-    font-family: var(--font-num);
-    font-size: 11.5px;
-    font-weight: 700;
-    color: var(--pink);
-    background: var(--pink-soft);
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-variant-numeric: tabular-nums;
 }
 
 .entry-copy-all {
@@ -1471,74 +1003,6 @@ body.in-month .brand-logo {
 .empty p {
     font-size: 13.5px;
     margin: 0;
-}
-
-/* ============================================================
-   FAB
-   ============================================================ */
-.fab {
-    position: fixed;
-    right: 20px;
-    bottom: calc(24px + var(--bottom));
-    width: 60px;
-    height: 60px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #fff;
-    box-shadow: 0 12px 30px rgba(209, 32, 83, 0.42), 0 4px 12px rgba(209, 32, 83, 0.28);
-    display: grid;
-    place-items: center;
-    z-index: 50;
-    transition: transform 0.15s var(--ease), box-shadow 0.25s;
-    overflow: hidden;
-    animation: fabIn 0.4s var(--ease) 0.2s backwards;
-}
-
-@keyframes fabIn {
-    from {
-        opacity: 0;
-        transform: scale(0.7);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.fab::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    box-shadow: 0 0 0 0 rgba(209, 32, 83, 0.4);
-    animation: fabPulse 2.6s ease-out infinite;
-    pointer-events: none;
-}
-
-@keyframes fabPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(209, 32, 83, 0.35);
-    }
-
-    100% {
-        box-shadow: 0 0 0 20px rgba(209, 32, 83, 0);
-    }
-}
-
-.fab:hover {
-    transform: scale(1.06) translateY(-2px);
-}
-
-.fab:active {
-    transform: scale(0.94);
-}
-
-.fab svg {
-    width: 26px;
-    height: 26px;
-    position: relative;
-    z-index: 1;
 }
 
 /* ============================================================
@@ -1976,58 +1440,6 @@ body.in-month .brand-logo {
 }
 
 /* ============================================================
-   TOAST
-   ============================================================ */
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(100px + var(--bottom));
-    transform: translate(-50%, 24px);
-    background: var(--ink);
-    color: #fff;
-    padding: 13px 20px;
-    border-radius: 14px;
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.28s var(--ease), transform 0.32s var(--ease);
-    z-index: 300;
-    max-width: 90vw;
-    text-align: center;
-    line-height: 1.5;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
-}
-
-.toast-icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: none;
-    place-items: center;
-    flex-shrink: 0;
-    font-size: 12px;
-    font-weight: 800;
-    background: rgba(255, 255, 255, 0.18);
-}
-
-.toast.ok {
-    background: #0d7a51;
-}
-
-.toast.err {
-    background: #b81d38;
-}
-
-/* ============================================================
    SCROLLBAR
    ============================================================ */
 ::-webkit-scrollbar {
@@ -2056,10 +1468,6 @@ body.in-month .brand-logo {
         padding: 20px 24px 40px;
     }
 
-    .fab {
-        display: none;
-    }
-
     .toast {
         bottom: 32px;
     }
@@ -2076,20 +1484,6 @@ body.in-month .brand-logo {
         font-size: 19px;
     }
 
-    .month-badge {
-        width: 58px;
-        height: 58px;
-        border-radius: 17px;
-    }
-
-    .month-badge b {
-        font-size: 16px;
-    }
-
-    .month-badge small {
-        font-size: 10.5px;
-    }
-
     .month-hero {
         padding: 24px;
     }
@@ -2100,14 +1494,6 @@ body.in-month .brand-logo {
 
     .month-hero-amount b {
         font-size: 36px;
-    }
-
-    .mh-stat-val {
-        font-size: 19px;
-    }
-
-    .mh-stat-lbl {
-        font-size: 12.5px;
     }
 
     .day-chip {
@@ -2125,8 +1511,7 @@ body.in-month .brand-logo {
         gap: 10px;
     }
 
-    .sum-value,
-    .sum-input {
+    .sum-value {
         font-size: 17.5px;
     }
 
@@ -2156,8 +1541,7 @@ body.in-month .brand-logo {
         font-size: 11px;
     }
 
-    .sum-value,
-    .sum-input {
+    .sum-value {
         font-size: 15px;
     }
 
@@ -2171,18 +1555,6 @@ body.in-month .brand-logo {
 
     .sum-pawna-label {
         font-size: 12.5px;
-    }
-
-    .mh-stat {
-        padding: 10px 11px;
-    }
-
-    .mh-stat-val {
-        font-size: 15.5px;
-    }
-
-    .mh-stat-lbl {
-        font-size: 11px;
     }
 }
 
@@ -2348,11 +1720,6 @@ body.in-month .brand-logo {
     z-index: 1;
 }
 
-.month-hero-amount.month-hero-deposit {
-    margin-top: 14px;
-    padding-top: 14px;
-}
-
 .mh-lbl {
     display: block;
     font-size: 12.5px;
@@ -2372,18 +1739,9 @@ body.in-month .brand-logo {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
-/* মোট জমা slightly smaller than the headline bKash figure */
-.month-hero-deposit b {
-    font-size: 26px;
-}
-
 @media (min-width: 720px) {
     .month-hero-amount b {
         font-size: 36px;
-    }
-
-    .month-hero-deposit b {
-        font-size: 30px;
     }
 }
 
@@ -2543,16 +1901,6 @@ body.in-month .brand-logo {
     background: var(--green-soft) !important;
     color: var(--green) !important;
     border-color: #c8eedd !important;
-}
-
-/* ============================================================
-   DAY BODY  —  entries block (top) + sum block (below)
-   ============================================================ */
-.day-body {
-    padding: 0 12px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
 }
 
 /* ---------- নম্বর তালিকা block (priority, top) ---------- */
@@ -2890,37 +2238,6 @@ body.in-month .brand-logo {
     color: var(--green);
 }
 
-.sum-input {
-    width: 100%;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-family: var(--font-num);
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    line-height: 1.25;
-    font-variant-numeric: tabular-nums;
-    color: var(--green);
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-    border-radius: 0;
-}
-
-.sum-input::placeholder {
-    color: var(--muted-2);
-    font-weight: 700;
-    opacity: 0.7;
-}
-
-.sum-input::-webkit-outer-spin-button,
-.sum-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
 /* ---------- হাসান পাওনা row ---------- */
 .sum-pawna {
     display: flex;
@@ -3077,8 +2394,7 @@ body.in-month .brand-logo {
         font-size: 10.5px;
     }
 
-    .sum-value,
-    .sum-input {
+    .sum-value {
         font-size: 15px;
     }
 
@@ -3097,17 +2413,13 @@ body.in-month .brand-logo {
 
 /* ---------- desktop ---------- */
 @media (min-width: 720px) {
-    .day-body {
-        padding: 0 16px 16px;
-    }
 
     .sum-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
     }
 
-    .sum-value,
-    .sum-input {
+    .sum-value {
         font-size: 17px;
     }
 
@@ -3123,7 +2435,6 @@ body.in-month .brand-logo {
         padding: 16px;
     }
 }
-
 
 .sum-grid {
     display: grid;
@@ -3297,13 +2608,6 @@ body.in-month .brand-logo {
     font-variant-numeric: tabular-nums;
 }
 
-/* #dayDetailBody uses the same flex layout as .day-body */
-#dayDetailBody {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
 @media (min-width: 720px) {
     .day-hero {
         padding: 24px;
@@ -3458,76 +2762,10 @@ body.in-month .brand-logo {
     overflow: visible;
 }
 
-
-
-/* ============================================================
-   BACK BUTTON  — always visible (goes to dashboard)
-   ============================================================ */
-.back-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: grid;
-    /* ← always visible now */
-    place-items: center;
-    flex-shrink: 0;
-    transition: background 0.15s, transform 0.12s;
-}
-
-.back-btn:hover {
-    background: #fbd5e2;
-}
-
-.back-btn:active {
-    transform: scale(0.92);
-}
-
-.back-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* REMOVE these old rules (they're no longer needed): */
-/*
-body.in-month .back-btn { display: grid; }
-body.in-month .brand-logo { display: none; }
-*/
-
-/* ============================================================
-   THEME ALIGNMENT WITH DASHBOARD
-   ------------------------------------------------------------
-   Matches the dashboard's 480px app shell, brand logo treatment,
-   and spacing rhythm. Paste at the BOTTOM of style.css so it
-   wins the cascade over the earlier duplicate rules.
-   ============================================================ */
-
-/* ---------- 1. App shell width (480px, same as dashboard) ---------- */
-.topbar-inner {
-    max-width: 480px;
-    margin: 0 auto;
-}
-
 .container {
     max-width: 480px;
     margin: 0 auto;
     padding: 16px 14px calc(32px + var(--bottom));
-}
-
-/* ---------- 2. Brand logo — same as dashboard ---------- */
-.brand-logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    /* SVG already paints the pink tile — kill the CSS gradient */
-    background: transparent;
-    box-shadow: var(--shadow-pink);
-    overflow: hidden;
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    position: relative;
 }
 
 /* Remove the old CSS sheen — the SVG has its own */
@@ -3535,22 +2773,10 @@ body.in-month .brand-logo { display: none; }
     display: none;
 }
 
-/* ← THE MISSING RULE that was breaking the logo */
-.brand-logo .brand-mark {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-
 /* ---------- 3. Sheet — match the 480px phone-width feel ---------- */
 .sheet {
     max-width: 480px;
     margin: 0 auto;
-}
-
-/* ---------- 4. Toast — align bottom offset with new shell ---------- */
-.toast {
-    max-width: min(90vw, 440px);
 }
 
 /* ---------- 5. Confirm dialog — keep phone-width on desktop ---------- */
@@ -3589,15 +2815,6 @@ body.in-month .brand-logo { display: none; }
     .topbar {
         padding: calc(10px + var(--top)) 12px 10px;
     }
-}
-
-/* ============================================================
-   MONTH HEADER — "সব কপি" button beside the day count
-   ============================================================ */
-.section-head-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .section-head-right .entry-copy-all {

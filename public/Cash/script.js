@@ -11,6 +11,7 @@ let state = {
 };
 
 let mutationLock = false;
+const { esc, money, toast, fmtDateTime: fmtDate } = App;
 
 /* ============================================================
    API & DATA LAYER
@@ -101,25 +102,6 @@ async function resetEverything() {
         toast("রিসেট করা যায়নি: " + err.message, "error");
         throw err;
     }
-}
-
-/* ============================================================
-   HELPERS
-   ============================================================ */
-function money(n) {
-    const num = Number(n || 0);
-    const sign = num < 0 ? "-" : "";
-    return sign + "৳" + Math.abs(num).toLocaleString("en-IN", { maximumFractionDigits: 0 });
-}
-
-function esc(s) {
-    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function fmtDate(iso) {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "";
-    return `${d.toLocaleDateString("en-GB", { day: "numeric", month: "numeric", year: "2-digit" })} · ${d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`;
 }
 
 /* ============================================================
@@ -333,14 +315,6 @@ function askBalance({ title, current }) {
         };
         setTimeout(() => { amtInp.focus(); amtInp.select(); }, 100);
     });
-}
-
-function toast(msg, kind) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className = `toast show ${kind || ""}`;
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.className = "toast", 2500);
 }
 
 /* ============================================================
