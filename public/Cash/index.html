@@ -6,17 +6,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#d12053" />
-    <link rel="icon" type="image/svg+xml" href="/shared/icon.svg" />
+    <meta name="theme-color" content="#9c1038" />
     <meta name="format-detection" content="telephone=no" />
-    <title>ক্যাশের হিসাব — ইজি লেনদেন</title>
+    <title>হাসান ক্যাশ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/shared/base.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
 
@@ -38,10 +36,57 @@
         </button>
 
         <div class="brand">
-          <div class="brand-logo" aria-hidden="true"></div>
+          <div class="brand-logo" aria-hidden="true">
+            <svg
+              class="brand-mark"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient
+                  id="el-grad"
+                  x1="0"
+                  y1="0"
+                  x2="100"
+                  y2="100"
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset="0%" stop-color="#e8437a" />
+                  <stop offset="55%" stop-color="#d12053" />
+                  <stop offset="100%" stop-color="#a8153f" />
+                </linearGradient>
+              </defs>
+
+              <!-- tile -->
+              <rect width="100" height="100" rx="24" fill="url(#el-grad)" />
+
+              <!-- top-left sheen -->
+              <path
+                d="M0 24 Q0 0 24 0 L76 0 Q100 0 100 24 L100 34 Q60 54 0 54 Z"
+                fill="rgba(255,255,255,0.10)"
+              />
+
+              <!-- ই -->
+              <text
+                x="50"
+                y="74"
+                text-anchor="middle"
+                font-family="'Noto Sans Bengali','Hind Siliguri',sans-serif"
+                font-size="60"
+                font-weight="800"
+                fill="#ffffff"
+              >
+                ই
+              </text>
+
+              <!-- coin accent -->
+              <circle cx="80" cy="22" r="5.5" fill="#ffffff" />
+              <circle cx="80" cy="22" r="2.2" fill="#d12053" />
+            </svg>
+          </div>
           <div class="brand-text">
-            <h1>ক্যাশের হিসাব</h1>
-            <span class="brand-sub">হাতে নগদ কত আছে</span>
+            <h1>হাসান ক্যাশ</h1>
+            <span class="brand-sub">সব লেনদেন</span>
           </div>
         </div>
       </div>
@@ -127,10 +172,9 @@
       </div>
     </main>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="toast" id="toast"></div>
     <div id="modalRoot"></div>
 
-    <script src="/shared/app.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

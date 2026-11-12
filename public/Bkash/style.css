@@ -3,14 +3,23 @@
    ============================================================ */
 :root {
     --bg: #f4f6f9;
+    --card: #ffffff;
     --ink: #1e2430;
     --ink-soft: #3b4456;
     --muted: #5b6475;
     --line: #e2e6ee;
 
+    --pink: #d12053;
+    --pink-press: #a8153f;
+    --pink-soft: #fde8ef;
+
+    --green: #12a06a;
     --amber: #f0a010;
+    --red: #dc2648;
     --wa: #128c4a;
 
+    --top: env(safe-area-inset-top, 0px);
+    --bottom: env(safe-area-inset-bottom, 0px);
     --wrap: 1080px;
 }
 
@@ -56,6 +65,57 @@ button {
 
 .hidden {
     display: none !important;
+}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--surface);
+    color: var(--ink);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: calc(10px + var(--top)) max(16px, calc((100% - var(--wrap)) / 2 + 16px)) 10px;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+#brandLogo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: var(--surface);
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.topbar-titles {
+    min-width: 0;
+    line-height: 1.25;
+}
+
+.topbar-titles h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.topbar-titles .sub {
+    font-size: 12.5px;
+    color: var(--muted);
 }
 
 /* ============================================================
@@ -567,6 +627,12 @@ select {
     background: var(--pink-press);
 }
 
+.btn-ghost {
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
 .btn-light {
     background: var(--surface-3);
     color: var(--ink);
@@ -605,6 +671,12 @@ select {
     transform: none;
 }
 
+.btn-sm {
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 15px;
+}
+
 .btn-block {
     width: 100%;
 }
@@ -625,6 +697,32 @@ select {
 
 .toolbar .btn {
     padding: 0 10px;
+}
+
+/* Back button */
+.back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px 0 12px;
+    margin-bottom: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--ink);
+    font-size: 15.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.back:hover {
+    background: var(--pink-soft);
+}
+
+.back:active {
+    transform: scale(0.97);
 }
 
 /* ============================================================
@@ -804,9 +902,15 @@ select {
     color: var(--rose-ink);
 }
 
-.tag.receive {
+.tag.receive,
+.tag.verified {
     background: var(--ok-bg);
     color: var(--ok-ink);
+}
+
+.tag.pending {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
 }
 
 .block-badge {
@@ -818,6 +922,17 @@ select {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.2px;
+}
+
+.trx-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--surface-3);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    word-break: break-all;
 }
 
 /* ============================================================
@@ -878,6 +993,41 @@ select {
 .info-icon {
     font-size: 18px;
     flex-shrink: 0;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(30px + var(--bottom));
+    transform: translate(-50%, 30px);
+    background: var(--toast-bg);
+    color: #ffffff;
+    padding: 13px 22px;
+    border-radius: 14px;
+    font-size: 15.5px;
+    font-weight: 600;
+    text-align: center;
+    max-width: 90vw;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 300;
+    transition: opacity 0.25s, transform 0.25s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.toast.success {
+    background: #0d7a51;
+}
+
+.toast.error {
+    background: #c31e3f;
 }
 
 /* ============================================================
@@ -1087,6 +1237,16 @@ select {
         0 6px 16px rgba(30, 36, 48, 0.08);
 }
 
+/* Balances alignment between the Bengali labels and the English digits */
+.detail-num {
+    font-size: 15px !important;
+    line-height: 1 !important;
+    display: inline-block;
+    vertical-align: middle;
+    /* Optional: Makes numbers look clean and evenly spaced */
+    font-variant-numeric: tabular-nums;
+}
+
 /* ============================================================
    BUNDLE STAT BOX
    ============================================================ */
@@ -1147,6 +1307,29 @@ select {
 .stat-bundle.stat-bundle-empty .sub {
     color: var(--muted);
     font-weight: 500;
+}
+
+/* Expired state — red tint */
+.stat-bundle.stat-bundle-expired {
+    background: linear-gradient(135deg, var(--rose-bg) 0%, var(--rose-bg) 100%);
+    border-color: var(--rose-line);
+}
+
+.stat-bundle.stat-bundle-expired::before {
+    background: radial-gradient(circle, rgba(225, 29, 72, 0.18), transparent 70%);
+}
+
+.stat-bundle.stat-bundle-expired .lbl {
+    color: var(--rose-ink);
+}
+
+.stat-bundle.stat-bundle-expired .val {
+    color: var(--rose-ink);
+}
+
+.stat-bundle.stat-bundle-expired .sub {
+    color: var(--rose-ink);
+    font-weight: 700;
 }
 
 /* 4-column desktop grid */
@@ -1272,6 +1455,7 @@ select {
         padding: 0 20px;
     }
 }
+
 
 /* ============================================================
    PEOPLE GRID
@@ -1800,6 +1984,27 @@ select {
     margin-bottom: 14px;
 }
 
+.summary-item {
+    background: var(--surface);
+    border: 1px solid var(--line, var(--line));
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.summary-item span {
+    display: block;
+    font-size: 13px;
+    color: var(--muted, #5b6475);
+}
+
+.summary-item b {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
 @media (min-width: 620px) {
     .summary {
         max-width: 420px;
@@ -1871,17 +2076,69 @@ html {
     touch-action: manipulation;
 }
 
+/* ============================================================
+   THEME ALIGNMENT WITH DASHBOARD
+   ------------------------------------------------------------
+   Brings this bKash হিসাব app in line with the dashboard:
+   same pink (#d12053), same surface palette (#f5f3f6),
+   same pink radial glow, same font stack, same radii scale,
+   same pink-tinted shadows, glass topbar, matching cards.
+   Paste at the BOTTOM of style.css.
+   ============================================================ */
+
 /* ---------- 1. TOKENS ---------- */
 :root {
+    /* surface */
+    --bg: #f5f3f6;
+    --card: #ffffff;
+
     /* ink */
+    --ink: #17181f;
+    --ink-2: #3a3d4a;
     --ink-soft: #3a3d4a;
+    --muted: #6e7180;
+    --muted-2: #a1a4b3;
+
+    /* lines */
+    --line: #ebe6ec;
+    --line-2: #f3eef4;
+
+    /* brand pink — matches dashboard */
+    --pink: #d12053;
+    --pink-2: #e8437a;
+    --pink-press: #a8153f;
+    --pink-soft: #fde8ef;
+    --pink-tint: #fff6fa;
 
     /* accents */
+    --green: #12a06a;
     --amber: #f0a010;
+    --red: #dc2648;
     --wa: #128c4a;
+
+    /* radii — dashboard scale */
+    --r-sm: 12px;
+    --r: 16px;
+    --r-md: 20px;
+    --r-lg: 24px;
+
+    /* shadows — dashboard pink-tinted */
+    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
+    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
+    --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
+    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
+    --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
+    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
+
+    /* fonts — dashboard stack */
+    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
     /* layout — the dashboard shell feel, still room for 2-col grid */
     --wrap: 720px;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ---------- 2. BODY — pink radial glow ---------- */
@@ -1901,6 +2158,7 @@ body {
 .p-bal,
 .tx-amount,
 .stat .val,
+.summary-item b,
 .limit-row b,
 .p-name .num,
 .person-header-val,
@@ -1908,6 +2166,41 @@ body {
 .bundle-pill {
     font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 3. TOPBAR — glass + blur like dashboard ---------- */
+.topbar {
+    background: var(--topbar-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid var(--line-2);
+    padding: calc(10px + var(--top)) 16px 10px;
+    transition: box-shadow 0.25s var(--ease);
+}
+
+.topbar-left {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* brand logo — dashboard tile treatment */
+#brandLogo {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    object-fit: cover;
+    background: transparent;
+    padding: 0;
+    box-shadow: var(--shadow-pink);
+    flex-shrink: 0;
+}
+
+.topbar-titles h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: var(--ink);
 }
 
 /* ---------- 4. LAYOUT ---------- */
@@ -1977,6 +2270,14 @@ body {
     background: var(--pink-tint);
 }
 
+/* ---------- 7. SUMMARY + STAT tiles ---------- */
+.summary-item {
+    background: var(--card);
+    border: 1px solid var(--line-2);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-xs);
+}
+
 .stat {
     background: var(--surface-2);
     border: 1px solid var(--line-2);
@@ -2020,6 +2321,12 @@ body {
     background: var(--surface-4);
 }
 
+.btn-ghost {
+    background: var(--surface);
+    color: var(--ink-2);
+    border: 1px solid var(--line);
+}
+
 .btn-danger {
     background: var(--pink-soft);
     color: var(--pink-press);
@@ -2054,6 +2361,18 @@ body {
 
 .add-btn:hover {
     box-shadow: 0 10px 26px rgba(209, 32, 83, 0.42);
+}
+
+.back {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--ink-2);
+}
+
+.back:hover {
+    background: var(--pink-tint);
+    border-color: rgba(209, 32, 83, 0.2);
 }
 
 /* ---------- 9. INPUTS — dashboard radius + focus ring ---------- */
@@ -2091,9 +2410,15 @@ textarea:focus {
     color: var(--pink-press);
 }
 
-.tag.receive {
+.tag.receive,
+.tag.verified {
     background: var(--ok-bg);
     color: var(--ok-ink);
+}
+
+.tag.pending {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
 }
 
 .block-badge {
@@ -2142,6 +2467,23 @@ textarea:focus {
     .modal {
         border-radius: 24px;
     }
+}
+
+/* ---------- 13. TOAST — dashboard style ---------- */
+.toast {
+    background: var(--toast-bg);
+    color: #fff;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+    font-weight: 600;
+}
+
+.toast.success {
+    background: #0d7a51;
+}
+
+.toast.error {
+    background: #b81d38;
 }
 
 /* ---------- 14. EMPTY / WARN / INFO ---------- */
@@ -2237,6 +2579,37 @@ textarea:focus {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* ============================================================
+   BACK BUTTON — matches the dashboard / entry manager style
+   ============================================================ */
+.back-btn {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 12px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn:hover {
+    background: var(--rose-bg-2);
+}
+
+.back-btn:active {
+    transform: scale(0.92);
+}
+
+.back-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* ============================================================
@@ -2520,8 +2893,51 @@ body,
 .topbar,
 .panel,
 .modal,
+.person-card,
+.p-card,
 .toast {
     transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* ---------- theme toggle button ---------- */
+.theme-btn {
+    margin-left: auto;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 12px;
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+}
+
+.theme-btn:hover {
+    background: var(--rose-bg-2);
+}
+
+.theme-btn:active {
+    transform: scale(0.92);
+}
+
+.theme-btn svg {
+    width: 21px;
+    height: 21px;
+}
+
+.theme-btn .icon-sun {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-btn .icon-sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .theme-btn .icon-moon {
+    display: none;
 }
 
 /* ---------- dark: box colour fixes ---------- */
@@ -2541,6 +2957,7 @@ body,
 :root {
     /* Clean Light Background */
     --bg: #f5f6f8;
+    --card: #ffffff;
     --surface: #ffffff;
     --surface-2: #f8f9fa;
     --surface-3: #f1f3f5;
@@ -2549,11 +2966,14 @@ body,
     /* Text Colors */
     --ink: #1e2430;
     --ink-soft: #3b4456;
+    --muted: #6e7180;
     --muted-3: #8b93a7;
 
     /* Brand Pink/Red from the image */
     --pink: #c2185b;
     --pink-press: #a0154a;
+    --pink-soft: #fde8ef;
+    --pink-tint: #fff6fa;
 
     /* Lines & Borders */
     --line: #e2e6ee;
@@ -2564,7 +2984,12 @@ body,
     --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.06);
     --shadow-pink: 0 8px 24px rgba(194, 24, 91, 0.25);
 
-    }
+    /* Radii */
+    --r-sm: 12px;
+    --r: 16px;
+    --r-md: 20px;
+    --r-lg: 24px;
+}
 
 body {
     background-color: var(--bg);
@@ -2575,8 +3000,30 @@ body {
     font-size: 15px;
 }
 
+/* ------------------------------------------------------------
+   1. TOPBAR & HEADER
+   ------------------------------------------------------------ */
+.topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--line-2);
+    box-shadow: none;
+    padding: calc(12px + var(--top)) 16px 12px;
+}
+
+.topbar-titles h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.topbar-titles .sub {
+    font-size: 13px;
+    color: var(--muted);
+}
+
 /* Round Action Buttons (Back, Plus, Theme) */
 .back-btn,
+.theme-btn,
 .add-btn {
     background: var(--pink-soft);
     color: var(--pink);
@@ -2587,6 +3034,7 @@ body {
 }
 
 .back-btn:hover,
+.theme-btn:hover,
 .add-btn:hover {
     background: #fbd3e1;
     /* Slightly darker pink on hover */
@@ -2595,6 +3043,7 @@ body {
 }
 
 .back-btn:active,
+.theme-btn:active,
 .add-btn:active {
     transform: scale(0.95);
 }
@@ -2606,6 +3055,9 @@ body {
     font-weight: 700;
 }
 
+/* ------------------------------------------------------------
+   2. HERO CARD (Total Balance / Summary)
+   ------------------------------------------------------------ */
 /* Matches the big deep red card in the image */
 .summary,
 .stat:first-child,
@@ -2635,13 +3087,15 @@ body {
     pointer-events: none;
 }
 
-.stat:first-child .lbl {
+.stat:first-child .lbl,
+.summary-item span {
     color: rgba(255, 255, 255, 0.85);
     font-size: 14px;
     font-weight: 500;
 }
 
-.stat:first-child .val {
+.stat:first-child .val,
+.summary-item b {
     color: #ffffff;
     font-size: 34px;
     font-weight: 800;
@@ -2871,6 +3325,144 @@ body {
     box-shadow: 0 8px 24px rgba(194, 24, 91, 0.25);
 }
 
+/* 2. The Inner White Boxes */
+.summary-item {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    /* Remove any default borders or shadows if they exist */
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 3. Make the first box narrow and the second box wider (like the image) */
+.summary-item:first-child {
+    flex: 1;
+    /* Takes up 1 part of the space */
+}
+
+.summary-item:last-child {
+    flex: 2;
+    /* Takes up 2 parts of the space */
+}
+
+/* Text styling inside the white boxes */
+.summary-item span {
+    font-size: 12px;
+    color: #6e7180;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.summary-item b {
+    font-size: 20px;
+    color: #1e2430;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   DUES CARD (Match Image)
+   ============================================================ */
+
+.dues-card {
+    /* Deep magenta/pink gradient matching the screenshot */
+    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
+    border-radius: 20px;
+    padding: 20px;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(194, 24, 91, 0.25);
+    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
+}
+
+/* Decorative soft circles in the background */
+.dues-card::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    /* Soft light overlay */
+    pointer-events: none;
+}
+
+.dues-card::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    right: -20px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}
+
+/* Top Row (Icon + Title and Badge) */
+.dues-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+    /* Keeps text above the background circles */
+}
+
+.dues-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* Circular Taka Icon */
+.icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* "বাকি" Pill Badge */
+.badge-due {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Large Amount Text */
+.dues-amount {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    position: relative;
+    z-index: 1;
+    /* Keeps text above the background circles */
+    line-height: 1.2;
+    font-family: "Noto Sans Bengali", inherit;
+    /* Ensures Bengali numbers look correct */
+}
+
 /* ============================================================
    DASHBOARD HERO CARD (Match Image)
    ============================================================ */
@@ -2886,7 +3478,8 @@ body {
     box-shadow: 0 10px 24px rgba(194, 24, 91, 0.25);
     font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
     margin-bottom: 16px;
-    }
+    /* Space before the people grid */
+}
 
 /* Decorative soft circles in the background */
 .summary-card::before {
@@ -2922,7 +3515,8 @@ body {
     margin-bottom: 12px;
     position: relative;
     z-index: 1;
-    }
+    /* Keeps text above the background circles */
+}
 
 .summary-title {
     display: flex;
@@ -2946,6 +3540,17 @@ body {
     line-height: 1;
 }
 
+/* "বাকি" Pill Badge */
+.status-badge {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
 /* Large Amount Text */
 .summary-amount {
     font-size: 34px;
@@ -2955,7 +3560,8 @@ body {
     z-index: 1;
     line-height: 1.2;
     font-family: "Noto Sans Bengali", inherit;
-    }
+    /* Ensures Bengali numbers look correct */
+}
 
 /* Footer (Total People count) */
 .summary-footer {
