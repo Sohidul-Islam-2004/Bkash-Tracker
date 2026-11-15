@@ -9,7 +9,7 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#d12053" />
+    <meta name="theme-color" content="#c2185b" />
     <title>বিকাশ হিসাব</title>
 
     <link rel="stylesheet" href="style.css" />
@@ -40,6 +40,7 @@
         </button>
 
         <img id="brandLogo" alt="লোগো" />
+
         <div class="topbar-titles">
           <h1>বিকাশ হিসাব</h1>
         </div>
@@ -70,20 +71,20 @@
             <i>+</i> যোগ
           </button>
         </div>
-      <!-- Replace the old summary div with this new card -->
-<div class="summary-card">
-    <div class="summary-header">
-        <div class="summary-title">
-            <span class="taka-icon">৳</span>
-            <span>মোট ব্যালেন্স</span>
+
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="summary-title">
+              <span class="taka-icon">৳</span>
+              <span>মোট ব্যালেন্স</span>
+            </div>
+          </div>
+          <div class="summary-amount" id="totalBalance">৳0</div>
+          <div class="summary-footer">
+            মোট মানুষ: <b id="totalPeople">0</b> জন
+          </div>
         </div>
-   
-    </div>
-    <div class="summary-amount" id="totalBalance">৳0</div>
-    <div class="summary-footer">
-        মোট মানুষ: <b id="totalPeople">0</b> জন
-    </div>
-</div>
+
         <div id="peopleGrid" class="people-grid"></div>
       </section>
 
@@ -97,29 +98,12 @@
             নতুন মানুষের হিসাব
           </h2>
 
-                  <form onsubmit="submitPerson(event)">
-            <!-- Photo -->
-            <div class="field photo-field">
-              <div class="photo-picker">
-                <div id="photoFallback" class="avatar avatar-xl">?</div>
-                <img id="photoPreview" class="avatar avatar-xl hidden" alt="" />
-                <label class="photo-btn">
-                  📷 ছবি নিন
-                  <input
-                    name="photo"
-                    type="file"
-                    accept="image/*"
-                    onchange="previewPhoto(event)"
-                    hidden
-                  />
-                </label>
-              </div>
-            </div>
-
+          <form onsubmit="submitPerson(event)">
             <!-- Name -->
             <div class="field">
-              <label>নাম</label>
+              <label for="f-name">নাম</label>
               <input
+                id="f-name"
                 name="name"
                 type="text"
                 required
@@ -128,42 +112,46 @@
               />
             </div>
 
-            <!-- bKash number -->
-            <div class="field">
-              <label>বিকাশ নম্বর</label>
-              <input
-                name="bKashNumber"
-                type="tel"
-                required
-                pattern="01[0-9]{9}"
-                placeholder="01XXXXXXXXX"
-                maxlength="11"
-                inputmode="numeric"
-              />
-            </div>
-
-            <!-- WhatsApp -->
-            <div class="field">
-              <label
-                >হোয়াটসঅ্যাপ নম্বর
-                <span class="opt">(না দিলেও চলবে)</span></label
-              >
-              <input
-                name="whatsappNumber"
-                type="tel"
-                placeholder="8801XXXXXXXXX"
-                inputmode="numeric"
-              />
+            <!-- Numbers -->
+            <div class="row">
+              <div class="field">
+                <label for="f-bkash">বিকাশ নম্বর</label>
+                <input
+                  id="f-bkash"
+                  name="bKashNumber"
+                  type="tel"
+                  required
+                  pattern="01[0-9]{9}"
+                  placeholder="01XXXXXXXXX"
+                  maxlength="11"
+                  inputmode="numeric"
+                />
+              </div>
+              <div class="field">
+                <label for="f-wa"
+                  >হোয়াটসঅ্যাপ নম্বর
+                  <span class="opt">(না দিলেও চলবে)</span></label
+                >
+                <input
+                  id="f-wa"
+                  name="whatsappNumber"
+                  type="tel"
+                  placeholder="8801XXXXXXXXX"
+                  inputmode="numeric"
+                />
+              </div>
             </div>
 
             <!-- Current balance -->
             <div class="field">
-              <label>এখন কত টাকা আছে?</label>
+              <label for="f-balance">এখন কত টাকা আছে?</label>
               <input
+                id="f-balance"
                 name="initialBalance"
                 type="number"
                 step="1"
                 value=""
+                placeholder="0"
                 inputmode="numeric"
               />
             </div>
@@ -173,22 +161,26 @@
 
             <div class="row">
               <div class="field">
-                <label>দৈনিক লিমিট</label>
+                <label for="f-daily">দৈনিক লিমিট</label>
                 <input
+                  id="f-daily"
                   name="dailyUsedBase"
                   type="number"
                   min="0"
                   value=""
+                  placeholder="0"
                   inputmode="numeric"
                 />
               </div>
               <div class="field">
-                <label>মাসিক লিমিট</label>
+                <label for="f-monthly">মাসিক লিমিট</label>
                 <input
+                  id="f-monthly"
                   name="monthlyUsedBase"
                   type="number"
                   min="0"
                   value=""
+                  placeholder="0"
                   inputmode="numeric"
                 />
               </div>
@@ -199,8 +191,9 @@
 
             <div class="row">
               <div class="field">
-                <label>বান্ডেল সংখ্যা</label>
+                <label for="f-bundle">বান্ডেল সংখ্যা</label>
                 <input
+                  id="f-bundle"
                   name="bundleCount"
                   type="number"
                   min="0"
@@ -210,11 +203,11 @@
                 />
               </div>
               <div class="field">
-                <label
+                <label for="f-expiry"
                   >মেয়াদ শেষের তারিখ
                   <span class="opt">(না দিলে ৩০ দিন)</span></label
                 >
-                <input name="bundleExpiry" type="date" />
+                <input id="f-expiry" name="bundleExpiry" type="date" />
               </div>
             </div>
 
