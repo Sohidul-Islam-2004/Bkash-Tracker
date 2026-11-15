@@ -260,7 +260,7 @@ async function createTransaction(req, res) {
         const dup = await Transaction.findOne({ person: personId, trxId: cleanTrx });
         if (dup) throw new HttpError(400, "TrxID already exists");
     }
-
+ 
     const transaction = await Transaction.create({
         person: personId, type, amount,
         date: date ? new Date(date) : now,
@@ -274,7 +274,8 @@ async function createTransaction(req, res) {
     if (person.baseMonthKey !== mKey) { person.monthlyUsedBase = 0; person.baseMonthKey = mKey; }
 
     if (type === "send") {
-        person.bundleCount = Number(person.bundleCount) - 1;
+        if (person.bundleCount >= 1)
+            person.bundleCount = Number(person.bundleCount) - 1;
         person.initialBalance = Number(person.initialBalance) - amount;
         person.dailyUsedBase = Number(person.dailyUsedBase) + amount;
         person.monthlyUsedBase = Number(person.monthlyUsedBase) + amount;
