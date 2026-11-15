@@ -1,34 +1,113 @@
 /* ============================================================
-   ROOT TOKENS
+   বিকাশ হিসাব — stylesheet
+   Rewritten for clean, consistent alignment.
+   Colour palette is UNCHANGED from the previous version.
+   ============================================================ */
+
+/* ============================================================
+   1. TOKENS
    ============================================================ */
 :root {
-    --bg: #f4f6f9;
+    color-scheme: light;
+
+    /* surfaces */
+    --bg: #f5f6f8;
     --card: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f8f9fa;
+    --surface-3: #f1f3f5;
+    --surface-4: #e9ecef;
+
+    /* ink */
     --ink: #1e2430;
     --ink-soft: #3b4456;
-    --muted: #5b6475;
+    --muted: #6e7180;
+    --muted-3: #8b93a7;
+
+    /* lines */
     --line: #e2e6ee;
+    --line-2: #f0f2f5;
+    --dash-line: #d8cbd2;
 
-    --pink: #d12053;
-    --pink-press: #a8153f;
+    /* brand */
+    --pink: #c2185b;
+    --pink-press: #a0154a;
     --pink-soft: #fde8ef;
+    --pink-tint: #fff6fa;
+    --pink-hover: #fbd3e1;
+    --pink-edge: rgba(209, 32, 83, 0.18);
+    --hero-from: #c2185b;
+    --hero-to: #8e0038;
 
+    /* accents */
     --green: #12a06a;
     --amber: #f0a010;
     --red: #dc2648;
     --wa: #128c4a;
 
+    --rose-bg: #fde3e8;
+    --rose-bg-2: #fadbe1;
+    --rose-ink: #b3122f;
+    --rose-line: #fecdd3;
+
+    --ok-bg: #d9f4e7;
+    --ok-ink: #0a6b45;
+    --ok-line: #c8ead9;
+
+    --warn-bg: #fff3df;
+    --warn-ink: #7a4600;
+    --warn-line: #f3d29b;
+
+    --blue-bg: #eef6ff;
+    --blue-bg-2: #dbeafe;
+    --blue-ink: #1e40af;
+    --blue-line: #bfdbfe;
+
+    --toast-bg: #17181f;
+
+    /* radii */
+    --r-sm: 12px;
+    --r: 14px;
+    --r-md: 18px;
+    --r-lg: 22px;
+
+    /* shadows */
+    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
+    --shadow-sm: 0 2px 8px rgba(20, 22, 34, 0.05);
+    --shadow-md: 0 8px 20px rgba(20, 22, 34, 0.08);
+    --shadow-pink: 0 8px 24px rgba(194, 24, 91, 0.22);
+
+    /* type */
+    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-num: "Noto Sans Bengali", "Hind Siliguri", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    /* metrics — one source of truth for alignment */
+    --wrap: 760px;
+    --gutter: 16px;
+    --gap: 12px;
+    --field-h: 50px;
+    --topbar-h: 64px;
+
     --top: env(safe-area-inset-top, 0px);
     --bottom: env(safe-area-inset-bottom, 0px);
-    --wrap: 1080px;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ============================================================
-   BASE
+   2. BASE
    ============================================================ */
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
 }
 
 html,
@@ -38,14 +117,12 @@ body {
 }
 
 body {
-    font-family: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
     background: var(--bg);
     color: var(--ink);
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.55;
     min-height: 100vh;
-    padding-bottom: calc(32px + var(--bottom));
     -webkit-font-smoothing: antialiased;
 }
 
@@ -58,8 +135,14 @@ button {
     font-family: inherit;
 }
 
+h1,
+h2,
+h3 {
+    margin: 0;
+}
+
 :focus-visible {
-    outline: 3px solid var(--ink);
+    outline: 2px solid var(--pink);
     outline-offset: 2px;
 }
 
@@ -67,78 +150,124 @@ button {
     display: none !important;
 }
 
+/* numbers always tabular so columns line up */
+.summary-amount,
+.p-bal,
+.p-limits b,
+.stat .val,
+.tx-amount,
+.tx-date,
+.person-header-val,
+.num {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+}
+
+/* no text selection (inputs excepted) */
+body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+input,
+select,
+textarea {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
 /* ============================================================
-   TOPBAR
+   3. TOPBAR
    ============================================================ */
 .topbar {
     position: sticky;
     top: 0;
     z-index: 40;
-    background: var(--surface);
-    color: var(--ink);
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: calc(10px + var(--top)) max(16px, calc((100% - var(--wrap)) / 2 + 16px)) 10px;
+    background: var(--card);
+    border-bottom: 1px solid var(--line-2);
+    padding-top: var(--top);
 }
 
 .topbar-left {
+    max-width: var(--wrap);
+    margin: 0 auto;
+    padding: 12px var(--gutter);
     display: flex;
     align-items: center;
     gap: 12px;
     min-width: 0;
+}
+
+.back-btn {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border: 0;
+    border-radius: var(--r-sm);
+    background: var(--pink-soft);
+    color: var(--pink);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.12s;
+}
+
+.back-btn:hover {
+    background: var(--pink-hover);
+}
+
+.back-btn:active {
+    transform: scale(0.94);
+}
+
+.back-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
 #brandLogo {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    flex: 0 0 40px;
+    border-radius: var(--r-sm);
     object-fit: cover;
-    background: var(--surface);
-    padding: 2px;
-    flex-shrink: 0;
 }
 
 .topbar-titles {
     min-width: 0;
-    line-height: 1.25;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .topbar-titles h1 {
-    margin: 0;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .topbar-titles .sub {
     font-size: 12.5px;
     color: var(--muted);
+    line-height: 1.3;
 }
 
 /* ============================================================
-   LAYOUT
+   4. LAYOUT
    ============================================================ */
 .container {
     max-width: var(--wrap);
     margin: 0 auto;
-    padding: 16px 14px 32px;
+    padding: var(--gutter) var(--gutter) calc(40px + var(--bottom));
 }
 
 .view {
-    animation: fade 0.25s ease-out;
-}
-
-#viewAddPerson {
-    max-width: 560px;
-    margin-inline: auto;
-}
-
-#viewPerson {
-    max-width: 860px;
-    margin-inline: auto;
+    animation: fade 0.22s ease-out;
 }
 
 @keyframes fade {
@@ -152,28 +281,32 @@ button {
 }
 
 /* ============================================================
-   SEARCH BAR + ADD BUTTON
+   5. SEARCH BAR + ADD BUTTON
    ============================================================ */
 .searchbar {
     position: sticky;
-    top: calc(61px + var(--top));
+    top: calc(var(--topbar-h) + var(--top));
     z-index: 30;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: stretch;
     background: var(--bg);
     padding: 2px 0 12px;
-    display: flex;
-    gap: 10px;
 }
 
 .searchbar input {
-    flex: 1;
-    min-height: 52px;
-    padding-left: 46px;
-    border: 1.5px solid var(--line);
-    border-radius: 14px;
-    font-size: 16px;
+    min-height: var(--field-h);
+    height: var(--field-h);
+    margin: 0;
+    padding: 0 14px 0 44px;
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    font-size: 15px;
     font-family: inherit;
-    background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' stroke='%235b6475' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='9' cy='9' r='6.5'/%3E%3Cpath d='M14 14l4 4'/%3E%3C/svg%3E") no-repeat 16px center;
     color: var(--ink);
+    background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='19' height='19' fill='none' stroke='%236e7180' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8.5' cy='8.5' r='6'/%3E%3Cpath d='M13 13l4 4'/%3E%3C/svg%3E") no-repeat 15px center;
+    box-shadow: var(--shadow-xs);
     -webkit-appearance: none;
     appearance: none;
 }
@@ -181,82 +314,205 @@ button {
 .searchbar input:focus {
     outline: none;
     border-color: var(--pink);
-    box-shadow: 0 0 0 4px var(--pink-soft);
-}
-
-.searchbar.solo input {
-    display: none;
-}
-
-.searchbar.solo .add-btn {
-    flex: 1;
-    justify-content: center;
+    box-shadow: 0 0 0 3px var(--pink-soft);
 }
 
 .add-btn {
-    flex-shrink: 0;
-    height: 52px;
-    padding: 0 18px 0 14px;
+    height: var(--field-h);
+    padding: 0 18px;
     border: 0;
-    border-radius: 14px;
-    background: var(--pink);
-    color: #ffffff;
-    font-size: 17px;
+    border-radius: var(--r);
+    background: var(--pink-soft);
+    color: var(--pink);
+    font-size: 15px;
     font-weight: 700;
+    line-height: 1;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     cursor: pointer;
-    transition: background 0.15s, transform 0.12s;
+    white-space: nowrap;
+    transition: background 0.18s, transform 0.12s;
 }
 
 .add-btn i {
     font-style: normal;
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 400;
     line-height: 1;
-    margin-top: -3px;
+    /* optical centring of the plus glyph */
+    transform: translateY(-1px);
 }
 
 .add-btn:hover {
-    background: var(--pink-press);
+    background: var(--pink-hover);
 }
 
 .add-btn:active {
     transform: scale(0.96);
 }
 
+.searchbar.solo {
+    grid-template-columns: 1fr;
+}
+
+.searchbar.solo input {
+    display: none;
+}
+
 /* ============================================================
-   PEOPLE LIST
+   6. HERO SUMMARY CARD
+   ============================================================ */
+.summary-card {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+    padding: 20px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
+    color: #ffffff;
+    box-shadow: var(--shadow-pink);
+}
+
+.summary-card::before,
+.summary-card::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.summary-card::before {
+    top: -60px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+}
+
+.summary-card::after {
+    bottom: -80px;
+    right: -20px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.summary-header,
+.summary-amount,
+.summary-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.summary-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.taka-icon {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.status-badge {
+    padding: 4px 14px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.summary-amount {
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+}
+
+.summary-footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.3);
+    font-size: 14px;
+    opacity: 0.92;
+}
+
+.summary-footer b {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* ============================================================
+   7. PEOPLE GRID + PERSON CARD
    ============================================================ */
 .people-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: var(--gap);
+    align-items: start;
+}
+
+@media (min-width: 620px) {
+    .people-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 14px;
+    }
 }
 
 .person {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 12px 14px;
+    background: var(--card);
+    border: 1.5px solid var(--pink-edge);
+    border-radius: var(--r-md);
+    padding: 16px;
     cursor: pointer;
-    animation: cardIn 0.3s ease-out backwards;
-    transition: border-color 0.15s, transform 0.12s;
+    box-shadow: var(--shadow-xs), 0 6px 16px rgba(194, 24, 91, 0.07);
+    transition: transform 0.2s var(--ease), box-shadow 0.22s var(--ease),
+        border-color 0.2s;
+    animation: cardIn 0.32s var(--ease) backwards;
 }
 
 .person:hover {
-    border-color: var(--dash-line);
+    transform: translateY(-3px);
+    border-color: var(--pink);
+    box-shadow: var(--shadow-sm), 0 14px 28px rgba(194, 24, 91, 0.14);
 }
 
 .person:active {
-    transform: scale(0.985);
+    transform: translateY(0) scale(0.995);
+}
+
+.person.blocked {
+    background: var(--pink-tint);
 }
 
 @keyframes cardIn {
     from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(10px);
     }
 
     to {
@@ -265,232 +521,423 @@ button {
     }
 }
 
+/* ---- top row: name block + balance, right aligned ---- */
 .p-top {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
     align-items: center;
-    gap: 12px;
 }
 
 .p-name {
-    flex: 1;
     min-width: 0;
 }
 
 .p-name h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     display: flex;
     align-items: center;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+    color: var(--ink);
+    /* keep long names on one line */
+    overflow: hidden;
+}
+
+.p-name .name-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .p-name .num {
-    font-size: 14px;
+    margin-top: 2px;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--muted);
-    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.2px;
 }
 
 .p-bal {
-    font-family: "Noto Sans Bengali", inherit;
-    font-size: 22px;
+    justify-self: end;
+    text-align: right;
+    font-size: 20px;
     font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+    color: var(--pink);
     white-space: nowrap;
-    font-variant-numeric: tabular-nums;
 }
 
+/* ---- limits: two equal, top-aligned columns ---- */
 .p-limits {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-top: 10px;
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-2);
+}
+
+.p-limits>div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .p-limits .limit-row {
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
-    font-size: 12.5px;
-    line-height: 1.35;
+    gap: 2px;
+}
+
+.p-limits .limit-row span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
 }
 
 .p-limits .limit-row b {
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.25;
+    letter-spacing: -0.2px;
 }
 
 .p-limits .limit-row b.over {
-    color: var(--rose-ink);
+    color: var(--red);
 }
 
 .p-limits .bar {
-    height: 8px;
-    margin: 4px 0 0;
+    margin-top: 8px;
 }
 
-/* ============================================================
-   LIMIT ROWS + BARS
-   ============================================================ */
-.limit-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: 14px;
-    color: var(--muted);
-    margin-top: 0;
-}
-
-.limit-row b {
-    color: var(--ink);
-    font-size: 15px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-}
-
+/* ---- bars ---- */
 .bar {
-    height: 14px;
+    height: 6px;
     border-radius: 99px;
     background: var(--surface-3);
-    margin: 5px 0 12px;
     overflow: hidden;
-}
-
-.bar:last-child {
-    margin-bottom: 0;
 }
 
 .bar span {
     display: block;
     height: 100%;
     border-radius: 99px;
-    transition: width 0.6s ease-out;
+    background: var(--pink);
+    transition: width 0.6s var(--ease);
 }
 
-/* ============================================================
-   AVATARS
-   ============================================================ */
-.avatar {
-    border-radius: 50%;
-    object-fit: cover;
-    display: flex;
+/* ---- badges on the card ---- */
+.bundle-pill,
+.block-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 3px;
+    padding: 2px 9px;
+    border-radius: 99px;
     background: var(--pink-soft);
-    color: var(--pink-press);
+    color: var(--pink);
+    font-size: 11px;
     font-weight: 700;
-    flex-shrink: 0;
+    line-height: 1.6;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
 }
 
-img.avatar {
-    border: 2px solid var(--surface);
-    box-shadow: 0 0 0 1px var(--line);
-}
-
-.avatar-sm {
-    width: 52px;
-    height: 52px;
-    font-size: 19px;
-}
-
-.avatar-lg {
-    width: 68px;
-    height: 68px;
-    font-size: 24px;
-}
-
-.avatar-xl {
-    width: 96px;
-    height: 96px;
-    font-size: 34px;
+.bundle-pill-empty {
+    background: var(--surface-3);
+    color: var(--muted-3);
 }
 
 /* ============================================================
-   PANELS
+   8. EMPTY STATE
+   ============================================================ */
+.empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 44px 24px;
+    background: var(--card);
+    border: 1.5px dashed var(--dash-line);
+    border-radius: var(--r-lg);
+    color: var(--muted);
+}
+
+.empty .icon {
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 10px;
+}
+
+.empty h3 {
+    margin-bottom: 6px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.empty p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ============================================================
+   9. PANELS
    ============================================================ */
 .panel {
     background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 20px 16px;
-    margin-bottom: 14px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-lg);
+    padding: 20px var(--gutter);
+    margin-bottom: var(--gap);
+    box-shadow: var(--shadow-xs);
+}
+
+.panel:last-child {
+    margin-bottom: 0;
 }
 
 .panel-title,
 .panel h2 {
-    margin: 0 0 16px;
-    font-size: 19px;
-    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 8px;
+    margin: 0 0 18px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
 }
 
 .panel-title-icon {
-    font-size: 22px;
+    font-size: 20px;
+    line-height: 1;
 }
 
 .section-label {
-    font-size: 15.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 22px 0 12px;
-    color: var(--ink-soft);
+    font-size: 15px;
     font-weight: 700;
+    color: var(--ink);
+}
+
+.section-label::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    border-radius: 50%;
+    background: var(--pink);
 }
 
 /* ============================================================
-   STATS (person detail)
+   10. PERSON DETAIL — header
+   ============================================================ */
+.person-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.person-header-name {
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+.person-header-info {
+    display: grid;
+    gap: 4px;
+}
+
+/* label column fixed → every value starts at the same x */
+.person-header-row {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.person-header-lbl {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.person-header-val {
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.2px;
+    overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   11. PERSON DETAIL — stats
    ============================================================ */
 .stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+    margin-top: 16px;
+    align-items: stretch;
 }
 
 .stat {
-    background: var(--bg);
-    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
     padding: 14px;
-}
-
-.stat:first-child {
-    grid-column: 1 / -1;
-    background: var(--pink);
-    color: #ffffff;
-    padding: 18px;
+    border-radius: var(--r);
+    background: var(--surface-2);
+    border: 1px solid var(--line-2);
+    min-width: 0;
 }
 
 .stat .lbl {
-    font-size: 13.5px;
-    color: var(--muted);
+    font-size: 12.5px;
     font-weight: 600;
+    color: var(--muted);
+    line-height: 1.35;
 }
 
 .stat .val {
-    font-family: "Noto Sans Bengali", inherit;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
-    margin-top: 2px;
-    line-height: 1.2;
-    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+    letter-spacing: -0.3px;
 }
 
 .stat .sub {
     font-size: 12.5px;
     color: var(--muted);
-    margin-top: 4px;
+    line-height: 1.35;
 }
 
-.stat:first-child .lbl {
-    color: rgba(255, 255, 255, 0.88);
+.stat .sub:empty {
+    display: none;
 }
 
-.stat:first-child .val {
-    font-size: 34px;
+/* balance — hero tile, full width on mobile */
+.stat-balance {
+    grid-column: 1 / -1;
+    position: relative;
+    overflow: hidden;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--hero-from) 0%, var(--hero-to) 100%);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: var(--shadow-pink);
+}
+
+.stat-balance::after {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.stat-balance .lbl,
+.stat-balance .sub {
+    position: relative;
+    z-index: 1;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.stat-balance .val {
+    position: relative;
+    z-index: 1;
+    font-size: 30px;
+    color: #ffffff;
+}
+
+/* bundle tile */
+.stat-bundle {
+    grid-column: 1 / -1;
+    background: var(--blue-bg);
+    border-color: var(--blue-line);
+}
+
+.stat-bundle .lbl,
+.stat-bundle .val,
+.stat-bundle .sub {
+    color: var(--blue-ink);
+}
+
+.stat-bundle .val {
+    font-size: 20px;
+}
+
+.stat-bundle-empty {
+    background: var(--surface-2);
+    border-color: var(--line-2);
+}
+
+.stat-bundle-empty .lbl,
+.stat-bundle-empty .sub {
+    color: var(--muted);
+}
+
+.stat-bundle-empty .val {
+    color: var(--muted-3);
+}
+
+.stat-bundle-expired {
+    background: var(--rose-bg);
+    border-color: var(--rose-line);
+}
+
+.stat-bundle-expired .lbl,
+.stat-bundle-expired .val,
+.stat-bundle-expired .sub {
+    color: var(--rose-ink);
 }
 
 /* ============================================================
-   FORMS
+   12. PERSON DETAIL — toolbar
+   ============================================================ */
+.toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.toolbar .btn {
+    width: 100%;
+    padding: 0 12px;
+    min-width: 0;
+}
+
+/* full-width rows: the primary action and the delete action */
+.toolbar-full,
+.toolbar .btn-danger {
+    grid-column: 1 / -1;
+}
+
+/* ============================================================
+   13. FORMS
    ============================================================ */
 form .row {
     display: grid;
@@ -498,23 +945,38 @@ form .row {
     gap: 0 14px;
 }
 
+.row-3>.field:first-child {
+    grid-column: 1 / -1;
+}
+
+/* label + input in a column, input pushed to the bottom
+   → inputs in one row always line up, even if a label wraps */
 .field {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 16px;
     min-width: 0;
 }
 
+.field>input,
+.field>select,
+.field>textarea {
+    margin-top: auto;
+}
+
 label {
     display: block;
-    font-size: 15px;
-    color: var(--ink-soft);
     margin-bottom: 6px;
+    font-size: 14px;
     font-weight: 600;
+    color: var(--ink-soft);
+    line-height: 1.4;
 }
 
 label .opt {
-    color: var(--muted);
+    font-size: 12.5px;
     font-weight: 400;
-    font-size: 13px;
+    color: var(--muted);
 }
 
 input,
@@ -522,17 +984,17 @@ select,
 textarea {
     width: 100%;
     min-width: 0;
-    min-height: 52px;
+    min-height: var(--field-h);
     padding: 12px 14px;
     border: 1.5px solid var(--line);
-    border-radius: 14px;
-    font-size: 16px;
+    border-radius: var(--r);
+    font-size: 15px;
     font-family: inherit;
-    background: var(--surface-2);
     color: var(--ink);
+    background: var(--surface-2);
     -webkit-appearance: none;
     appearance: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 input::placeholder {
@@ -545,73 +1007,40 @@ textarea:focus {
     outline: none;
     border-color: var(--pink);
     background: var(--surface);
-    box-shadow: 0 0 0 4px var(--pink-soft);
+    box-shadow: 0 0 0 3px var(--pink-soft);
+}
+
+input[type="date"],
+input[type="datetime-local"] {
+    /* keeps native pickers the same height as text inputs */
+    line-height: 1.2;
 }
 
 select {
     padding-right: 42px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none' stroke='%236f626b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' fill='none' stroke='%236e7180' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
 }
 
-/* Photo picker */
-.photo-field {
-    margin-bottom: 20px;
-}
-
-.photo-picker {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 22px 16px;
-    background: var(--bg);
-    border: 1.5px dashed var(--dash-line);
-    border-radius: 22px;
-}
-
-.photo-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--ink);
-    padding: 0 20px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.photo-btn:hover {
-    background: var(--pink-soft);
-}
-
-.photo-btn:active {
-    transform: scale(0.97);
-}
-
 /* ============================================================
-   BUTTONS
+   14. BUTTONS
    ============================================================ */
 .btn {
     border: 0;
-    border-radius: 14px;
+    border-radius: var(--r);
     min-height: 48px;
-    padding: 0 20px;
-    font-size: 16px;
+    padding: 0 18px;
+    font-size: 15px;
     font-weight: 700;
-    cursor: pointer;
+    line-height: 1.2;
+    text-align: center;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    white-space: nowrap;
-    transition: background 0.15s, transform 0.12s;
+    gap: 7px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s, box-shadow 0.2s;
 }
 
 .btn:active {
@@ -619,27 +1048,28 @@ select {
 }
 
 .btn-primary {
-    background: var(--pink);
+    background: linear-gradient(135deg, var(--pink), var(--pink-press));
     color: #ffffff;
+    box-shadow: var(--shadow-pink);
 }
 
 .btn-primary:hover {
-    background: var(--pink-press);
+    background: linear-gradient(135deg, var(--pink-press), var(--pink-press));
+}
+
+.btn-light {
+    background: var(--surface-3);
+    color: var(--ink-soft);
+}
+
+.btn-light:hover {
+    background: var(--surface-4);
 }
 
 .btn-ghost {
     background: var(--surface);
     color: var(--ink);
     border: 1px solid var(--line);
-}
-
-.btn-light {
-    background: var(--surface-3);
-    color: var(--ink);
-}
-
-.btn-light:hover {
-    background: var(--surface-4);
 }
 
 .btn-danger {
@@ -661,20 +1091,21 @@ select {
 }
 
 .btn-muted {
-    background: var(--surface-4);
+    background: var(--surface-3);
     color: var(--muted-3);
     cursor: not-allowed;
 }
 
-.btn-muted:hover {
-    background: var(--surface-4);
+.btn-muted:hover,
+.btn-muted:active {
+    background: var(--surface-3);
     transform: none;
 }
 
 .btn-sm {
-    min-height: 44px;
-    padding: 0 16px;
-    font-size: 15px;
+    min-height: 42px;
+    padding: 0 14px;
+    font-size: 14px;
 }
 
 .btn-block {
@@ -682,65 +1113,29 @@ select {
 }
 
 .btn-xl {
-    min-height: 56px;
-    font-size: 17px;
+    min-height: 54px;
     margin-top: 8px;
-}
-
-/* Toolbar */
-.toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 16px;
-}
-
-.toolbar .btn {
-    padding: 0 10px;
-}
-
-/* Back button */
-.back {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    padding: 0 16px 0 12px;
-    margin-bottom: 12px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    color: var(--ink);
-    font-size: 15.5px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.back:hover {
-    background: var(--pink-soft);
-}
-
-.back:active {
-    transform: scale(0.97);
+    font-size: 16px;
 }
 
 /* ============================================================
-   FOLD-OUT PANELS (details/summary)
+   15. FOLD-OUT PANELS
    ============================================================ */
 .fold {
     padding: 0;
+    overflow: hidden;
 }
 
 .fold summary {
     list-style: none;
     cursor: pointer;
-    min-height: 60px;
-    padding: 0 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 18px;
+    gap: 12px;
+    min-height: 58px;
+    padding: 0 var(--gutter);
+    font-size: 16px;
     font-weight: 700;
 }
 
@@ -750,57 +1145,54 @@ select {
 
 .fold summary::after {
     content: "+";
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 400;
+    line-height: 1;
     color: var(--pink);
+    flex: 0 0 auto;
 }
 
 .fold[open] summary::after {
     content: "−";
 }
 
-.fold form {
-    padding: 4px 16px 20px;
-}
-
+.fold form,
 .fold-body {
-    padding: 0 16px 18px;
+    padding: 4px var(--gutter) 20px;
 }
 
 /* ============================================================
-   TRANSACTION LIST
+   16. TRANSACTION LIST
    ============================================================ */
 .tx-list {
     display: flex;
     flex-direction: column;
-    gap: 0;
 }
 
 .tx-item {
     padding: 14px 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--line-2);
 }
 
 .tx-item:first-child {
-    padding-top: 4px;
+    padding-top: 2px;
 }
 
 .tx-item:last-child {
     border-bottom: 0;
-    padding-bottom: 0;
+    padding-bottom: 2px;
 }
 
-/* Row 1: tag + counterparty + amount + delete */
 .tx-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 10px;
 }
 
 .tx-counterparty {
-    flex: 1;
     min-width: 0;
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--ink-soft);
     white-space: nowrap;
@@ -814,13 +1206,11 @@ select {
 }
 
 .tx-amount {
-    font-family: "Noto Sans Bengali", inherit;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 800;
-    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.2px;
     white-space: nowrap;
-    padding-left: 8px;
-    letter-spacing: -0.3px;
+    text-align: right;
 }
 
 .tx-amount.send {
@@ -839,21 +1229,20 @@ select {
     content: "+ ";
 }
 
-/* Small delete button */
 .tx-del {
-    flex-shrink: 0;
     width: 32px;
     height: 32px;
+    flex: 0 0 32px;
     border: 0;
     border-radius: 10px;
     background: var(--surface-3);
     color: var(--rose-ink);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
+    line-height: 1;
+    display: grid;
+    place-items: center;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     transition: background 0.15s, transform 0.1s;
 }
 
@@ -865,36 +1254,34 @@ select {
     transform: scale(0.92);
 }
 
-/* Row 2: date + time */
 .tx-date {
     margin-top: 6px;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--muted);
-    letter-spacing: 0.1px;
 }
 
-/* Row 3: notes */
 .tx-notes {
     margin-top: 4px;
     font-size: 13.5px;
+    line-height: 1.5;
     color: var(--ink-soft);
-    line-height: 1.55;
-    word-break: break-word;
     overflow-wrap: anywhere;
 }
 
 /* ============================================================
-   TAGS
+   17. TAGS
    ============================================================ */
 .tag {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 12px;
+    padding: 3px 11px;
     border-radius: 99px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
-    flex-shrink: 0;
+    line-height: 1.5;
+    white-space: nowrap;
 }
 
 .tag.send {
@@ -913,69 +1300,21 @@ select {
     color: var(--warn-ink);
 }
 
-.block-badge {
-    display: inline-block;
-    background: var(--rose-bg);
-    color: var(--rose-ink);
-    padding: 3px 9px;
-    border-radius: 99px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-}
-
-.trx-code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: var(--surface-3);
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink-soft);
-    word-break: break-all;
-}
-
 /* ============================================================
-   EMPTY / WARN / INFO
+   18. WARN / INFO
    ============================================================ */
-.empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--muted);
-    background: var(--card);
-    border-radius: 22px;
-    border: 1.5px dashed var(--dash-line);
-}
-
-.empty .icon {
-    font-size: 60px;
-    line-height: 1;
-    margin-bottom: 12px;
-}
-
-.empty h3 {
-    color: var(--ink);
-    margin: 0 0 6px;
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.empty p {
-    margin: 0;
-    font-size: 15.5px;
-}
-
 .warn,
 .info {
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
     gap: 10px;
-    padding: 14px 16px;
-    border-radius: 14px;
+    padding: 13px 15px;
+    border-radius: var(--r);
     margin-bottom: 16px;
-    font-size: 15px;
-    line-height: 1.65;
-    word-break: break-word;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
 }
 
 .warn {
@@ -990,48 +1329,14 @@ select {
     color: var(--pink-press);
 }
 
+.warn-icon,
 .info-icon {
-    font-size: 18px;
-    flex-shrink: 0;
+    font-size: 17px;
+    line-height: 1.5;
 }
 
 /* ============================================================
-   TOAST
-   ============================================================ */
-.toast {
-    position: fixed;
-    left: 50%;
-    bottom: calc(30px + var(--bottom));
-    transform: translate(-50%, 30px);
-    background: var(--toast-bg);
-    color: #ffffff;
-    padding: 13px 22px;
-    border-radius: 14px;
-    font-size: 15.5px;
-    font-weight: 600;
-    text-align: center;
-    max-width: 90vw;
-    opacity: 0;
-    pointer-events: none;
-    z-index: 300;
-    transition: opacity 0.25s, transform 0.25s;
-}
-
-.toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
-}
-
-.toast.success {
-    background: #0d7a51;
-}
-
-.toast.error {
-    background: #c31e3f;
-}
-
-/* ============================================================
-   MODAL
+   19. MODAL
    ============================================================ */
 .modal-bg {
     position: fixed;
@@ -1041,7 +1346,7 @@ select {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    animation: fade 0.2s ease-out;
+    animation: fade 0.18s ease-out;
 }
 
 .modal {
@@ -1049,10 +1354,11 @@ select {
     max-width: 480px;
     max-height: 92vh;
     overflow-y: auto;
-    background: var(--surface);
-    border-radius: 28px 28px 0 0;
     padding: 12px 20px calc(22px + var(--bottom));
-    animation: sheet 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: var(--card);
+    border-radius: 26px 26px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+    animation: sheet 0.26s var(--ease);
 }
 
 .modal::before {
@@ -1060,9 +1366,9 @@ select {
     display: block;
     width: 40px;
     height: 4px;
+    margin: 0 auto 16px;
     border-radius: 4px;
     background: var(--line);
-    margin: 0 auto 16px;
 }
 
 @keyframes sheet {
@@ -1079,1403 +1385,72 @@ select {
 
 .modal h3 {
     margin: 0 0 6px;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
+    letter-spacing: -0.2px;
 }
 
 .modal .modal-sub {
-    color: var(--muted);
-    font-size: 15px;
     margin-bottom: 18px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.modal .section-label {
+    margin: 18px 0 12px;
 }
 
 .modal-actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-top: 18px;
 }
 
-.modal-actions .btn {
-    flex: 1;
+.modal.modal-edit {
+    max-width: 520px;
 }
 
 .preview-msg {
-    background: var(--ok-bg);
-    border: 1px solid var(--ok-line);
+    margin: 10px 0 0;
     padding: 14px 16px;
-    border-radius: 14px;
-    font-size: 15px;
-    white-space: pre-wrap;
-    line-height: 1.7;
-    margin: 12px 0;
     max-height: 220px;
     overflow-y: auto;
-    word-break: break-word;
+    background: var(--ok-bg);
+    border: 1px solid var(--ok-line);
+    border-radius: var(--r);
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
 
 /* ============================================================
-   RESPONSIVE
+   20. TOAST
    ============================================================ */
-@media (min-width: 520px) {
-    form .row {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (min-width: 720px) {
-    body {
-        font-size: 16.5px;
-    }
-
-    .container {
-        padding: 28px 24px 40px;
-    }
-
-    .people-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 12px;
-    }
-
-    .panel {
-        padding: 26px 24px;
-    }
-
-    .stats {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .stat:first-child {
-        grid-column: auto;
-    }
-
-    .stat:first-child .val {
-        font-size: 26px;
-    }
-
-    .toolbar {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .toolbar .btn {
-        padding: 0 18px;
-    }
-
-    .modal-bg {
-        align-items: center;
-        padding: 16px;
-    }
-
-    .modal {
-        border-radius: 26px;
-        padding: 26px 24px;
-    }
-
-    .modal::before {
-        display: none;
-    }
-
-    .tx-item {
-        padding: 16px 0;
-    }
-
-    .tx-amount {
-        font-size: 19px;
-    }
-
-    .tx-date {
-        font-size: 13.5px;
-    }
-}
-
-@media (max-width: 360px) {
-    .toolbar .btn {
-        font-size: 14.5px;
-    }
-
-    .p-bal {
-        font-size: 19px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        animation: none !important;
-        transition: none !important;
-    }
-}
-
-.person {
-    background: var(--surface);
-    padding: 12px 14px;
-    cursor: pointer;
-    border-radius: 20px;
-    animation: cardIn 0.3s ease-out backwards;
-
-    /* 1. SOFT TRANSLUCENT PINK BORDER: Ties the border edge directly into the bKash theme */
-    border: 2px solid rgba(209, 32, 83, 0.25);
-
-    /* 2. THEME-MATCHED FADED GLOW SHADOW: Creates a soft, multi-layered depth halo 
-       that prevents blending with the page background */
-    box-shadow: 0 10px 24px rgba(209, 32, 83, 0.08),
-        0 4px 12px rgba(30, 36, 48, 0.05),
-        0 0 0 4px rgba(209, 32, 83, 0.03);
-
-    /* Ensures clean structural rendering transitions */
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.person:hover {
-    /* solidifies the theme border and adds a crisp interactive lift */
-    border-color: var(--pink);
-    transform: translateY(-3px);
-    box-shadow: 0 16px 32px rgba(209, 32, 83, 0.14),
-        0 6px 16px rgba(30, 36, 48, 0.08);
-}
-
-/* Balances alignment between the Bengali labels and the English digits */
-.detail-num {
-    font-size: 15px !important;
-    line-height: 1 !important;
-    display: inline-block;
-    vertical-align: middle;
-    /* Optional: Makes numbers look clean and evenly spaced */
-    font-variant-numeric: tabular-nums;
-}
-
-/* ============================================================
-   BUNDLE STAT BOX
-   ============================================================ */
-.stat-bundle {
-    background: linear-gradient(135deg, var(--blue-bg) 0%, var(--blue-bg-2) 100%);
-    border-color: var(--blue-line);
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-bundle::before {
-    content: "";
-    position: absolute;
-    top: -30px;
-    right: -30px;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.15), transparent 70%);
-    pointer-events: none;
-}
-
-.stat-bundle .lbl {
-    color: var(--blue-ink);
-    font-size: 12px;
-    letter-spacing: 0.2px;
-}
-
-.stat-bundle .val {
-    color: var(--blue-ink);
-    font-size: 22px;
-}
-
-.stat-bundle .sub {
-    color: var(--blue-ink);
-    font-weight: 600;
-    font-size: 12px;
-}
-
-/* Empty state — lighter */
-.stat-bundle.stat-bundle-empty {
-    background: var(--surface-2);
-    border-color: var(--line);
-}
-
-.stat-bundle.stat-bundle-empty::before {
-    display: none;
-}
-
-.stat-bundle.stat-bundle-empty .lbl {
-    color: var(--muted);
-}
-
-.stat-bundle.stat-bundle-empty .val {
-    color: var(--muted-3);
-}
-
-.stat-bundle.stat-bundle-empty .sub {
-    color: var(--muted);
-    font-weight: 500;
-}
-
-/* Expired state — red tint */
-.stat-bundle.stat-bundle-expired {
-    background: linear-gradient(135deg, var(--rose-bg) 0%, var(--rose-bg) 100%);
-    border-color: var(--rose-line);
-}
-
-.stat-bundle.stat-bundle-expired::before {
-    background: radial-gradient(circle, rgba(225, 29, 72, 0.18), transparent 70%);
-}
-
-.stat-bundle.stat-bundle-expired .lbl {
-    color: var(--rose-ink);
-}
-
-.stat-bundle.stat-bundle-expired .val {
-    color: var(--rose-ink);
-}
-
-.stat-bundle.stat-bundle-expired .sub {
-    color: var(--rose-ink);
-    font-weight: 700;
-}
-
-/* 4-column desktop grid */
-@media (min-width: 720px) {
-    .stats {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .stat:first-child {
-        grid-column: auto;
-    }
-}
-
-/* ============================================================
-   PERSON HEADER — aligned avatar + info
-   ============================================================ */
-.person-header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.person-header-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.person-header-name {
-    margin: 0 0 4px;
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: -0.3px;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.person-header-row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 14.5px;
-    line-height: 1.5;
-}
-
-.person-header-lbl {
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 13px;
-    flex-shrink: 0;
-    min-width: 64px;
-}
-
-.person-header-val {
-    color: var(--ink-soft);
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.2px;
-    word-break: break-all;
-}
-
-/* ============================================================
-   PERSON STATS — no empty gaps
-   ============================================================ */
-.person-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 18px;
-}
-
-.person-stats .stat-balance {
-    grid-column: 1 / -1;
-}
-
-.person-stats .stat-bundle {
-    grid-column: 1 / -1;
-}
-
-/* ============================================================
-   PERSON TOOLBAR — primary full, rest 2-col
-   ============================================================ */
-.person-toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 18px;
-}
-
-.person-toolbar .toolbar-full {
-    grid-column: 1 / -1;
-}
-
-/* ============================================================
-   DESKTOP — 4-col stats, wrapped toolbar
-   ============================================================ */
-@media (min-width: 720px) {
-    .person-stats {
-        grid-template-columns: repeat(4, 1fr);
-    }
-
-    .person-stats .stat-balance,
-    .person-stats .stat-bundle {
-        grid-column: auto;
-    }
-
-    .person-toolbar {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .person-toolbar .toolbar-full {
-        grid-column: auto;
-        flex: 1 1 100%;
-    }
-
-    .person-toolbar .btn {
-        padding: 0 20px;
-    }
-}
-
-
-/* ============================================================
-   PEOPLE GRID
-   ============================================================ */
-.people-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-}
-
-@media (min-width: 620px) {
-    .people-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 16px;
-    }
-}
-
-/* ============================================================
-   PERSON CARD
-   ============================================================ */
-.person {
-    position: relative;
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 18px 18px 16px;
-    cursor: pointer;
-    overflow: hidden;
-    border: 1px solid rgba(18, 23, 43, 0.06);
-    box-shadow:
-        0 1px 2px rgba(18, 23, 43, 0.03),
-        0 8px 22px rgba(18, 23, 43, 0.05);
-    transition:
-        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-        box-shadow 0.22s,
-        border-color 0.22s;
-    animation: cardIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
-}
-
-/* Soft gradient accent on the top-right corner */
-.person::before {
-    content: "";
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(209, 32, 83, 0.08), transparent 70%);
-    pointer-events: none;
-    transition: transform 0.3s;
-}
-
-/* Top edge highlight */
-.person::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 20px;
-    right: 20px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--shine), transparent);
-    pointer-events: none;
-}
-
-.person:hover {
-    transform: translateY(-4px);
-    border-color: rgba(209, 32, 83, 0.18);
-    box-shadow:
-        0 4px 8px rgba(18, 23, 43, 0.04),
-        0 20px 40px rgba(209, 32, 83, 0.1);
-}
-
-.person:hover::before {
-    transform: scale(1.4);
-}
-
-.person:active {
-    transform: translateY(-1px) scale(0.995);
-}
-
-@keyframes cardIn {
-    from {
-        opacity: 0;
-        transform: translateY(14px) scale(0.97);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* Blocked state — subtle tint */
-.person.blocked {
-    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%);
-}
-
-/* ============================================================
-   TOP ROW — avatar + name + balance
-   ============================================================ */
-.p-top {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    position: relative;
-    z-index: 1;
-}
-
-.p-top .avatar-sm {
-    width: 56px;
-    height: 56px;
-    font-size: 20px;
-    border: 2.5px solid var(--surface);
-    box-shadow:
-        0 0 0 1px rgba(18, 23, 43, 0.06),
-        0 6px 16px rgba(18, 23, 43, 0.08);
-}
-
-.p-name {
-    flex: 1;
-    min-width: 0;
-}
-
-.p-name h3 {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.p-name .num {
-    font-size: 12.5px;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.3px;
-    margin-top: 2px;
-}
-
-/* Balance — gradient text, prominent */
-.p-bal {
-    font-family: "Noto Sans Bengali", inherit;
-    font-size: 22px;
-    font-weight: 800;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.6px;
-    background: linear-gradient(135deg, var(--ink) 0%, var(--ink-soft) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    flex-shrink: 0;
-}
-
-/* ============================================================
-   LIMITS BLOCK — two side-by-side columns
-   ============================================================ */
-.p-limits {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px dashed rgba(18, 23, 43, 0.08);
-    position: relative;
-    z-index: 1;
-}
-
-.p-limits>div {
-    min-width: 0;
-}
-
-.p-limits .limit-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    font-size: 11.5px;
-    line-height: 1.3;
-    color: var(--muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.p-limits .limit-row span {
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 11px;
-}
-
-.p-limits .limit-row b {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--ink);
-    letter-spacing: -0.3px;
-    text-transform: none;
-    font-variant-numeric: tabular-nums;
-    margin-top: 2px;
-}
-
-.p-limits .limit-row b.over {
-    color: var(--red);
-}
-
-/* Progress bars — thin, pill, with shimmer */
-.p-limits .bar {
-    height: 6px;
-    margin: 8px 0 0;
-    background: var(--surface-4);
-    box-shadow: inset 0 1px 2px rgba(18, 23, 43, 0.04);
-    border-radius: 99px;
-    overflow: hidden;
-}
-
-.p-limits .bar span {
-    border-radius: 99px;
-    position: relative;
-    overflow: hidden;
-    display: block;
-    height: 100%;
-    transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.p-limits .bar span::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent 35%, var(--shine-soft) 50%, transparent 65%);
-    animation: barShimmer 3s infinite;
-}
-
-@keyframes barShimmer {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
-}
-
-/* ============================================================
-   BLOCK BADGE — sits next to name
-   ============================================================ */
-.block-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: linear-gradient(135deg, var(--rose-bg), var(--rose-bg-2));
-    color: var(--rose-ink);
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.15);
-    flex-shrink: 0;
-}
-
-/* ============================================================
-   PEOPLE GRID — clearer separation
-   ============================================================ */
-.people-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-}
-
-@media (min-width: 620px) {
-    .people-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 18px;
-    }
-}
-
-/* ============================================================
-   PERSON CARD — bigger text, plain balance, strong shadow
-   ============================================================ */
-.person {
-    position: relative;
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 20px 20px 18px;
-    cursor: pointer;
-    overflow: hidden;
-    border: 1px solid rgba(18, 23, 43, 0.06);
-    box-shadow:
-        0 2px 4px rgba(18, 23, 43, 0.04),
-        0 10px 24px rgba(18, 23, 43, 0.08),
-        0 24px 48px rgba(18, 23, 43, 0.06);
-    transition:
-        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-        box-shadow 0.22s,
-        border-color 0.22s;
-    animation: cardIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
-}
-
-/* Remove the pink radial tint in the corner */
-.person::before {
-    display: none;
-}
-
-/* Keep top highlight */
-.person::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 24px;
-    right: 24px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--shine), transparent);
-    pointer-events: none;
-}
-
-.person:hover {
-    transform: translateY(-4px);
-    border-color: rgba(209, 32, 83, 0.15);
-    box-shadow:
-        0 4px 8px rgba(18, 23, 43, 0.05),
-        0 16px 36px rgba(18, 23, 43, 0.12),
-        0 32px 64px rgba(18, 23, 43, 0.08);
-}
-
-.person:active {
-    transform: translateY(-1px) scale(0.995);
-}
-
-@keyframes cardIn {
-    from {
-        opacity: 0;
-        transform: translateY(14px) scale(0.97);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-/* ============================================================
-   TOP ROW — avatar + name + balance
-   ============================================================ */
-.p-top {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    position: relative;
-    z-index: 1;
-}
-
-.p-top .avatar-sm {
-    width: 62px;
-    height: 62px;
-    font-size: 22px;
-    border: 3px solid var(--surface);
-    box-shadow:
-        0 0 0 1px rgba(18, 23, 43, 0.06),
-        0 6px 16px rgba(18, 23, 43, 0.1);
-}
-
-.p-name {
-    flex: 1;
-    min-width: 0;
-}
-
-/* BIGGER NAME */
-.p-name h3 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: -0.3px;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* BIGGER NUMBER */
-.p-name .num {
-    font-size: 15px;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.3px;
-    margin-top: 4px;
-    font-weight: 500;
-}
-
-/* PLAIN BALANCE — no gradient, no color */
-.p-bal {
-    font-family: "Noto Sans Bengali", inherit;
-    font-size: 26px;
-    font-weight: 800;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.6px;
-    color: var(--ink);
-    background: none;
-    -webkit-background-clip: unset;
-    -webkit-text-fill-color: unset;
-    background-clip: unset;
-    flex-shrink: 0;
-}
-
-/* ============================================================
-   LIMITS BLOCK
-   ============================================================ */
-.p-limits {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px dashed rgba(18, 23, 43, 0.1);
-    position: relative;
-    z-index: 1;
-}
-
-.p-limits>div {
-    min-width: 0;
-}
-
-.p-limits .limit-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    font-size: 12px;
-    line-height: 1.3;
-    color: var(--muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.p-limits .limit-row span {
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 11.5px;
-}
-
-.p-limits .limit-row b {
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--ink);
-    letter-spacing: -0.4px;
-    text-transform: none;
-    font-variant-numeric: tabular-nums;
-    margin-top: 3px;
-}
-
-.p-limits .limit-row b.over {
-    color: var(--red);
-}
-
-/* Bars */
-.p-limits .bar {
-    height: 7px;
-    margin: 9px 0 0;
-    background: var(--surface-4);
-    box-shadow: inset 0 1px 2px rgba(18, 23, 43, 0.04);
-    border-radius: 99px;
-    overflow: hidden;
-}
-
-.p-limits .bar span {
-    border-radius: 99px;
-    position: relative;
-    overflow: hidden;
-    display: block;
-    height: 100%;
-    transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.p-limits .bar span::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent 35%, var(--shine-soft) 50%, transparent 65%);
-    animation: barShimmer 3s infinite;
-}
-
-@keyframes barShimmer {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
-}
-
-/* ============================================================
-   BLOCK BADGE
-   ============================================================ */
-.block-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: linear-gradient(135deg, var(--rose-bg), var(--rose-bg-2));
-    color: var(--rose-ink);
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    box-shadow: 0 2px 6px rgba(153, 27, 27, 0.15);
-    flex-shrink: 0;
-}
-
-.summary {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-
-.summary-item {
-    background: var(--surface);
-    border: 1px solid var(--line, var(--line));
-    border-radius: 14px;
-    padding: 12px 14px;
-}
-
-.summary-item span {
-    display: block;
-    font-size: 13px;
-    color: var(--muted, #5b6475);
-}
-
-.summary-item b {
-    display: block;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
-}
-
-@media (min-width: 620px) {
-    .summary {
-        max-width: 420px;
-    }
-}
-
-/* ============================================================
-   BUNDLE PILL — small badge on dashboard cards
-   ============================================================ */
-.bundle-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--blue-bg) 0%, var(--blue-bg-2) 100%);
-    color: var(--blue-ink);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-    line-height: 1.5;
-    border: 1px solid var(--blue-line);
-    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
-    vertical-align: middle;
-    flex-shrink: 0;
-    margin-left: 2px;
-}
-
-/* Bundle pill — empty (0 count) state */
-.bundle-pill-empty {
-    background: var(--surface-3);
-    color: var(--muted-3);
-    border-color: var(--line);
-    box-shadow: none;
-    opacity: 0.9;
-}
-
-/* Disable text selection + copy */
-* {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-/* Allow selection only in input fields (so users can still edit) */
-input,
-textarea,
-select,
-[contenteditable] {
-    -webkit-user-select: text;
-    -moz-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
-}
-
-/* Prevent long-press context menu on mobile */
-img,
-a,
-button {
-    -webkit-touch-callout: none;
-}
-
-/* Prevent double-tap zoom on iOS */
-html {
-    -webkit-text-size-adjust: 100%;
-    touch-action: manipulation;
-}
-
-/* ============================================================
-   THEME ALIGNMENT WITH DASHBOARD
-   ------------------------------------------------------------
-   Brings this bKash হিসাব app in line with the dashboard:
-   same pink (#d12053), same surface palette (#f5f3f6),
-   same pink radial glow, same font stack, same radii scale,
-   same pink-tinted shadows, glass topbar, matching cards.
-   Paste at the BOTTOM of style.css.
-   ============================================================ */
-
-/* ---------- 1. TOKENS ---------- */
-:root {
-    /* surface */
-    --bg: #f5f3f6;
-    --card: #ffffff;
-
-    /* ink */
-    --ink: #17181f;
-    --ink-2: #3a3d4a;
-    --ink-soft: #3a3d4a;
-    --muted: #6e7180;
-    --muted-2: #a1a4b3;
-
-    /* lines */
-    --line: #ebe6ec;
-    --line-2: #f3eef4;
-
-    /* brand pink — matches dashboard */
-    --pink: #d12053;
-    --pink-2: #e8437a;
-    --pink-press: #a8153f;
-    --pink-soft: #fde8ef;
-    --pink-tint: #fff6fa;
-
-    /* accents */
-    --green: #12a06a;
-    --amber: #f0a010;
-    --red: #dc2648;
-    --wa: #128c4a;
-
-    /* radii — dashboard scale */
-    --r-sm: 12px;
-    --r: 16px;
-    --r-md: 20px;
-    --r-lg: 24px;
-
-    /* shadows — dashboard pink-tinted */
-    --shadow-xs: 0 1px 2px rgba(20, 22, 34, 0.04);
-    --shadow-sm: 0 2px 6px rgba(20, 22, 34, 0.05);
-    --shadow: 0 4px 14px rgba(20, 22, 34, 0.06);
-    --shadow-md: 0 10px 30px rgba(20, 22, 34, 0.08);
-    --shadow-lg: 0 24px 48px rgba(20, 22, 34, 0.12);
-    --shadow-pink: 0 8px 22px rgba(209, 32, 83, 0.28);
-
-    /* fonts — dashboard stack */
-    --font-body: "Hind Siliguri", "Noto Sans Bengali", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-num: "Noto Sans Bengali", "Hind Siliguri", "Inter", -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
-    /* layout — the dashboard shell feel, still room for 2-col grid */
-    --wrap: 720px;
-    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* ---------- 2. BODY — pink radial glow ---------- */
-body {
-    font-family: var(--font-body);
-    background-color: var(--bg);
-    background-image: radial-gradient(1200px 600px at 50% -200px,
-            rgba(209, 32, 83, 0.08),
-            transparent 70%);
-    background-attachment: fixed;
-    color: var(--ink);
-    font-size: 15px;
-    line-height: 1.5;
-}
-
-/* numbers use the tabular numeral font, like the dashboard */
-.p-bal,
-.tx-amount,
-.stat .val,
-.summary-item b,
-.limit-row b,
-.p-name .num,
-.person-header-val,
-.tx-date,
-.bundle-pill {
-    font-family: var(--font-num);
-    font-variant-numeric: tabular-nums;
-}
-
-/* ---------- 3. TOPBAR — glass + blur like dashboard ---------- */
-.topbar {
-    background: var(--topbar-bg);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 1px solid var(--line-2);
-    padding: calc(10px + var(--top)) 16px 10px;
-    transition: box-shadow 0.25s var(--ease);
-}
-
-.topbar-left {
-    max-width: var(--wrap);
-    margin: 0 auto;
-    width: 100%;
-}
-
-/* brand logo — dashboard tile treatment */
-#brandLogo {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    object-fit: cover;
-    background: transparent;
-    padding: 0;
-    box-shadow: var(--shadow-pink);
-    flex-shrink: 0;
-}
-
-.topbar-titles h1 {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.4px;
-    color: var(--ink);
-}
-
-/* ---------- 4. LAYOUT ---------- */
-.container {
-    max-width: var(--wrap);
-    margin: 0 auto;
-    padding: 16px 14px calc(32px + var(--bottom));
-}
-
-#viewAddPerson {
-    max-width: 560px;
-    margin-inline: auto;
-}
-
-#viewPerson {
-    max-width: 720px;
-    margin-inline: auto;
-}
-
-/* ---------- 5. PANELS — dashboard radius + soft shadow ---------- */
-.panel {
-    background: var(--card);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r-lg);
-    padding: 18px 16px;
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 12px;
-}
-
-.panel-title,
-.panel h2 {
-    font-size: 16px;
-    letter-spacing: -0.2px;
-    margin: 0 0 14px;
-    color: var(--ink);
-}
-
-/* ---------- 6. PERSON CARD — clean, dashboard-shaped ---------- */
-.person {
-    background: var(--card);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r-md);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    transition: transform 0.2s var(--ease),
-        box-shadow 0.25s var(--ease),
-        border-color 0.2s var(--ease);
-}
-
-/* remove the old decorative glows on person cards */
-.person::before,
-.person::after {
-    display: none;
-}
-
-.person:hover {
-    transform: translateY(-2px);
-    border-color: rgba(209, 32, 83, 0.18);
-    box-shadow: var(--shadow-md);
-}
-
-.person:active {
-    transform: translateY(0) scale(0.99);
-}
-
-.person.blocked {
-    background: var(--pink-tint);
-}
-
-/* ---------- 7. SUMMARY + STAT tiles ---------- */
-.summary-item {
-    background: var(--card);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r);
-    box-shadow: var(--shadow-xs);
-}
-
-.stat {
-    background: var(--surface-2);
-    border: 1px solid var(--line-2);
-    border-radius: var(--r);
-}
-
-.stat:first-child,
-.person-stats .stat-balance {
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #ffffff;
-    border-color: transparent;
-    box-shadow: var(--shadow-pink);
-}
-
-/* ---------- 8. BUTTONS — dashboard look ---------- */
-.btn {
-    border-radius: 14px;
-    font-weight: 700;
-    transition: transform 0.15s var(--ease),
-        box-shadow 0.2s var(--ease),
-        background 0.15s;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    color: #fff;
-    box-shadow: var(--shadow-pink);
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, var(--pink-2), var(--pink-press));
-    box-shadow: 0 10px 26px rgba(209, 32, 83, 0.36);
-}
-
-.btn-light {
-    background: var(--surface-3);
-    color: var(--ink-2);
-}
-
-.btn-light:hover {
-    background: var(--surface-4);
-}
-
-.btn-ghost {
-    background: var(--surface);
-    color: var(--ink-2);
-    border: 1px solid var(--line);
-}
-
-.btn-danger {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-}
-
-.btn-danger:hover {
-    background: var(--rose-bg-2);
-}
-
-.btn-wa {
-    background: linear-gradient(135deg, #14b866, #0a8347);
-    color: #fff;
-    box-shadow: 0 8px 22px rgba(18, 160, 106, 0.28);
-}
-
-.btn-wa:hover {
-    box-shadow: 0 10px 26px rgba(18, 160, 106, 0.36);
-}
-
-.btn-muted {
-    background: var(--surface-3);
-    color: var(--muted-2);
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.add-btn {
-    background: linear-gradient(135deg, var(--pink), var(--pink-press));
-    box-shadow: var(--shadow-pink);
-    border-radius: 14px;
-}
-
-.add-btn:hover {
-    box-shadow: 0 10px 26px rgba(209, 32, 83, 0.42);
-}
-
-.back {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    color: var(--ink-2);
-}
-
-.back:hover {
-    background: var(--pink-tint);
-    border-color: rgba(209, 32, 83, 0.2);
-}
-
-/* ---------- 9. INPUTS — dashboard radius + focus ring ---------- */
-input,
-select,
-textarea {
-    border: 1.5px solid var(--line);
-    border-radius: 14px;
-    background: var(--surface-2);
-    color: var(--ink);
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: var(--pink);
-    background: var(--surface);
-    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
-}
-
-.searchbar input {
-    border-radius: 14px;
-    background-color: var(--surface);
-}
-
-.searchbar input:focus {
-    border-color: var(--pink);
-    box-shadow: 0 0 0 4px rgba(209, 32, 83, 0.1);
-}
-
-/* ---------- 10. TAGS + BADGES ---------- */
-.tag.send {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-}
-
-.tag.receive,
-.tag.verified {
-    background: var(--ok-bg);
-    color: var(--ok-ink);
-}
-
-.tag.pending {
-    background: var(--warn-bg);
-    color: var(--warn-ink);
-}
-
-.block-badge {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-    box-shadow: none;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.bundle-pill {
-    background: var(--pink-soft);
-    color: var(--pink-press);
-    border-color: var(--rose-line);
-    box-shadow: none;
-}
-
-.bundle-pill-empty {
-    background: var(--surface-3);
-    color: var(--muted-2);
-    border-color: var(--line);
-}
-
-/* ---------- 11. LIMIT BARS ---------- */
-.bar {
-    background: var(--surface-3);
-    box-shadow: inset 0 1px 2px rgba(20, 22, 34, 0.04);
-}
-
-/* ---------- 12. MODAL — dashboard sheet ---------- */
-.modal {
-    border-radius: 28px 28px 0 0;
-    box-shadow: 0 -20px 60px rgba(20, 22, 34, 0.15);
-}
-
-.modal::before {
-    background: var(--line);
-}
-
-.modal h3 {
-    font-size: 17px;
-    letter-spacing: -0.2px;
-}
-
-@media (min-width: 720px) {
-    .modal {
-        border-radius: 24px;
-    }
-}
-
-/* ---------- 13. TOAST — dashboard style ---------- */
 .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(28px + var(--bottom));
+    transform: translate(-50%, 30px);
+    max-width: 90vw;
+    padding: 13px 22px;
+    border-radius: var(--r);
     background: var(--toast-bg);
-    color: #fff;
-    border-radius: 14px;
-    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+    color: #ffffff;
+    font-size: 15px;
     font-weight: 600;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 300;
+    box-shadow: 0 16px 40px rgba(20, 22, 34, 0.3);
+    transition: opacity 0.22s, transform 0.22s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
 }
 
 .toast.success {
@@ -2486,91 +1461,97 @@ textarea:focus {
     background: #b81d38;
 }
 
-/* ---------- 14. EMPTY / WARN / INFO ---------- */
-.empty {
-    background: var(--card);
-    border: 1.5px dashed var(--dash-line);
-    border-radius: var(--r-lg);
-    color: var(--muted);
-}
+/* ============================================================
+   21. RESPONSIVE
+   ============================================================ */
+@media (min-width: 520px) {
+    form .row {
+        grid-template-columns: 1fr 1fr;
+    }
 
-.empty h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--ink);
-}
-
-.empty p {
-    font-size: 13.5px;
-}
-
-.warn {
-    background: var(--warn-bg);
-    border: 1px solid var(--warn-line);
-    border-radius: 14px;
-    color: var(--warn-ink);
-}
-
-.info {
-    background: var(--pink-soft);
-    border-radius: 14px;
-    color: var(--pink-press);
-}
-
-/* ---------- 15. TX LIST — lighter dividers ---------- */
-.tx-item {
-    border-bottom: 1px solid var(--line-2);
-}
-
-.tx-notes {
-    color: var(--ink-soft);
-}
-
-/* ---------- 16. STAGGER — match dashboard card entrance ---------- */
-.person:nth-child(1) {
-    animation-delay: 0.02s;
-}
-
-.person:nth-child(2) {
-    animation-delay: 0.05s;
-}
-
-.person:nth-child(3) {
-    animation-delay: 0.08s;
-}
-
-.person:nth-child(4) {
-    animation-delay: 0.11s;
-}
-
-.person:nth-child(5) {
-    animation-delay: 0.14s;
-}
-
-.person:nth-child(6) {
-    animation-delay: 0.17s;
-}
-
-/* ---------- 17. RESPONSIVE — dashboard shell rhythm ---------- */
-@media (min-width: 480px) {
-    .container {
-        padding: 18px 16px calc(36px + var(--bottom));
+    .row-3 {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
 @media (min-width: 720px) {
-    .container {
-        padding: 24px 20px calc(40px + var(--bottom));
+    :root {
+        --gutter: 20px;
     }
 
-    /* keep the 2×2 stat grid tight */
-    .stats,
-    .person-stats {
+    body {
+        font-size: 15.5px;
+    }
+
+    .container {
+        padding-top: 20px;
+    }
+
+    .panel {
+        padding: 24px;
+    }
+
+    .fold summary {
+        padding: 0 24px;
+    }
+
+    .fold form,
+    .fold-body {
+        padding: 4px 24px 22px;
+    }
+
+    .stats {
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
+    }
+
+    .stat-balance,
+    .stat-bundle {
+        grid-column: auto;
+    }
+
+    .stat-balance .val {
+        font-size: 24px;
+    }
+
+    .toolbar {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .toolbar .btn-danger {
+        grid-column: auto;
+    }
+
+    .modal-bg {
+        align-items: center;
+        padding: 16px;
+    }
+
+    .modal {
+        border-radius: 24px;
+        padding: 24px;
+    }
+
+    .modal::before {
+        display: none;
     }
 }
 
-/* ---------- 18. REDUCED MOTION — respect user choice ---------- */
+@media (max-width: 360px) {
+    .p-bal {
+        font-size: 18px;
+    }
+
+    .p-name h3 {
+        font-size: 16px;
+    }
+
+    .toolbar .btn,
+    .btn-sm {
+        font-size: 14px;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -2578,1074 +1559,5 @@ textarea:focus {
     *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
-    }
-}
-
-/* ============================================================
-   BACK BUTTON — matches the dashboard / entry manager style
-   ============================================================ */
-.back-btn {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    border: 0;
-    border-radius: 12px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.12s;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.back-btn:hover {
-    background: var(--rose-bg-2);
-}
-
-.back-btn:active {
-    transform: scale(0.92);
-}
-
-.back-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-/* ============================================================
-   DASHBOARD PERSON CARD — compact override only
-   Wins the cascade over all earlier .person blocks.
-   ============================================================ */
-
-.person {
-    padding: 12px 14px;
-    border-radius: 16px;
-    border: 1px solid var(--line-2);
-    background: var(--card);
-    box-shadow:
-        0 1px 2px rgba(20, 22, 34, 0.03),
-        0 4px 12px rgba(20, 22, 34, 0.04);
-    transition:
-        transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
-        box-shadow 0.22s,
-        border-color 0.18s;
-}
-
-/* kill every decorative pseudo from the earlier passes */
-.person::before,
-.person::after {
-    display: none !important;
-}
-
-.person:hover {
-    transform: translateY(-1px);
-    border-color: rgba(209, 32, 83, 0.18);
-    box-shadow:
-        0 2px 4px rgba(20, 22, 34, 0.04),
-        0 10px 22px rgba(209, 32, 83, 0.08);
-}
-
-.person:active {
-    transform: translateY(0) scale(0.995);
-}
-
-/* top row: avatar + name + balance */
-.p-top {
-    gap: 10px;
-    align-items: center;
-}
-
-.p-top .avatar-sm {
-    width: 42px;
-    height: 42px;
-    font-size: 15px;
-    font-weight: 800;
-    border: 2px solid var(--surface);
-    box-shadow:
-        0 0 0 1px rgba(20, 22, 34, 0.06),
-        0 2px 6px rgba(20, 22, 34, 0.05);
-}
-
-.p-name h3 {
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.2px;
-    gap: 6px;
-}
-
-.p-name .num {
-    font-size: 12px;
-    margin-top: 1px;
-    font-weight: 500;
-    letter-spacing: 0.2px;
-}
-
-.p-bal {
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: -0.4px;
-    color: var(--ink);
-    line-height: 1.1;
-}
-
-/* limits block */
-.p-limits {
-    gap: 10px;
-    margin-top: 10px;
-    padding-top: 9px;
-    border-top: 1px dashed rgba(20, 22, 34, 0.08);
-}
-
-.p-limits .limit-row {
-    gap: 0;
-    font-size: 10.5px;
-    line-height: 1.3;
-    letter-spacing: 0.4px;
-}
-
-.p-limits .limit-row span {
-    font-size: 10.5px;
-    font-weight: 600;
-}
-
-.p-limits .limit-row b {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    margin-top: 1px;
-}
-
-.p-limits .bar {
-    height: 5px;
-    margin-top: 5px;
-}
-
-/* badges on the card */
-.bundle-pill {
-    padding: 1.5px 7px;
-    font-size: 10.5px;
-    border-radius: 20px;
-    gap: 2px;
-}
-
-.block-badge {
-    padding: 2px 7px;
-    font-size: 10px;
-    letter-spacing: 0.3px;
-    border-radius: 20px;
-    background: var(--pink-soft);
-    color: var(--pink-press);
-    box-shadow: none;
-}
-
-/* grid density */
-.people-grid {
-    gap: 10px;
-}
-
-@media (min-width: 620px) {
-    .people-grid {
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 12px;
-    }
-}
-
-/* tiny screens */
-@media (max-width: 380px) {
-    .person {
-        padding: 10px 12px;
-    }
-
-    .p-top .avatar-sm {
-        width: 38px;
-        height: 38px;
-        font-size: 13px;
-    }
-
-    .p-name h3 {
-        font-size: 14px;
-    }
-
-    .p-bal {
-        font-size: 15.5px;
-    }
-}
-
-/* ============================================================
-   THEME  —  light / dark  (toggle button in the topbar)
-   ============================================================ */
-:root {
-    color-scheme: light;
-    /* softer, less glaring white */
-    --bg: #ebe7ec;
-    --card: #f7f4f7;
-    --surface: #f7f4f7;
-    --surface-2: #f2eef2;
-    --surface-3: #ebe5ea;
-    --surface-4: #e3dce2;
-    --muted-3: #8b93a7;
-    --rose-bg: #fde3e8;
-    --rose-bg-2: #fadbe1;
-    --rose-ink: #b3122f;
-    --rose-line: #fecdd3;
-    --ok-bg: #d9f4e7;
-    --ok-ink: #0a6b45;
-    --ok-line: #c8ead9;
-    --warn-bg: #fff3df;
-    --warn-ink: #7a4600;
-    --warn-line: #f3d29b;
-    --blue-bg: #eef6ff;
-    --blue-bg-2: #dbeafe;
-    --blue-ink: #1e40af;
-    --blue-line: #bfdbfe;
-    --dash-line: #d8cbd2;
-    --topbar-bg: rgba(247, 244, 247, 0.88);
-    --toast-bg: #17181f;
-    --shine: rgba(255, 255, 255, 0.95);
-    --shine-soft: rgba(255, 255, 255, 0.5);
-}
-
-:root[data-theme="dark"] {
-    color-scheme: dark;
-    --bg: #0f1117;
-    --card: #181b24;
-    --surface: #181b24;
-    --surface-2: #1d212c;
-    --surface-3: #232836;
-    --surface-4: #2a3040;
-
-    --ink: #eef0f6;
-    --ink-2: #c6cad7;
-    --ink-soft: #c6cad7;
-    --muted: #9aa1b3;
-    --muted-2: #6f768a;
-    --muted-3: #6f768a;
-
-    --line: #2a2f3d;
-    --line-2: #232836;
-
-    --pink: #ec3f73;
-    --pink-2: #ff6a98;
-    --pink-press: #d12053;
-    --pink-soft: #3a1626;
-    --pink-tint: #1f1620;
-
-    --green: #2ad08f;
-    --amber: #f5b53a;
-    --red: #ff5272;
-    --wa: #25b86a;
-
-    --rose-bg: #3a1621;
-    --rose-bg-2: #4a1b29;
-    --rose-ink: #ff8da3;
-    --rose-line: #5c2231;
-    --ok-bg: #0f2e22;
-    --ok-ink: #5fe0ac;
-    --ok-line: #1b4a37;
-    --warn-bg: #33260d;
-    --warn-ink: #f7c46a;
-    --warn-line: #5a4318;
-    --blue-bg: #14233d;
-    --blue-bg-2: #19305a;
-    --blue-ink: #8db8ff;
-    --blue-line: #274a80;
-    --dash-line: #3a4052;
-
-    --topbar-bg: rgba(24, 27, 36, 0.85);
-    --toast-bg: #2a3040;
-    --shine: rgba(255, 255, 255, 0.07);
-    --shine-soft: rgba(255, 255, 255, 0.06);
-
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
-    --shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.55);
-    --shadow-pink: 0 8px 22px rgba(236, 63, 115, 0.25);
-}
-
-:root[data-theme="dark"] body {
-    background-image: radial-gradient(1200px 600px at 50% -200px,
-            rgba(236, 63, 115, 0.12), transparent 70%);
-}
-
-:root[data-theme="dark"] .modal-bg {
-    background: rgba(0, 0, 0, 0.65);
-}
-
-:root[data-theme="dark"] input,
-:root[data-theme="dark"] select,
-:root[data-theme="dark"] textarea {
-    color: var(--ink);
-}
-
-:root[data-theme="dark"] ::placeholder {
-    color: var(--muted-2);
-}
-
-:root[data-theme="dark"] .toast {
-    color: #fff;
-}
-
-/* smooth switch */
-body,
-.topbar,
-.panel,
-.modal,
-.person-card,
-.p-card,
-.toast {
-    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
-}
-
-/* ---------- theme toggle button ---------- */
-.theme-btn {
-    margin-left: auto;
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    border: 0;
-    border-radius: 12px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.12s;
-}
-
-.theme-btn:hover {
-    background: var(--rose-bg-2);
-}
-
-.theme-btn:active {
-    transform: scale(0.92);
-}
-
-.theme-btn svg {
-    width: 21px;
-    height: 21px;
-}
-
-.theme-btn .icon-sun {
-    display: none;
-}
-
-:root[data-theme="dark"] .theme-btn .icon-sun {
-    display: block;
-}
-
-:root[data-theme="dark"] .theme-btn .icon-moon {
-    display: none;
-}
-
-/* ---------- dark: box colour fixes ---------- */
-:root[data-theme="dark"] .photo-picker {
-    background: var(--surface-2);
-}
-
-:root[data-theme="dark"] .info {
-    background: var(--pink-soft);
-    color: #ffb3c9;
-}
-
-/* ============================================================
-   FINAL THEME OVERRIDE — MATCHING THE SCREENSHOT
-   ============================================================ */
-
-:root {
-    /* Clean Light Background */
-    --bg: #f5f6f8;
-    --card: #ffffff;
-    --surface: #ffffff;
-    --surface-2: #f8f9fa;
-    --surface-3: #f1f3f5;
-    --surface-4: #e9ecef;
-
-    /* Text Colors */
-    --ink: #1e2430;
-    --ink-soft: #3b4456;
-    --muted: #6e7180;
-    --muted-3: #8b93a7;
-
-    /* Brand Pink/Red from the image */
-    --pink: #c2185b;
-    --pink-press: #a0154a;
-    --pink-soft: #fde8ef;
-    --pink-tint: #fff6fa;
-
-    /* Lines & Borders */
-    --line: #e2e6ee;
-    --line-2: #f0f2f5;
-
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.06);
-    --shadow-pink: 0 8px 24px rgba(194, 24, 91, 0.25);
-
-    /* Radii */
-    --r-sm: 12px;
-    --r: 16px;
-    --r-md: 20px;
-    --r-lg: 24px;
-}
-
-body {
-    background-color: var(--bg);
-    background-image: none;
-    /* Remove old radial gradients */
-    color: var(--ink);
-    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
-    font-size: 15px;
-}
-
-/* ------------------------------------------------------------
-   1. TOPBAR & HEADER
-   ------------------------------------------------------------ */
-.topbar {
-    background: var(--card);
-    border-bottom: 1px solid var(--line-2);
-    box-shadow: none;
-    padding: calc(12px + var(--top)) 16px 12px;
-}
-
-.topbar-titles h1 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--ink);
-}
-
-.topbar-titles .sub {
-    font-size: 13px;
-    color: var(--muted);
-}
-
-/* Round Action Buttons (Back, Plus, Theme) */
-.back-btn,
-.theme-btn,
-.add-btn {
-    background: var(--pink-soft);
-    color: var(--pink);
-    border: none;
-    border-radius: var(--r-sm);
-    box-shadow: none;
-    transition: background 0.2s, transform 0.1s;
-}
-
-.back-btn:hover,
-.theme-btn:hover,
-.add-btn:hover {
-    background: #fbd3e1;
-    /* Slightly darker pink on hover */
-    box-shadow: none;
-    transform: none;
-}
-
-.back-btn:active,
-.theme-btn:active,
-.add-btn:active {
-    transform: scale(0.95);
-}
-
-.add-btn {
-    padding: 0 16px;
-    height: 40px;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-/* ------------------------------------------------------------
-   2. HERO CARD (Total Balance / Summary)
-   ------------------------------------------------------------ */
-/* Matches the big deep red card in the image */
-.summary,
-.stat:first-child,
-.person-stats .stat-balance {
-    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
-    border-radius: var(--r-lg);
-    padding: 24px;
-    color: #ffffff;
-    box-shadow: var(--shadow-pink);
-    border: none;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Add a subtle decorative curve like in the image */
-.summary::after,
-.stat:first-child::after,
-.person-stats .stat-balance::after {
-    content: "";
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    pointer-events: none;
-}
-
-.stat:first-child .lbl,
-.summary-item span {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.stat:first-child .val,
-.summary-item b {
-    color: #ffffff;
-    font-size: 34px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    font-family: "Noto Sans Bengali", inherit;
-    margin-top: 4px;
-}
-
-/* ------------------------------------------------------------
-   3. SECTION LABELS (e.g., "দৈনিক হিসাব")
-   ------------------------------------------------------------ */
-.section-label {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 24px 0 12px;
-}
-
-/* The pink dot indicator */
-.section-label::before {
-    content: "";
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--pink);
-}
-
-/* ------------------------------------------------------------
-   4. PERSON CARDS (List Items)
-   ------------------------------------------------------------ */
-.people-grid {
-    gap: 12px;
-}
-
-.person {
-    background: var(--card);
-    border: none;
-    border-radius: var(--r-md);
-    padding: 16px;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Remove all old decorative pseudo-elements */
-.person::before,
-.person::after {
-    display: none !important;
-}
-
-.person:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border: none;
-}
-
-.person:active {
-    transform: translateY(0) scale(0.99);
-}
-
-/* Top Row Layout */
-.p-top {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-/* Avatar as a rounded square (mimicking the date blocks in the image) */
-.p-top .avatar-sm {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    background: var(--pink-soft);
-    color: var(--pink);
-    font-size: 20px;
-    font-weight: 800;
-    border: none;
-    box-shadow: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.p-name h3 {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 2px;
-}
-
-.p-name .num {
-    font-size: 13px;
-    color: var(--muted);
-    font-weight: 500;
-}
-
-/* Balance Amount */
-.p-bal {
-    color: var(--pink);
-    font-size: 20px;
-    font-weight: 800;
-    font-family: "Noto Sans Bengali", inherit;
-    letter-spacing: -0.3px;
-    background: none;
-    -webkit-text-fill-color: initial;
-}
-
-/* Limits Section inside the card */
-.p-limits {
-    border-top: 1px solid var(--line-2);
-    margin-top: 16px;
-    padding-top: 14px;
-    gap: 16px;
-}
-
-.p-limits .limit-row {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-}
-
-.p-limits .limit-row b {
-    font-size: 16px;
-    color: var(--ink);
-    font-weight: 800;
-    margin-top: 4px;
-}
-
-.p-limits .limit-row b.over {
-    color: var(--red);
-}
-
-.p-limits .bar {
-    height: 6px;
-    background: var(--surface-3);
-    border-radius: 99px;
-    margin-top: 8px;
-}
-
-.p-limits .bar span {
-    border-radius: 99px;
-    background: var(--pink);
-}
-
-/* Remove shimmer animation for a cleaner look */
-.p-limits .bar span::after {
-    display: none;
-}
-
-/* ------------------------------------------------------------
-   5. BADGES & PILLS
-   ------------------------------------------------------------ */
-.bundle-pill,
-.block-badge {
-    background: var(--pink-soft);
-    color: var(--pink);
-    border: none;
-    box-shadow: none;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    border-radius: 20px;
-}
-
-/* ------------------------------------------------------------
-   6. SEARCH BAR & INPUTS
-   ------------------------------------------------------------ */
-.searchbar input {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: var(--r-sm);
-    box-shadow: var(--shadow-sm);
-    min-height: 48px;
-}
-
-.searchbar input:focus {
-    border-color: var(--pink);
-    box-shadow: 0 0 0 3px var(--pink-soft);
-}
-
-/* ------------------------------------------------------------
-   7. MODALS & PANELS
-   ------------------------------------------------------------ */
-.panel {
-    background: var(--card);
-    border: none;
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
-    padding: 20px;
-}
-
-.modal {
-    background: var(--card);
-    border-radius: 28px 28px 0 0;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
-}
-
-.modal::before {
-    background: var(--line);
-}
-
-/* ------------------------------------------------------------
-   8. RESPONSIVE ADJUSTMENTS
-   ------------------------------------------------------------ */
-@media (min-width: 620px) {
-    .people-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 16px;
-    }
-}
-
-/* 1. The Outer Magenta Container */
-.summary {
-    background: linear-gradient(135deg, #c2185b, #8e0038);
-    /* Deep pink/magenta */
-    border-radius: 20px;
-    padding: 16px;
-    display: flex;
-    /* Aligns the inner boxes side by side */
-    gap: 12px;
-    /* Space between the two white boxes */
-    box-shadow: 0 8px 24px rgba(194, 24, 91, 0.25);
-}
-
-/* 2. The Inner White Boxes */
-.summary-item {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 16px;
-    /* Remove any default borders or shadows if they exist */
-    border: none;
-    box-shadow: none;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-/* 3. Make the first box narrow and the second box wider (like the image) */
-.summary-item:first-child {
-    flex: 1;
-    /* Takes up 1 part of the space */
-}
-
-.summary-item:last-child {
-    flex: 2;
-    /* Takes up 2 parts of the space */
-}
-
-/* Text styling inside the white boxes */
-.summary-item span {
-    font-size: 12px;
-    color: #6e7180;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.summary-item b {
-    font-size: 20px;
-    color: #1e2430;
-    font-weight: 800;
-    margin-top: 4px;
-}
-
-/* ============================================================
-   DUES CARD (Match Image)
-   ============================================================ */
-
-.dues-card {
-    /* Deep magenta/pink gradient matching the screenshot */
-    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
-    border-radius: 20px;
-    padding: 20px;
-    color: #ffffff;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 24px rgba(194, 24, 91, 0.25);
-    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
-}
-
-/* Decorative soft circles in the background */
-.dues-card::before {
-    content: "";
-    position: absolute;
-    top: -60px;
-    right: -40px;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    /* Soft light overlay */
-    pointer-events: none;
-}
-
-.dues-card::after {
-    content: "";
-    position: absolute;
-    bottom: -80px;
-    right: -20px;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    pointer-events: none;
-}
-
-/* Top Row (Icon + Title and Badge) */
-.dues-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    position: relative;
-    z-index: 1;
-    /* Keeps text above the background circles */
-}
-
-.dues-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-/* Circular Taka Icon */
-.icon-circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.6);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
-}
-
-/* "বাকি" Pill Badge */
-.badge-due {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    padding: 4px 14px;
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-/* Large Amount Text */
-.dues-amount {
-    font-size: 34px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    position: relative;
-    z-index: 1;
-    /* Keeps text above the background circles */
-    line-height: 1.2;
-    font-family: "Noto Sans Bengali", inherit;
-    /* Ensures Bengali numbers look correct */
-}
-
-/* ============================================================
-   DASHBOARD HERO CARD (Match Image)
-   ============================================================ */
-
-.summary-card {
-    /* Deep magenta/pink gradient matching the screenshot */
-    background: linear-gradient(135deg, #c2185b 0%, #8e0038 100%);
-    border-radius: 20px;
-    padding: 20px;
-    color: #ffffff;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 24px rgba(194, 24, 91, 0.25);
-    font-family: "Hind Siliguri", "Noto Sans Bengali", sans-serif;
-    margin-bottom: 16px;
-    /* Space before the people grid */
-}
-
-/* Decorative soft circles in the background */
-.summary-card::before {
-    content: "";
-    position: absolute;
-    top: -60px;
-    right: -40px;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
-    /* Soft light overlay */
-    pointer-events: none;
-}
-
-.summary-card::after {
-    content: "";
-    position: absolute;
-    bottom: -80px;
-    right: -20px;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    pointer-events: none;
-}
-
-/* Top Row (Icon + Title and Badge) */
-.summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    position: relative;
-    z-index: 1;
-    /* Keeps text above the background circles */
-}
-
-.summary-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-/* Circular Taka Icon */
-.taka-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.6);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
-}
-
-/* "বাকি" Pill Badge */
-.status-badge {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    padding: 4px 14px;
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.2;
-}
-
-/* Large Amount Text */
-.summary-amount {
-    font-size: 34px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    position: relative;
-    z-index: 1;
-    line-height: 1.2;
-    font-family: "Noto Sans Bengali", inherit;
-    /* Ensures Bengali numbers look correct */
-}
-
-/* Footer (Total People count) */
-.summary-footer {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.3);
-    font-size: 14px;
-    position: relative;
-    z-index: 1;
-    opacity: 0.9;
-}
-
-.summary-footer b {
-    font-weight: 700;
-    font-size: 15px;
-}
-
-/* Slightly wider edit modal on larger screens */
-.modal.modal-edit {
-    max-width: 520px;
-}
-
-@media (min-width: 720px) {
-    .modal.modal-edit {
-        max-width: 560px;
-    }
-}
-.person {
-    border: 2px solid rgba(209, 32, 83, 0.25) !important;
-    box-shadow:
-        0 1px 2px rgba(20, 22, 34, 0.03),
-        0 4px 12px rgba(209, 32, 83, 0.06);
-}
-
-.person:hover {
-    border-color: var(--pink) !important;
-    box-shadow: 0 10px 22px rgba(209, 32, 83, 0.14);
-}
-/* ============================================================
-   DASHBOARD PERSON CARD — POP / ELEVATED
-   ============================================================ */
-.person {
-    background: var(--card);
-    border: 2px solid rgba(209, 32, 83, 0.18) !important;
-    border-radius: 18px;
-    padding: 16px 16px 14px;
-    box-shadow:
-        0 1px 2px rgba(20, 22, 34, 0.04),
-        0 6px 14px rgba(20, 22, 34, 0.06),
-        0 16px 32px rgba(209, 32, 83, 0.08),
-        0 0 0 4px rgba(209, 32, 83, 0.04);
-    transition:
-        transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
-        box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-        border-color 0.2s;
-    will-change: transform;
-}
-
-/* kill any leftover decorative pseudos */
-.person::before,
-.person::after {
-    display: none !important;
-}
-
-.person:hover {
-    transform: translateY(-4px);
-    border-color: var(--pink) !important;
-    box-shadow:
-        0 2px 4px rgba(20, 22, 34, 0.05),
-        0 12px 24px rgba(20, 22, 34, 0.10),
-        0 24px 48px rgba(209, 32, 83, 0.18),
-        0 0 0 6px rgba(209, 32, 83, 0.08);
-}
-
-.person:active {
-    transform: translateY(-1px) scale(0.995);
-    box-shadow:
-        0 2px 6px rgba(20, 22, 34, 0.06),
-        0 8px 20px rgba(209, 32, 83, 0.12);
-}
-
-/* slightly denser grid so the pop shows */
-@media (min-width: 620px) {
-    .people-grid {
-        gap: 16px;
     }
 }

@@ -9,9 +9,7 @@ const MONTHLY_LIMIT = 300000;
    ============================================================ */
 let db = { people: [] };
 let historyOpen = false;
-let pendingPhotoDataUrl = null;
 let currentView = "viewDashboard";
-let tt = 'as';
 /* ============================================================
    API HELPERS
    ============================================================ */
@@ -243,7 +241,6 @@ async function showDashboard() {
 }
 
 function showAddPerson() {
-    resetPhotoPicker();
     show("viewAddPerson");
 }
 
@@ -292,63 +289,6 @@ function renderLogo() {
     img.src = DEFAULT_LOGO;
 }
 
-/* ============================================================
-   PHOTO PICKER
-   ============================================================ */
-function resetPhotoPicker() {
-    pendingPhotoDataUrl = null;
-    const preview = document.getElementById("photoPreview");
-    const fallback = document.getElementById("photoFallback");
-    if (preview) {
-        preview.src = "";
-        preview.classList.add("hidden");
-    }
-    if (fallback) fallback.classList.remove("hidden");
-    const fi = document.querySelector('input[name="photo"]');
-    if (fi) fi.value = "";
-}
-
-function previewPhoto(e) {
-    const file = e.target.files[0];
-    if (!file) {
-        resetPhotoPicker();
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-            const size = 200;
-            const c = document.createElement("canvas");
-            c.width = size;
-            c.height = size;
-            const ctx = c.getContext("2d");
-            const scale = Math.max(size / img.width, size / img.height);
-            const w = img.width * scale;
-            const h = img.height * scale;
-            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-            pendingPhotoDataUrl = c.toDataURL("image/jpeg", 0.85);
-
-            const preview = document.getElementById("photoPreview");
-            const fallback = document.getElementById("photoFallback");
-            preview.src = pendingPhotoDataUrl;
-            preview.classList.remove("hidden");
-            fallback.classList.add("hidden");
-        };
-        img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-function avatarHTML(person, sizeClass) {
-    if (person.photo) {
-        return `<img class="avatar ${sizeClass}" src="${esc(person.photo)}" alt="${esc(
-            person.name,
-        )}" />`;
-    }
-    return `<div class="avatar ${sizeClass}">${initialsOf(person.name)}</div>`;
-}
 
 /* ============================================================
    MODALS
@@ -517,10 +457,9 @@ function renderDashboard() {
                  style="animation-delay:${Math.min(i, 8) * 40}ms">
 
                 <div class="p-top">
-                    ${avatarHTML(p, "avatar-sm")}
                     <div class="p-name">
                         <h3>
-                            ${esc(p.name)}
+                            <span class="name-text">${esc(p.name)}</span>
                             <span class="bundle-pill ${!p.bundleCount ? "bundle-pill-empty" : ""}"
                                   title="সেন্ড মানি বান্ডেল">📦 ${p.bundleCount || 0}</span>
                             ${blocked ? '<span class="block-badge">সীমা শেষ</span>' : ""}
@@ -638,7 +577,7 @@ function editAll(id) {
                 <h3>✏️ সব তথ্য ঠিক করুন</h3>
                 <div class="modal-sub">যেকোনো তথ্য পরিবর্তন করে নিচে সেভ চাপুন</div>
 
-                <h3 class="section-label" style="margin-top:8px">👤 ব্যক্তির তথ্য</h3>
+                <h3 class="section-label">👤 ব্যক্তির তথ্য</h3>
 
                 <div class="field">
                     <label>নাম</label>
@@ -660,9 +599,9 @@ function editAll(id) {
                     </div>
                 </div>
 
-                <h3 class="section-label" style="margin-top:20px">💰 ব্যালেন্স ও সীমা</h3>
+                <h3 class="section-label">💰 ব্যালেন্স ও সীমা</h3>
 
-                <div class="row">
+                <div class="row row-3">
                     <div class="field">
                         <label>বর্তমান ব্যালেন্স</label>
                         <input id="${modalId}_balance" type="number"
@@ -683,7 +622,7 @@ function editAll(id) {
                     </div>
                 </div>
 
-                <h3 class="section-label" style="margin-top:20px">📦 সেন্ড মানি বান্ডেল</h3>
+                <h3 class="section-label">📦 সেন্ড মানি বান্ডেল</h3>
 
                 <div class="row">
                     <div class="field">
@@ -820,10 +759,9 @@ function renderPerson(id, all) {
         <div class="panel">
 
             <div class="person-header">
-                ${avatarHTML(p, "avatar-lg")}
-                <div class="person-header-info">
-                    <h2 class="person-header-name">${esc(p.name)}</h2>
+                <h2 class="person-header-name">${esc(p.name)}</h2>
 
+                <div class="person-header-info">
                     <div class="person-header-row">
                         <span class="person-header-lbl">বিকাশ</span>
                         <span class="person-header-val">${esc(p.bkashNumber)}</span>
@@ -840,7 +778,7 @@ function renderPerson(id, all) {
 
             ${warnings.length ? `
                 <div class="warn" style="margin-top:16px">
-                    <span style="font-size:20px">⚠️</span>
+                    <span class="warn-icon">⚠️</span>
                     <div>${warnings.join(" ")}</div>
                 </div>
             ` : ""}
@@ -884,10 +822,6 @@ function renderPerson(id, all) {
 
                 <button class="btn btn-light" onclick="editBundle('${p.id}')">
                     📦 বান্ডেল
-                </button>
-
-                <button class="btn btn-light" onclick="changePersonPhoto('${p.id}')">
-                    📷 ছবি পরিবর্তন
                 </button>
 
                 <button class="btn btn-danger" onclick="deletePerson('${p.id}')">
@@ -988,7 +922,7 @@ function renderTxList(personId, txns, hasMore, remaining) {
             <span class="tx-amount ${typeClass}">${money(t.amount)}</span>
             <button class="tx-del" onclick="deleteTxn('${personId}','${t.id}')" aria-label="মুছুন">✕</button>
           </div>
-          <div class="tx-date">${dateStr} -- ${timeStr}</div> 
+          <div class="tx-date">${dateStr} · ${timeStr}</div> 
           ${notesHtml}
         </div>`;
         })
@@ -1150,9 +1084,6 @@ async function submitPerson(e) {
     const f = new FormData(e.target);
     const num = (k) => Number(f.get(k)) || 0;
 
-    const fi = e.target.querySelector('input[name="photo"]');
-    const photoFile = fi && fi.files ? fi.files[0] : null;
-
     const fd = new FormData();
     fd.append("name", f.get("name").trim());
     fd.append("bkashNumber", f.get("bKashNumber").trim());
@@ -1162,7 +1093,6 @@ async function submitPerson(e) {
     fd.append("monthlyUsedBase", num("monthlyUsedBase"));
     fd.append("baseDayKey", dayKey());
     fd.append("baseMonthKey", monthKey());
-    if (photoFile) fd.append("photo", photoFile);
 
     const bundleCount = num("bundleCount");
     const bundleExpiry = (f.get("bundleExpiry") || "").trim();
@@ -1188,7 +1118,6 @@ async function submitPerson(e) {
         }
 
         e.target.reset();
-        resetPhotoPicker();
         toast("যোগ হয়েছে ✔", "success");
         await showDashboard();
     } catch (err) {
@@ -1286,35 +1215,6 @@ async function deletePerson(id) {
 }
 
 /* ============================================================
-   CHANGE PERSON PHOTO
-   ============================================================ */
-function changePersonPhoto(id) {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const fd = new FormData();
-        fd.append("photo", file);
-
-        try {
-            await apiForm("/api/people/" + id, {
-                method: "PATCH",
-                formData: fd,
-            });
-            await refreshPerson(id);
-            toast("ছবি বদলানো হয়েছে ✔", "success");
-            renderPerson(id);
-        } catch (err) {
-            toast(translateError(err.message), "error");
-        }
-    };
-    input.click();
-}
-
-/* ============================================================
    DISABLE ZOOM + COPY
    ============================================================ */
 document.addEventListener("wheel", (e) => {
@@ -1350,7 +1250,7 @@ document.addEventListener("contextmenu", (e) => {
 });
 
 let lastTouchEnd = 0;
-document.addEventListener("touchend", () => {
+document.addEventListener("touchend", (e) => {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) e.preventDefault();
     lastTouchEnd = now;
