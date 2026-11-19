@@ -55,6 +55,9 @@ const Bank = mongoose.model("Bank", BankSchema);
 const Cash = mongoose.model("Cash", CashSchema);
 const User = mongoose.model("User", UserSchema);
 
+/* AI assistant (chat + voice + photo) */
+app.use("/api/ai", require("./ai/router"));
+
 mongoose
     .connect(process.env.DB_URL)
     .then(() => console.log("Cloud Database connected successfully!"))
@@ -260,7 +263,7 @@ async function createTransaction(req, res) {
         const dup = await Transaction.findOne({ person: personId, trxId: cleanTrx });
         if (dup) throw new HttpError(400, "TrxID already exists");
     }
- 
+
     const transaction = await Transaction.create({
         person: personId, type, amount,
         date: date ? new Date(date) : now,
