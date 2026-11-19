@@ -1,5 +1,9 @@
 # AI সহকারী — chatbot (lekha + voice + photo)
 
+> **Ekhon default: AI shudhu hisab DEKHE ar BUJHIYE bole, kichu add/edit kore na.**
+> Add kora chalu korte chaile `.env` e `AI_CAN_WRITE=1` dao (Confirm card shoho).
+> Uttor shob shomoy shohoj Bangla te. Protita uttor er niche 🔊 "শুনুন" — porte na parle shunte parben.
+
 Shob page er niche bame ✨ button. Chap dile chat khule.
 
 ## Ki ki pare

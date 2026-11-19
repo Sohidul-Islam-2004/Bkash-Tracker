@@ -75,6 +75,7 @@
         send: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>',
         refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>',
         warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></svg>',
+        speak: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/></svg>',
         trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
     };
 
@@ -82,13 +83,13 @@
     fab.className = "ai-fab";
     fab.type = "button";
     fab.title = "AI সহকারী";
-    fab.innerHTML = ICON.spark;
+    fab.innerHTML = ICON.spark + "<span>হিসাব</span>";
 
     const panel = document.createElement("div");
     panel.className = "ai-panel";
     panel.innerHTML = `
       <div class="ai-head">
-        <div class="ai-title"><span class="ai-dot">${ICON.spark}</span><div><b>AI সহকারী</b><small>হিসাব দেখুন • লিখুন, বলুন বা ছবি দিন</small></div></div>
+        <div class="ai-title"><span class="ai-dot">${ICON.spark}</span><div><b>AI সহকারী</b><small>হিসাব দেখুন, প্রশ্ন করুন</small></div></div>
         <button class="ai-ibtn" data-act="clear" title="চ্যাট মুছুন">${ICON.trash}</button>
         <button class="ai-ibtn" data-act="close" title="বন্ধ">${ICON.x}</button>
       </div>
@@ -97,10 +98,11 @@
       <div class="ai-body"></div>
       <div class="ai-img-chip" hidden><img alt=""><span>ছবি যুক্ত হয়েছে</span><button type="button" title="বাদ">${ICON.x}</button></div>
       <div class="ai-rec" hidden><span class="ai-rec-dot"></span><span class="ai-rec-time">0:00</span> শুনছি… শেষ হলে ■ চাপুন</div>
+      <div class="ai-quick"></div>
       <form class="ai-input">
         <button type="button" class="ai-ibtn" data-act="photo" title="ছবি">${ICON.cam}</button>
         <input type="file" accept="image/*" hidden>
-        <textarea rows="1" placeholder="যেমন: Salam এর বিকাশ থেকে ৫০০০ send"></textarea>
+        <textarea rows="1" placeholder="প্রশ্ন লিখুন বা 🎤 চেপে বলুন"></textarea>
         <button type="button" class="ai-ibtn ai-mic" data-act="mic" title="ভয়েস">${ICON.mic}</button>
         <button type="submit" class="ai-send" title="পাঠান">${ICON.send}</button>
       </form>`;
@@ -122,6 +124,7 @@
         panel.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
         dashEl.hidden = t !== "hisab";
         body.hidden = t !== "chat";
+        $(".ai-quick").hidden = t !== "chat";
         $('[data-act="clear"]').style.visibility = t === "chat" ? "visible" : "hidden";
         if (t === "hisab") { if (!dash && !dashLoading) loadDash(); else renderDash(); } else render();
     }
@@ -140,9 +143,9 @@
             body.innerHTML = `
               <div class="ai-empty">
                 <div class="ai-empty-ic">${ICON.spark}</div>
-                <b>কী করতে চান?</b>
-                <p>হিসাব যোগ করুন বা জিজ্ঞেস করুন — সেভের আগে আপনি Confirm করবেন।</p>
-                ${["আজকে সব হিসাব কেমন?", "Salam er bkash e koto taka ache?", "01711223344 5000\n01812345678 2000 entry koro", "Rahim ke 2000 dhar dilam"]
+                <b>হিসাব নিয়ে যা খুশি জিজ্ঞেস করুন</b>
+                <p>নিচের একটা চাপুন, লিখুন, অথবা 🎤 চেপে মুখে বলুন।</p>
+                ${["আজকের সব হিসাব কেমন?", "কার কাছে কত টাকা পাবো?", "হাসান এখন কত পাবে?", "এই মাসে বিকাশে কত টাকা গেলো?"]
                     .map((s) => `<button type="button" class="ai-sug">${esc(s)}</button>`).join("")}
               </div>`;
             body.querySelectorAll(".ai-sug").forEach((b) => (b.onclick = () => { ta.value = b.textContent; send(); }));
@@ -156,7 +159,7 @@
             if (m.role === "error") return `<div class="ai-row"><div class="ai-bub err">${fmt(m.show)}</div></div>`;
             const cards = (m.actions || []).map((a, j) => card(a, i, j)).join("");
             const pend = (m.actions || []).filter((a) => a.state === "pending").length;
-            return `<div class="ai-row"><div class="ai-bub ai-md">${md(m.show)}</div></div>${cards}
+            return `<div class="ai-row"><div class="ai-bub ai-md">${md(m.show)}${canSpeak && m.show ? `<button type="button" class="ai-say" data-say="${i}" title="শুনুন">${ICON.speak}<span>শুনুন</span></button>` : ""}</div></div>${cards}
                 ${pend > 1 ? `<div class="ai-all"><button type="button" data-all="${i}">✓ সব Confirm (${pend})</button></div>` : ""}`;
         }).join("") + (busy ? `<div class="ai-row"><div class="ai-bub ai-typing"><i></i><i></i><i></i></div></div>` : "");
 
@@ -164,6 +167,7 @@
         body.querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => cancelAction(...b.dataset.no.split(":").map(Number))));
         body.querySelectorAll("[data-all]").forEach((b) => (b.onclick = () => confirmAll(Number(b.dataset.all))));
         body.querySelectorAll("[data-refresh]").forEach((b) => (b.onclick = () => location.reload()));
+        body.querySelectorAll("[data-say]").forEach((b) => (b.onclick = () => speak(msgs[Number(b.dataset.say)].show, b)));
         body.scrollTop = body.scrollHeight;
     }
 
@@ -177,6 +181,31 @@
         else if (a.state === "failed") foot = `<span class="st bad">✕ ${esc(a.error || "হয়নি")}</span>`;
         return `<div class="ai-card ${a.state}"><div class="ai-card-txt">${fmt(a.summary)}</div><div class="ai-card-foot">${foot}</div></div>`;
     }
+
+    /* ---------- dhrut proshno (chap dilei jiggesh) ---------- */
+    const QUICK = ["আজকের হিসাব", "কে কত পাবে?", "হাসান কত পাবে?", "বিকাশের লিমিট", "এই সপ্তাহের হিসাব", "গিলার হিসাব"];
+    $(".ai-quick").innerHTML = QUICK.map((q) => `<button type="button">${q}</button>`).join("");
+    $(".ai-quick").querySelectorAll("button").forEach((b) => (b.onclick = () => { ta.value = b.textContent; send(); }));
+
+    /* ---------- uttor pore shonano (Bangla TTS) ---------- */
+    const canSpeak = "speechSynthesis" in window;
+    let speakingBtn = null;
+    function speak(text, btn) {
+        if (!canSpeak) return;
+        if (speakingBtn === btn) { speechSynthesis.cancel(); btn.classList.remove("on"); speakingBtn = null; return; }
+        speechSynthesis.cancel();
+        if (speakingBtn) speakingBtn.classList.remove("on");
+        const clean = String(text || "").replace(/\*\*|`|#+\s|^\s*[-*•]\s/gm, "").replace(/\|/g, " ").replace(/([\d০-৯]),(?=[\d০-৯])/g, "$1").replace(/৳\s?([\d০-৯]+)/g, "$1 টাকা");
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = "bn-BD";
+        const v = speechSynthesis.getVoices().find((x) => /^bn/i.test(x.lang));
+        if (v) u.voice = v;
+        u.rate = 0.95;
+        u.onend = u.onerror = () => { btn.classList.remove("on"); if (speakingBtn === btn) speakingBtn = null; };
+        btn.classList.add("on"); speakingBtn = btn;
+        speechSynthesis.speak(u);
+    }
+    if (canSpeak) speechSynthesis.getVoices();
 
     /* ---------- send ---------- */
     function history() {
@@ -492,7 +521,7 @@
         }).join("")) : "";
 
         dashEl.innerHTML = chips + warn + kpi + bkash + entry + pawna + bank + gila + `
-            <button type="button" class="ai-ask" data-p="ask">${ICON.spark} AI দিয়ে বিশ্লেষণ করুন (${P})</button>
+            <button type="button" class="ai-ask" data-p="ask">${ICON.spark} ${P}-এর হিসাব বুঝিয়ে বলুন</button>
             <div class="ai-foot-note">${dashLoading ? "আপডেট হচ্ছে…" : `আপডেট: ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`}</div>`;
         bindDash();
     }
@@ -502,7 +531,7 @@
             const v = b.dataset.p;
             if (v === "refresh") return loadDash();
             if (v === "ask") {
-                ta.value = `${periodLabel()} er pura hisab analysis kore bolo — ki bhalo, ki kheyal rakha dorkar, ar ki korle bhalo hoy.`;
+                ta.value = `${periodLabel()}-এর পুরো হিসাব সহজ করে বুঝিয়ে বলুন — কোথায় সাবধান হতে হবে?`;
                 return send();
             }
             period = v; dash = null; loadDash();

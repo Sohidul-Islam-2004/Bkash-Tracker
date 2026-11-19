@@ -168,3 +168,16 @@
 .ai-skel { height: 64px; border-radius: 12px; background: linear-gradient(90deg, #f3eff4 25%, #faf7fa 50%, #f3eff4 75%); background-size: 200% 100%; animation: ai-sk 1.2s infinite; }
 .ai-skel.short { height: 120px; }
 @keyframes ai-sk { to { background-position: -200% 0; } }
+
+/* sohoj babohar: boro button, dhrut proshno, shunun */
+.ai-fab { width: auto; height: 52px; padding: 0 18px 0 15px; border-radius: 999px; gap: 7px; display: flex; align-items: center; font-size: 16px; font-weight: 700; }
+.ai-fab svg { width: 21px; height: 21px; }
+.ai-bub { font-size: 16px; }
+.ai-quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 10px 2px; background: #fff; border-top: 1px solid var(--ai-line); scrollbar-width: none; }
+.ai-quick::-webkit-scrollbar { display: none; }
+.ai-quick[hidden] { display: none; }
+.ai-quick button { flex: none; border: 1px solid #f3c3d3; background: var(--ai-soft); color: var(--ai-pink); border-radius: 999px; padding: 7px 13px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ai-quick + .ai-input { border-top: 0; }
+.ai-say { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; border: 1px solid var(--ai-line); background: #faf7fa; color: var(--ai-muted); border-radius: 999px; padding: 4px 11px 4px 8px; font: inherit; font-size: 13px; cursor: pointer; }
+.ai-say svg { width: 16px; height: 16px; }
+.ai-say.on { background: var(--ai-pink); border-color: var(--ai-pink); color: #fff; }

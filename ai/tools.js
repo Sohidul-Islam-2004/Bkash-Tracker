@@ -346,6 +346,7 @@ function cancelPending(id) { return pending.delete(id); }
 /* AI tool call chalay. write hole pending action banay. */
 async function runTool(name, args, actions) {
     if (READERS[name]) return READERS[name](args || {});
+    if (WRITERS[name] && process.env.AI_CAN_WRITE !== "1") return { error: "AI kichu add korte pare na — page theke korun" };
     if (WRITERS[name]) {
         const r = await WRITERS[name](args || {});
         if (r.error) return { error: r.error };
