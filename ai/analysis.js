@@ -56,10 +56,10 @@ async function analyze({ period = "today" } = {}) {
         const monthlyRemaining = MONTHLY_LIMIT - monthlyUsed;
         const bundleDaysLeft = p.bundleExpiry ? Math.ceil((new Date(p.bundleExpiry) - now) / 86400000) : null;
 
-        if (dailyRemaining <= 10000) warnings.push(`${p.name}: aajker limit e matro ${dailyRemaining} taka baki`);
-        if (monthlyRemaining <= 30000) warnings.push(`${p.name}: ei masher limit e matro ${monthlyRemaining} taka baki`);
-        if ((p.initialBalance || 0) < 1000) warnings.push(`${p.name}: balance kom (${p.initialBalance || 0} taka)`);
-        if (p.bundleCount > 0 && bundleDaysLeft !== null && bundleDaysLeft <= 3) warnings.push(`${p.name}: bundle er ${p.bundleCount} ta baki, ${bundleDaysLeft} din por meyad shesh`);
+        if (dailyRemaining <= 10000) warnings.push(`${p.name}: আজকের লিমিটে মাত্র ৳${dailyRemaining.toLocaleString("en-IN")} বাকি`);
+        if (monthlyRemaining <= 30000) warnings.push(`${p.name}: এই মাসের লিমিটে মাত্র ৳${monthlyRemaining.toLocaleString("en-IN")} বাকি`);
+        if ((p.initialBalance || 0) < 1000) warnings.push(`${p.name}: ব্যালেন্স কম (৳${(p.initialBalance || 0).toLocaleString("en-IN")})`);
+        if (p.bundleCount > 0 && bundleDaysLeft !== null && bundleDaysLeft <= 3) warnings.push(`${p.name}: বান্ডেলের ${p.bundleCount}টা বাকি, ${bundleDaysLeft} দিন পর মেয়াদ শেষ`);
 
         return {
             name: p.name, number: p.bkashNumber, balance: p.initialBalance || 0,
@@ -136,7 +136,7 @@ async function analyze({ period = "today" } = {}) {
         const target = g.price > 0 ? Math.ceil((g.advance || 0) / g.price) : 0;
         const lastDate = es.map((e) => e.date).sort().pop() || null;
         const daysSince = lastDate ? Math.floor((new Date(tKey) - new Date(lastDate)) / 86400000) : null;
-        if (target - pieces > 0 && daysSince !== null && daysSince >= 3) warnings.push(`Gila ${g.name}: ${daysSince} din kono piece nai, ekhono ${target - pieces} piece baki`);
+        if (target - pieces > 0 && daysSince !== null && daysSince >= 3) warnings.push(`গিলা ${g.name}: ${daysSince} দিন কোনো পিস আসেনি, এখনো ${target - pieces} পিস বাকি`);
         return {
             name: g.name, advance: g.advance || 0, pricePerPiece: g.price || 0,
             piecesDone: pieces, piecesNeededForAdvance: target, piecesLeft: target - pieces,

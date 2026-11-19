@@ -19,6 +19,9 @@
     let busy = false;
     let imageFile = null;
     let rec = null, recChunks = [], recTimer = null, recStart = 0;
+    let tab = "hisab";
+    try { tab = localStorage.getItem("ai_tab") || "hisab"; } catch { }
+    let period = "today", dash = null, dashLoading = false, dashErr = null;
 
     /* ---------- DOM ---------- */
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -70,6 +73,8 @@
         stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>',
         cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
         send: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg>',
+        refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/></svg>',
+        warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2zM12 10v5M12 18v.5"/></svg>',
         trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
     };
 
@@ -83,10 +88,12 @@
     panel.className = "ai-panel";
     panel.innerHTML = `
       <div class="ai-head">
-        <div class="ai-title"><span class="ai-dot">${ICON.spark}</span><div><b>AI সহকারী</b><small>লিখুন, বলুন বা ছবি দিন</small></div></div>
+        <div class="ai-title"><span class="ai-dot">${ICON.spark}</span><div><b>AI সহকারী</b><small>হিসাব দেখুন • লিখুন, বলুন বা ছবি দিন</small></div></div>
         <button class="ai-ibtn" data-act="clear" title="চ্যাট মুছুন">${ICON.trash}</button>
         <button class="ai-ibtn" data-act="close" title="বন্ধ">${ICON.x}</button>
       </div>
+      <div class="ai-tabs"><button type="button" data-tab="hisab">হিসাব</button><button type="button" data-tab="chat">চ্যাট</button></div>
+      <div class="ai-dash"></div>
       <div class="ai-body"></div>
       <div class="ai-img-chip" hidden><img alt=""><span>ছবি যুক্ত হয়েছে</span><button type="button" title="বাদ">${ICON.x}</button></div>
       <div class="ai-rec" hidden><span class="ai-rec-dot"></span><span class="ai-rec-time">0:00</span> শুনছি… শেষ হলে ■ চাপুন</div>
@@ -108,8 +115,20 @@
     const micBtn = $(".ai-mic");
 
     /* ---------- open / close ---------- */
-    const open = () => { panel.classList.add("open"); fab.classList.add("hide"); render(); setTimeout(() => ta.focus(), 150); };
-    const close = () => { panel.classList.remove("open"); fab.classList.remove("hide"); stopRec(true); };
+    const dashEl = $(".ai-dash");
+    function setTab(t) {
+        tab = t;
+        try { localStorage.setItem("ai_tab", t); } catch { }
+        panel.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === t));
+        dashEl.hidden = t !== "hisab";
+        body.hidden = t !== "chat";
+        $('[data-act="clear"]').style.visibility = t === "chat" ? "visible" : "hidden";
+        if (t === "hisab") { if (!dash && !dashLoading) loadDash(); else renderDash(); } else render();
+    }
+    panel.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => setTab(b.dataset.tab)));
+
+    const open = () => { panel.classList.add("open"); fab.classList.add("hide"); dash = null; setTab(tab); };
+    const close = () => { panel.classList.remove("open"); fab.classList.remove("hide"); stopRec(true); stopSR(false); };
     fab.onclick = open;
     $('[data-act="close"]').onclick = close;
     $('[data-act="clear"]').onclick = () => { msgs = []; persist(); render(); };
@@ -164,18 +183,20 @@
         return msgs.filter((m) => m.role === "user" || m.role === "assistant").slice(-12).map((m) => ({ role: m.role, content: m.ctx || m.show || "" }));
     }
 
-    async function send(audioBlob) {
+    async function send(audioBlob, viaVoice) {
         if (busy) return;
+        if (tab !== "chat") setTab("chat");
         const text = ta.value.trim();
         if (!text && !audioBlob && !imageFile) return;
 
         const fd = new FormData();
         fd.append("history", JSON.stringify(history()));
         if (text) fd.append("text", text);
+        if (viaVoice) fd.append("voice", "1");
         if (audioBlob) fd.append("audio", audioBlob, "voice." + (audioBlob.type.includes("mp4") ? "m4a" : audioBlob.type.includes("ogg") ? "ogg" : "webm"));
         if (imageFile) fd.append("image", imageFile, imageFile.name || "photo.jpg");
 
-        const userMsg = { role: "user", show: text || (audioBlob ? "…" : ""), img: !!imageFile, voice: !!audioBlob };
+        const userMsg = { role: "user", show: text || (audioBlob ? "…" : ""), img: !!imageFile, voice: !!audioBlob || !!viaVoice };
         msgs.push(userMsg);
         ta.value = ""; autosize(); clearImage();
         busy = true; render();
@@ -209,6 +230,7 @@
             const d = await res.json().catch(() => ({}));
             if (!res.ok || !d.ok) throw new Error(d.error || "সেভ হয়নি");
             a.state = "done";
+            dash = null;
             msgs.push({ role: "assistant", show: "", ctx: "Saved: " + a.summary, hidden: true });
             window.dispatchEvent(new CustomEvent("ai:saved", { detail: { module: a.module } }));
         } catch (e) {
@@ -247,15 +269,90 @@
     chip.querySelector("button").onclick = clearImage;
 
     /* ---------- voice (tap = shuru, abar tap = pathao) ---------- */
-    micBtn.onclick = () => (rec ? stopRec(false) : startRec());
+    /* Chrome/Android e browser er nijer Bangla voice (bn-BD) — onek bhalo bojhe, kotha bolar shathe shathe lekha dekhay.
+       Na thakle (Messenger/Facebook browser, Firefox) server er Whisper. */
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let sr = null, srBase = "", useWhisper = false;
+    try { useWhisper = localStorage.getItem("ai_whisper") === "1"; } catch { }
+
+    micBtn.onclick = () => {
+        if (sr) return stopSR(true);
+        if (rec) return stopRec(false);
+        if (!window.isSecureContext) return startRec(); // startRec e https er message ache
+        if (SR && !useWhisper) startSR(); else startRec();
+    };
+
+    function recUI(on) {
+        clearInterval(recTimer);
+        micBtn.classList.toggle("on", on);
+        micBtn.innerHTML = on ? ICON.stop : ICON.mic;
+        $(".ai-rec").hidden = !on;
+        $(".ai-rec-time").textContent = "0:00";
+        if (on) {
+            recStart = Date.now();
+            recTimer = setInterval(() => {
+                const s = Math.floor((Date.now() - recStart) / 1000);
+                $(".ai-rec-time").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+                if (s >= 120) { stopSR(true); stopRec(false); }
+            }, 250);
+        }
+    }
+
+    function startSR() {
+        if (busy) return;
+        if (tab !== "chat") setTab("chat");
+        const r = new SR();
+        r.lang = "bn-BD";
+        r.continuous = true;
+        r.interimResults = true;
+        srBase = ta.value.trim();
+        let finalText = "";
+        r.onresult = (e) => {
+            let interim = "";
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (e.results[i].isFinal) finalText += e.results[i][0].transcript + " ";
+                else interim += e.results[i][0].transcript;
+            }
+            ta.value = [srBase, (finalText + interim).trim()].filter(Boolean).join(" ");
+            autosize();
+        };
+        r.onerror = (e) => {
+            if (sr !== r) return;
+            sr = null; recUI(false);
+            if (e.error === "aborted") return;
+            if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+                return voiceError("Mic er permission bondho. Address bar er bame 🔒 icon e chap diye Microphone → Allow koro, tarpor page reload dao.");
+            }
+            if (e.error === "no-speech") return voiceError("Kichu shunte pai nai. 🎤 chap diye shathe shathe bolun.");
+            useWhisper = true;
+            try { localStorage.setItem("ai_whisper", "1"); } catch { }
+            voiceError(`Browser er voice kaj korche na (${e.error}). Ekhon theke server er voice use hobe — abar 🎤 chapun.`);
+        };
+        r.onend = () => {
+            if (sr !== r) return;
+            const shouldSend = r._send !== false;
+            sr = null; recUI(false);
+            const said = ta.value.trim();
+            if (shouldSend && said && said !== srBase) send(undefined, true);
+        };
+        sr = r;
+        try { r.start(); recUI(true); } catch (err) { sr = null; recUI(false); voiceError("Voice shuru hoy nai: " + err.message); }
+    }
+    function stopSR(sendIt) {
+        if (!sr) return;
+        sr._send = sendIt;
+        try { sr.stop(); } catch { }
+    }
 
     function voiceError(text) {
+        if (tab !== "chat") setTab("chat");
         msgs.push({ role: "error", show: "🎤 " + text });
         persist(); render();
     }
 
     async function startRec() {
         if (busy) return;
+        if (tab !== "chat") setTab("chat");
         if (!window.isSecureContext) {
             return voiceError(`Voice er jonno https lage. Ekhon khola ache: ${location.origin}\n` +
                 "• Computer e: http://localhost:" + (location.port || "3000") + " diye kholo\n" +
@@ -292,14 +389,7 @@
                 send(blob);
             };
             rec.start(250);
-            recStart = Date.now();
-            micBtn.classList.add("on"); micBtn.innerHTML = ICON.stop;
-            $(".ai-rec").hidden = false;
-            recTimer = setInterval(() => {
-                const s = Math.floor((Date.now() - recStart) / 1000);
-                $(".ai-rec-time").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-                if (s >= 120) stopRec(false);
-            }, 250);
+            recUI(true);
         } catch (e) {
             stream.getTracks().forEach((t) => t.stop());
             rec = null;
@@ -307,10 +397,115 @@
         }
     }
     function stopRec(discard) {
-        clearInterval(recTimer);
-        micBtn.classList.remove("on"); micBtn.innerHTML = ICON.mic;
-        $(".ai-rec").hidden = true;
-        $(".ai-rec-time").textContent = "0:00";
-        if (rec && rec.state === "recording") { rec._discard = discard; rec.stop(); }
+        if (!rec) return;
+        recUI(false);
+        if (rec.state === "recording") { rec._discard = discard; rec.stop(); }
+    }
+
+    /* ============================================================
+       হিসাব DASHBOARD — server er analysis theke, AI chara (shonkha 100% thik)
+       ============================================================ */
+    const tk = (n) => (n < 0 ? "−" : "") + "৳" + Math.abs(Math.round(Number(n) || 0)).toLocaleString("en-IN");
+    const num = (n) => Math.round(Number(n) || 0).toLocaleString("en-IN");
+    const PERIODS = [["today", "আজ"], ["week", "৭ দিন"], ["month", "এই মাস"]];
+    const periodLabel = () => (PERIODS.find((p) => p[0] === period) || PERIODS[0])[1];
+    const pct = (a, b) => (b > 0 ? Math.max(0, Math.min(100, Math.round((a / b) * 100))) : 0);
+    const BN_DAY = ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহঃ", "শুক্র", "শনি"];
+
+    async function loadDash() {
+        dashLoading = true; renderDash();
+        try {
+            const r = await fetch(`${API}/overview?period=${period}`);
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(d.error || "সার্ভার সমস্যা");
+            dash = d; dashErr = null;
+        } catch (e) { dashErr = e.message; }
+        dashLoading = false; renderDash();
+    }
+
+    const section = (title, page, inner) => `
+      <section class="ai-sec">
+        <div class="ai-sec-h"><b>${title}</b>${page ? `<a href="${page}">খুলুন ›</a>` : ""}</div>
+        ${inner}
+      </section>`;
+
+    function renderDash() {
+        if (tab !== "hisab") return;
+        const chips = `<div class="ai-chips">${PERIODS.map(([k, l]) => `<button type="button" data-p="${k}" class="${k === period ? "on" : ""}">${l}</button>`).join("")}
+            <button type="button" class="ai-ref" data-p="refresh" title="রিফ্রেশ">${ICON.refresh}</button></div>`;
+
+        if (!dash) {
+            dashEl.innerHTML = chips + (dashErr
+                ? `<div class="ai-dash-msg err">⚠ ${esc(dashErr)}<br><button type="button" data-p="refresh">আবার চেষ্টা</button></div>`
+                : `<div class="ai-dash-msg"><div class="ai-skel"></div><div class="ai-skel"></div><div class="ai-skel short"></div></div>`);
+            bindDash();
+            return;
+        }
+        const d = dash, P = periodLabel();
+        const bk = d.bkash, en = d.entry, pw = d.pawna, bn = d.bank, gi = d.gila;
+
+        const warn = d.warnings.length ? `
+          <div class="ai-warn"><div class="ai-warn-h">${ICON.warn}<b>খেয়াল রাখুন</b></div>
+            <ul>${d.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></div>` : "";
+
+        const kpi = `<div class="ai-kpis">
+            <a class="ai-kpi" href="/Bkash"><small>বিকাশ ব্যালেন্স</small><b>${tk(bk.totalBalance)}</b><span>${bk.accounts.length} টি অ্যাকাউন্ট</span></a>
+            <a class="ai-kpi" href="/Entry"><small>হাসান পাওনা</small><b>${tk(en.hasanPawnaNow)}</b><span>${P}: ${tk(en.period.total)}</span></a>
+            <a class="ai-kpi" href="/Bank"><small>ব্যাংক</small><b>${tk(bn.totalBalance)}</b><span>${bn.banks.length} টি ব্যাংক</span></a>
+            <a class="ai-kpi" href="/Cash"><small>হাতে ক্যাশ</small><b>${tk(d.cash.balance)}</b><span>${P}: −${num(d.cash.period.given)} / +${num(d.cash.period.taken)}</span></a>
+          </div>`;
+
+        const bkash = bk.accounts.length ? section("বিকাশ", "/Bkash", bk.accounts.map((a) => {
+            const used = 50000 - a.dailyRemaining;
+            const p = pct(used, 50000);
+            return `<div class="ai-acc">
+              <div class="ai-acc-top"><div><b>${esc(a.name)}</b><small>${esc(a.number)}</small></div><b class="ai-amt ${a.balance < 1000 ? "bad" : ""}">${tk(a.balance)}</b></div>
+              <div class="ai-bar ${p >= 80 ? "hot" : ""}"><i style="width:${p}%"></i></div>
+              <div class="ai-acc-meta"><span>আজকের লিমিট বাকি <b>${tk(a.dailyRemaining)}</b></span><span>মাসে বাকি ${tk(a.monthlyRemaining)}</span></div>
+              <div class="ai-acc-meta"><span>${P}: পাঠানো ${tk(a.period.sent)} · এসেছে ${tk(a.period.received)}</span>${a.bundleLeft ? `<span class="ai-pill">বান্ডেল ${a.bundleLeft}${a.bundleDaysLeft != null ? ` · ${a.bundleDaysLeft} দিন` : ""}</span>` : ""}</div>
+            </div>`;
+        }).join("")) : "";
+
+        const max7 = Math.max(1, ...en.last7Days.map((x) => x.total));
+        const entry = section("এন্ট্রি", "/Entry", `
+            <div class="ai-row3"><div><small>${P} মোট</small><b>${tk(en.period.total)}</b></div><div><small>এন্ট্রি</small><b>${num(en.period.count)} টি</b></div><div><small>জমা</small><b>${tk(en.period.deposit)}</b></div></div>
+            <div class="ai-spark">${en.last7Days.map((x) => {
+                const dt = new Date(x.date + "T00:00:00");
+                return `<div title="${x.date}: ${tk(x.total)}"><i style="height:${Math.max(3, pct(x.total, max7))}%" class="${x.date === d.today ? "now" : ""}"></i><small>${BN_DAY[dt.getDay()]}</small></div>`;
+            }).join("")}</div>
+            <div class="ai-acc-meta"><span>৭ দিনের গড় ${tk(en.last7Average)}/দিন</span></div>`);
+
+        const pawna = pw.people.length ? section("পাওনা", "/Pawna", `
+            <div class="ai-row2"><div class="good"><small>আমি পাবো</small><b>${tk(pw.totalTheyOweMe)}</b></div><div class="bad"><small>আমি দেবো</small><b>${tk(pw.totalIOwe)}</b></div></div>
+            ${pw.people.filter((p) => p.net !== 0).slice(0, 5).map((p) => `<div class="ai-line"><span>${esc(p.name)}</span><b class="${p.net > 0 ? "good" : "bad"}">${p.net > 0 ? "পাবো " : "দেবো "}${tk(Math.abs(p.net))}</b></div>`).join("")}`) : "";
+
+        const bank = bn.banks.length ? section("ব্যাংক", "/Bank", bn.banks.map((b) => `
+            <div class="ai-line"><span>${esc(b.name)}${b.period.deposit || b.period.withdraw ? `<small>${P}: +${num(b.period.deposit)} / −${num(b.period.withdraw)}</small>` : ""}</span><b>${tk(b.balance)}</b></div>`).join("")) : "";
+
+        const gila = gi.people.length ? section("গিলা", "/Gila", gi.people.map((g) => {
+            const p = pct(g.piecesDone, g.piecesNeededForAdvance);
+            return `<div class="ai-acc">
+              <div class="ai-acc-top"><div><b>${esc(g.name)}</b><small>অগ্রিম ${tk(g.advance)} · ${tk(g.pricePerPiece)}/পিস</small></div><b class="ai-amt">${num(g.piecesDone)}/${num(g.piecesNeededForAdvance)}</b></div>
+              <div class="ai-bar good"><i style="width:${p}%"></i></div>
+              <div class="ai-acc-meta"><span>${g.piecesLeft > 0 ? `আরও <b>${num(g.piecesLeft)} পিস</b> বাকি` : g.piecesLeft === 0 ? "অগ্রিম মিটেছে ✓" : `${num(-g.piecesLeft)} পিস বেশি`}</span><span>${g.lastEntry ? "শেষ: " + g.lastEntry.slice(5) : "এখনো নেই"}</span></div>
+            </div>`;
+        }).join("")) : "";
+
+        dashEl.innerHTML = chips + warn + kpi + bkash + entry + pawna + bank + gila + `
+            <button type="button" class="ai-ask" data-p="ask">${ICON.spark} AI দিয়ে বিশ্লেষণ করুন (${P})</button>
+            <div class="ai-foot-note">${dashLoading ? "আপডেট হচ্ছে…" : `আপডেট: ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`}</div>`;
+        bindDash();
+    }
+
+    function bindDash() {
+        dashEl.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => {
+            const v = b.dataset.p;
+            if (v === "refresh") return loadDash();
+            if (v === "ask") {
+                ta.value = `${periodLabel()} er pura hisab analysis kore bolo — ki bhalo, ki kheyal rakha dorkar, ar ki korle bhalo hoy.`;
+                return send();
+            }
+            period = v; dash = null; loadDash();
+        }));
     }
 })();

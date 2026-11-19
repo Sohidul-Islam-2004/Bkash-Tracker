@@ -61,14 +61,24 @@ async function transcribe(file) {
         form.append("file", new Blob([file.buffer], { type: file.mimetype }), file.originalname || "voice.webm");
         form.append("model", model);
         form.append("language", "bn");
-        form.append("prompt", "বিকাশ হিসাব। Salam, Hasan। 01711223344 নম্বরে 5000 টাকা send. ব্যাংকে জমা, ক্যাশ, পাওনা, গিলা।");
+        form.append("temperature", "0");
+        // NOTE: "prompt" deya hoy na — Whisper choto/nirob audio te prompt-tai hubohu ferot dey
         return fetch(`${BASE}/audio/transcriptions`, {
             method: "POST",
             headers: { Authorization: `Bearer ${key()}` },
             body: form,
         });
     });
-    return (await res.json()).text || "";
+    return cleanTranscript((await res.json()).text || "");
+}
+
+/* Whisper nirob/choto audio te kichu baandha kotha "hallucinate" kore — oigula bad */
+const JUNK = [/ধন্যবাদ\s*[।.!]?$/, /সাবস্ক্রাইব/, /subscribe/i, /thank you/i, /বিকাশ হিসাব।? ?Salam/, /ব্যাংকে জমা, ক্যাশ, পাওনা, গিলা/];
+function cleanTranscript(t) {
+    t = String(t || "").trim();
+    if (t.replace(/[\s।.,!?-]/g, "").length < 2) return "";
+    if (JUNK.some((re) => re.test(t)) && t.length < 40) return "";
+    return t;
 }
 
 /* Photo theke shob lekha/number ber kore (bKash screenshot, slip, WhatsApp screenshot) */

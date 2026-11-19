@@ -8,6 +8,7 @@ const express = require("express");
 const multer = require("multer");
 const groq = require("./groq");
 const { TOOLS, runTool, confirmPending, cancelPending, namesForPrompt, dayKey } = require("./tools");
+const { analyze } = require("./analysis");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -54,6 +55,10 @@ ${names}
 12. Add korar age dorkar hole check koro — jemon send er amount daily limit ba balance er beshi hole get_overview diye dekhe agei shotorko koro.
 13. Delete/edit AI diye hoy na — bolo page theke korte.
 
+# Voice
+- "(voice)" diye shuru message voice theke lekha; bhul shona shobdo thakte pare. Nam/shonkha/kaj er moto shobdo khujo (jemon "সালাম" = Salam, "পাঁচ হাজার" = 5000, "সেন্ড"/"পাঠালাম" = send).
+- Pura lekha ta-i obujh/olpo-shombondhohin hole (jemon "ক্যাওস তাওয়"), lomba list diye proshno koro na — ek line e bolo: "Voice ta bujhte pari nai, abar bolun ba likhe din." Ar kichu na.
+
 # Bhasha o lekhar dhoron
 - Malik je bhashay lekhe sheta-i: Banglish e lekhle Banglish, Bangla te Bangla, English e English.
 - Takar shonkha comma diye (12,500 ৳). Bhodro, shorasori, "apni" bola.
@@ -73,6 +78,7 @@ function parseHistory(raw) {
 router.post("/chat", upload.fields([{ name: "audio", maxCount: 1 }, { name: "image", maxCount: 1 }]), async (req, res) => {
     try {
         let text = String(req.body.text || "").trim();
+        if (req.body.voice === "1" && text) text = "(voice) " + text;
         let heard = null, seen = null;
 
         const audio = req.files?.audio?.[0];
@@ -80,7 +86,10 @@ router.post("/chat", upload.fields([{ name: "audio", maxCount: 1 }, { name: "ima
 
         if (audio) {
             heard = (await groq.transcribe(audio)).trim();
-            text = [text, heard].filter(Boolean).join("\n");
+            if (!heard && !text && !image) {
+                return res.json({ reply: "Kichu shunte pai nai 🎤 Mic er kache dhore abar spashto kore bolun.", actions: [], heard: "", userText: "" });
+            }
+            text = [text, heard ? "(voice) " + heard : ""].filter(Boolean).join("\n");
         }
         if (image) {
             if (!/^image\//.test(image.mimetype)) return res.status(400).json({ error: "Shudhu chhobi dao" });
@@ -120,6 +129,15 @@ router.post("/chat", upload.fields([{ name: "audio", maxCount: 1 }, { name: "ima
     } catch (err) {
         console.error("AI chat error:", err);
         res.status(500).json({ error: "AI e shomossha hoyeche: " + err.message });
+    }
+});
+
+router.get("/overview", async (req, res) => {
+    try {
+        res.json(await analyze({ period: String(req.query.period || "today") }));
+    } catch (err) {
+        console.error("AI overview error:", err);
+        res.status(500).json({ error: "Hisab ana gelo na: " + err.message });
     }
 });
 
