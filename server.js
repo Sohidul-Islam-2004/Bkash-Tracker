@@ -263,7 +263,7 @@ async function createTransaction(req, res) {
         const dup = await Transaction.findOne({ person: personId, trxId: cleanTrx });
         if (dup) throw new HttpError(400, "TrxID already exists");
     }
-
+ 
     const transaction = await Transaction.create({
         person: personId, type, amount,
         date: date ? new Date(date) : now,

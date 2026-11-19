@@ -24,7 +24,7 @@ Delete/edit AI diye hoy na, page theke korte hobe.
    ```
    GROQ_API_KEY=gsk_...
    ```
-   (Optional: `GROQ_MODEL`, `GROQ_VISION_MODEL`)
+   (Optional: `GROQ_MODEL`, `GROQ_VISION_MODEL`, `ENTRY_INITIAL_CARRY` — Entry page er InitialCarry bodlale etao bodlao)
 2. `npm install` (notun package lage nai; multer agei package.json e ache)
 3. Render e o `GROQ_API_KEY` environment variable e boshao.
 4. Voice shudhu **https** (Render) ba `localhost` e kaj korbe.
@@ -33,6 +33,7 @@ Delete/edit AI diye hoy na, page theke korte hobe.
 ```
 ai/groq.js                    # Groq: chat, Whisper (voice), vision (photo)
 ai/tools.js                   # AI ki ki korte pare + Confirm system
+ai/analysis.js                # pura hisab er analysis (shob jog-biyog server e)
 ai/router.js                  # /api/ai/chat, /api/ai/confirm, /api/ai/cancel
 public/assistant/assistant.js # chat widget
 public/assistant/assistant.css

@@ -10,8 +10,6 @@ const mongoose = require("mongoose");
 const M = (name) => mongoose.model(name);
 const API = () => `http://127.0.0.1:${process.env.PORT || 3000}`;
 
-const DAILY_LIMIT = 50000;
-const MONTHLY_LIMIT = 300000;
 
 const BN = "০১২৩৪৫৬৭৮৯";
 const toEn = (s) => String(s ?? "").replace(/[০-৯]/g, (d) => BN.indexOf(d));
@@ -20,7 +18,6 @@ const money = (n) => "৳" + Number(n || 0).toLocaleString("en-IN");
 function dayKey(d = new Date()) {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
-const monthKey = (d = new Date()) => dayKey(d).slice(0, 7);
 
 function cleanPhone(n) {
     const s = toEn(n).replace(/[\s\-+]/g, "").replace(/^88/, "");
@@ -87,52 +84,6 @@ async function namesForPrompt() {
 /* ============================================================
    READ TOOLS
    ============================================================ */
-async function getOverview() {
-    const tKey = dayKey(), mKey = monthKey();
-    const [people, banks, cash, pawna, gila, entries] = await Promise.all([
-        bkashPeople(),
-        M("Bank").find({}, "name totalDeposit totalWithdraw transactions.type transactions.amount").lean(),
-        M("Cash").findOne({}, "balance").lean(),
-        M("Pawna").find({}, "name totalSend totalReceive").lean(),
-        M("Gila").find({}, "name advance price entries").lean(),
-        M("Entries").find({ date: tKey }, "total count deposit").lean(),
-    ]);
-    return {
-        today: tKey,
-        bkash: people.map((p) => {
-            const daily = p.baseDayKey === tKey ? p.dailyUsedBase || 0 : 0;
-            const monthly = p.baseMonthKey === mKey ? p.monthlyUsedBase || 0 : 0;
-            return {
-                name: p.name, number: p.bkashNumber, balance: p.initialBalance || 0,
-                dailyRemaining: DAILY_LIMIT - daily, monthlyRemaining: MONTHLY_LIMIT - monthly,
-                bundleLeft: p.bundleCount || 0,
-            };
-        }),
-        banks: banks.map((b) => {
-            let d = b.totalDeposit, w = b.totalWithdraw;
-            if (typeof d !== "number" || typeof w !== "number") {
-                d = 0; w = 0;
-                (b.transactions || []).forEach((t) => (t.type === "withdraw" ? (w += t.amount) : (d += t.amount)));
-            }
-            return { name: b.name, balance: d - w };
-        }),
-        cashBalance: cash ? cash.balance || 0 : 0,
-        pawna: pawna.map((p) => {
-            const net = (p.totalSend || 0) - (p.totalReceive || 0);
-            return { name: p.name, net, meaning: net > 0 ? "se amake debe (ami pabo)" : net < 0 ? "ami take dibo" : "soman" };
-        }),
-        gila: gila.map((g) => ({
-            name: g.name, advance: g.advance, pricePerPiece: g.price,
-            totalPieces: (g.entries || []).reduce((s, e) => s + (e.pieces || 0), 0),
-        })),
-        entriesToday: {
-            total: entries.reduce((s, e) => s + (e.total || 0), 0),
-            count: entries.reduce((s, e) => s + (e.count || 0), 0),
-            deposit: entries.reduce((s, e) => s + (e.deposit || 0), 0),
-        },
-    };
-}
-
 async function getEntries({ date }) {
     const d = cleanDate(date);
     if (!d) return { error: "Tarikh YYYY-MM-DD format e dao" };
@@ -313,7 +264,9 @@ const fn = (name, description, properties, required = []) =>
     ({ type: "function", function: { name, description, parameters: { type: "object", properties, required } } });
 
 const TOOLS = [
-    fn("get_overview", "Shob hisab er bortoman obostha: bKash balance + limit, bank, cash, pawna, gila, aajker entry.", {}),
+    fn("get_overview", "Pura hisab er analysis (shob jog-biyog kora): bKash balance/limit/send-receive, Entry (Hasan pawna, 7 diner trend), Pawna (ke koto debe/pabo), Bank, Cash, Gila (koto piece baki), ar warnings. Hisab/obostha/report/analysis/poramorsho — shob proshner age eta call koro.", {
+        period: str("today | week | month | all — kon somoyer lenden dekhbe (default today)", { enum: ["today", "week", "month", "all"] }),
+    }),
     fn("get_entries", "Kono ekta tarikh er Entry (bKash entry manager) er total/count/joma.", { date: str("YYYY-MM-DD") }, ["date"]),
     fn("get_history", "Kono manush/bank er recent lenden.", {
         module: str("bkash | pawna | bank | cash | gila", { enum: ["bkash", "pawna", "bank", "cash", "gila"] }),
@@ -366,7 +319,8 @@ const TOOLS = [
     }, ["name", "pieces", "mode"]),
 ];
 
-const READERS = { get_overview: getOverview, get_entries: getEntries, get_history: getHistory };
+const { analyze } = require("./analysis");
+const READERS = { get_overview: analyze, get_entries: getEntries, get_history: getHistory };
 
 /* ---------- pending action store (Confirm er jonno) ---------- */
 const pending = new Map();

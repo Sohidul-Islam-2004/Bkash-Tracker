@@ -24,6 +24,45 @@
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const fmt = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
 
+    /* chhoto markdown renderer: heading, bold, bullet, numbered list, table */
+    const inline = (s) => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>");
+    const cells = (line) => line.trim().replace(/^\||\|$/g, "").split("|").map((c) => inline(c.trim()));
+    function md(src) {
+        const lines = esc(src).replace(/\r/g, "").split("\n");
+        const out = [];
+        let para = [];
+        const flush = () => { if (para.length) { out.push(`<p>${para.map(inline).join("<br>")}</p>`); para = []; } };
+        for (let i = 0; i < lines.length; i++) {
+            const l = lines[i];
+            if (/^\s*\|/.test(l) && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1] || "")) {
+                flush();
+                const head = cells(l);
+                const rows = [];
+                i += 2;
+                while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(cells(lines[i++]));
+                i--;
+                out.push(`<div class="ai-tbl"><table><thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+            } else if (/^\s*#{1,6}\s+/.test(l)) {
+                flush(); out.push(`<div class="ai-h">${inline(l.replace(/^\s*#{1,6}\s+/, ""))}</div>`);
+            } else if (/^\s*([-*•]|\d+[.)])\s+/.test(l)) {
+                flush();
+                const ordered = /^\s*\d+[.)]/.test(l);
+                const items = [];
+                while (i < lines.length && /^\s*([-*•]|\d+[.)])\s+/.test(lines[i])) items.push(inline(lines[i++].replace(/^\s*([-*•]|\d+[.)])\s+/, "")));
+                i--;
+                out.push(`<${ordered ? "ol" : "ul"}>${items.map((x) => `<li>${x}</li>`).join("")}</${ordered ? "ol" : "ul"}>`);
+            } else if (/^\s*(-{3,}|\*{3,})\s*$/.test(l)) {
+                flush(); out.push("<hr>");
+            } else if (!l.trim()) {
+                flush();
+            } else {
+                para.push(l);
+            }
+        }
+        flush();
+        return out.join("");
+    }
+
     const ICON = {
         spark: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2zm7 11l.9 2.6 2.6.9-2.6.9L19 20l-.9-2.6-2.6-.9 2.6-.9L19 13zM5 15l.7 1.8 1.8.7-1.8.7L5 20l-.7-1.8-1.8-.7 1.8-.7L5 15z"/></svg>',
         x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
@@ -98,7 +137,7 @@
             if (m.role === "error") return `<div class="ai-row"><div class="ai-bub err">${fmt(m.show)}</div></div>`;
             const cards = (m.actions || []).map((a, j) => card(a, i, j)).join("");
             const pend = (m.actions || []).filter((a) => a.state === "pending").length;
-            return `<div class="ai-row"><div class="ai-bub">${fmt(m.show)}</div></div>${cards}
+            return `<div class="ai-row"><div class="ai-bub ai-md">${md(m.show)}</div></div>${cards}
                 ${pend > 1 ? `<div class="ai-all"><button type="button" data-all="${i}">✓ সব Confirm (${pend})</button></div>` : ""}`;
         }).join("") + (busy ? `<div class="ai-row"><div class="ai-bub ai-typing"><i></i><i></i><i></i></div></div>` : "");
 
@@ -133,7 +172,7 @@
         const fd = new FormData();
         fd.append("history", JSON.stringify(history()));
         if (text) fd.append("text", text);
-        if (audioBlob) fd.append("audio", audioBlob, "voice." + (audioBlob.type.includes("mp4") ? "mp4" : "webm"));
+        if (audioBlob) fd.append("audio", audioBlob, "voice." + (audioBlob.type.includes("mp4") ? "m4a" : audioBlob.type.includes("ogg") ? "ogg" : "webm"));
         if (imageFile) fd.append("image", imageFile, imageFile.name || "photo.jpg");
 
         const userMsg = { role: "user", show: text || (audioBlob ? "…" : ""), img: !!imageFile, voice: !!audioBlob };
@@ -210,23 +249,49 @@
     /* ---------- voice (tap = shuru, abar tap = pathao) ---------- */
     micBtn.onclick = () => (rec ? stopRec(false) : startRec());
 
+    function voiceError(text) {
+        msgs.push({ role: "error", show: "🎤 " + text });
+        persist(); render();
+    }
+
     async function startRec() {
         if (busy) return;
-        if (!navigator.mediaDevices || !window.MediaRecorder) return alert("এই ব্রাউজারে ভয়েস চলে না");
+        if (!window.isSecureContext) {
+            return voiceError(`Voice er jonno https lage. Ekhon khola ache: ${location.origin}\n` +
+                "• Computer e: http://localhost:" + (location.port || "3000") + " diye kholo\n" +
+                "• Phone e: Render er https link diye kholo (192.168... IP diye voice cholbe na)");
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+            return voiceError("Ei browser e voice record hoy na. Chrome, Edge ba notun Safari use koro.");
+        }
+        let stream;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e) {
+            const why = {
+                NotAllowedError: "Mic er permission bondho. Address bar er bame 🔒 ba ⚙ icon e chap diye Microphone → Allow koro, tarpor page reload dao.",
+                SecurityError: "Mic er permission bondho. Address bar er bame 🔒 icon e chap diye Microphone → Allow koro.",
+                NotFoundError: "Kono microphone pawa jay nai. Mic laga ache kina dekho.",
+                NotReadableError: "Mic onno kono app (Zoom/Meet/WhatsApp call) use korche. Oita bondho kore abar try koro.",
+            }[e.name] || `Mic chalu hoy nai (${e.name || e.message}).`;
+            return voiceError(why);
+        }
+        try {
+            const type = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
             rec = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
             recChunks = [];
-            rec.ondataavailable = (e) => e.data.size && recChunks.push(e.data);
+            rec.ondataavailable = (e) => e.data && e.data.size && recChunks.push(e.data);
             rec.onstop = () => {
                 stream.getTracks().forEach((t) => t.stop());
-                const blob = new Blob(recChunks, { type: rec.mimeType || "audio/webm" });
+                const blob = new Blob(recChunks, { type: rec.mimeType || type || "audio/webm" });
                 const discard = rec._discard;
+                const secs = (Date.now() - recStart) / 1000;
                 rec = null;
-                if (!discard && blob.size > 1000) send(blob);
+                if (discard) return;
+                if (secs < 1 || blob.size < 1000) return voiceError("Recording khub choto chilo. 🎤 chap dao, kotha bolo, tarpor ■ chap dao.");
+                send(blob);
             };
-            rec.start();
+            rec.start(250);
             recStart = Date.now();
             micBtn.classList.add("on"); micBtn.innerHTML = ICON.stop;
             $(".ai-rec").hidden = false;
@@ -235,8 +300,10 @@
                 $(".ai-rec-time").textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
                 if (s >= 120) stopRec(false);
             }, 250);
-        } catch {
-            alert("মাইক্রোফোন অনুমতি দিন (https লাগবে)");
+        } catch (e) {
+            stream.getTracks().forEach((t) => t.stop());
+            rec = null;
+            voiceError(`Record shuru hoy nai (${e.message}).`);
         }
     }
     function stopRec(discard) {
